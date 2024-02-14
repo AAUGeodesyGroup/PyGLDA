@@ -1,0 +1,65 @@
+{
+    "bounds": {
+        "lat": [
+            69.975,
+            20.975
+        ],
+        "lon": [
+            -79.975,
+            79.975
+        ],
+        "prefix": "FanPy"
+    },
+    "init": {
+        "mode": "warm",
+        "date": "2000-01-01",
+        "spinup": [
+            "2000-01-01",
+            "2010-01-01"
+        ],
+        "dir": "/home/user/codes/Run_W3_V2_Albert/DATA/init",
+        "spec": ""
+    },
+    "run": {
+        "fromdate": "2000-01-02",
+        "todate": "2000-01-31",
+        "res": 0.05,
+        "exttype": "ERA5",
+        "save_states_every_day": false,
+        "save_output_every_day": false
+    },
+    "input": {
+        "meteo": "/media/user/Backup Plus/ERA5/Raw_W3",
+        "clim": "/home/user/codes/Run_W3_V2_Albert/DATA/climatologies",
+        "pars": "/home/user/codes/Run_W3_V2_Albert/DATA/parameters",
+        "mask_fn": "/home/user/codes/Run_W3_V2_Albert/DATA/parameters/mask.h5"
+    },
+    "output": {
+        "dir": "/home/user/codes/Run_W3_V2_Albert",
+        "var": {
+            "ETtot": false,
+            "Qtot": false,
+            "Qnet": false,
+            "E0": false,
+            "Ei": false,
+            "Et": false,
+            "Es": false,
+            "Er": false,
+            "RSn": false,
+            "RLn": false,
+            "LE": false,
+            "H": false,
+            "albedo": false,
+            "LAI": false,
+            "Ssnow": false,
+            "z_g": false,
+            "S0": false,
+            "Sroot": false,
+            "Ssoil": false,
+            "Sg": false,
+            "Ts": false,
+            "fsnow": false,
+            "Sr": false
+        }
+    }
+}

@@ -1,0 +1,66 @@
+{
+    "bounds": {
+        "lat": [
+            -9.9,
+            -43.8
+        ],
+        "lon": [
+            112.4,
+            154.3
+        ],
+        "prefix": "OL_test"
+    },
+    "init": {
+        "mode": "cold",
+        "date": "2002-12-31",
+        "spinup": [
+            "2000-01-01",
+            "2005-01-31"
+        ],
+        "dir": "/media/user/My Book/Fan/W3RA_data/init",
+        "spec": ""
+    },
+    "run": {
+        "fromdate": "2003-01-01",
+        "todate": "2003-01-31",
+        "res": 0.1,
+        "exttype": "ERA5",
+        "save_states_every_day": true,
+        "save_output_every_day": false
+    },
+    "input": {
+        "meteo": "/work/W3RA_Fan/res",
+        "clim": "/work/W3RA_Fan/res",
+        "pars": "/work/W3RA_Fan/res",
+        "mask_fn": "/work/W3RA_Fan/res"
+    },
+    "output": {
+        "dir": "/work/W3RA_Fan/res",
+        "var": {
+            "Stot": true,
+            "ETtot": false,
+            "Qtot": false,
+            "Qnet": false,
+            "E0": false,
+            "Ei": false,
+            "Et": false,
+            "Es": false,
+            "Er": false,
+            "RSn": false,
+            "RLn": false,
+            "LE": false,
+            "H": false,
+            "albedo": false,
+            "LAI": false,
+            "Ssnow": false,
+            "z_g": false,
+            "S0": false,
+            "Sroot": false,
+            "Ssoil": false,
+            "Sg": false,
+            "Ts": false,
+            "fsnow": false,
+            "Sr": false
+        }
+    }
+}
