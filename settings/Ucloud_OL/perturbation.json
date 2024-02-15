@@ -31,11 +31,11 @@
     },
     "par": {
         "ER_frac_ref": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "normal",
             "coefficients": [
-                0.3
+                0.4
             ]
         },
         "FdrainFC": {
@@ -79,11 +79,11 @@
             ]
         },
         "FsoilEmax": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "normal",
             "coefficients": [
-                0.3
+                0.4
             ]
         },
         "FwaterE": {
@@ -103,11 +103,11 @@
             ]
         },
         "InitLoss": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "normal",
             "coefficients": [
-                0.3
+                0.4
             ]
         },
         "K_gw": {
@@ -183,19 +183,19 @@
             ]
         },
         "PrefR": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "normal",
             "coefficients": [
-                0.3
+                0.4
             ]
         },
         "S0FC": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "normal",
             "coefficients": [
-                0.3
+                0.4
             ]
         },
         "SLA": {
@@ -207,19 +207,19 @@
             ]
         },
         "S_sls": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "normal",
             "coefficients": [
-                0.3
+                0.4
             ]
         },
         "SdFC": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "normal",
             "coefficients": [
-                0.3
+                0.4
             ]
         },
         "Sgref": {
@@ -247,11 +247,11 @@
             ]
         },
         "SsFC": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "normal",
             "coefficients": [
-                0.3
+                0.4
             ]
         },
         "Tgrow": {
@@ -311,11 +311,11 @@
             ]
         },
         "beta": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "normal",
             "coefficients": [
-                0.3
+                0.4
             ]
         },
         "cGsmax": {

@@ -65,7 +65,6 @@ class perturbation:
             for key in forcing:
                 dict_group_load = ff_1['data'][key][:]
 
-
                 if forcing[key]['is_perturbed']:
 
                     pp = self.__generate_perturbation(config=forcing[key], mean=dict_group_load)
@@ -77,10 +76,8 @@ class perturbation:
                     outdata[key] = dict_group_load
                     pass
 
-
-
             for ens in np.arange(self.ens):
-                dict_group = ff_2.create_group('ens_%s' % (ens+1))
+                dict_group = ff_2.create_group('ens_%s' % (ens + 1))
                 for key in outdata.keys():
                     if np.ndim(outdata[key]) == 2:
                         dict_group[key] = outdata[key]
@@ -137,9 +134,8 @@ class perturbation:
                 outdata[key] = dict_group_load
                 pass
 
-
         for ens in np.arange(self.ens):
-            dict_group = ff_2.create_group('ens_%s' % (ens+1))
+            dict_group = ff_2.create_group('ens_%s' % (ens + 1))
             for key in outdata.keys():
                 if np.ndim(outdata[key]) == 2:
                     dict_group[key] = outdata[key]
@@ -154,7 +150,133 @@ class perturbation:
         ff_1.close()
         ff_2.close()
 
+        pass
 
+    def perturbe_coherent_par(self, percentage):
+
+        samples = self.Gaussian_perturbation(mean=0, std=1)
+
+        dir_in = Path(self.setting['dir']['in'])
+        dir_out = Path(self.setting['dir']['out'])
+
+        forcing = self.setting['par']
+
+        dir_out = dir_out / 'ens_par'
+
+        if dir_out.exists():
+            pass
+        else:
+            dir_out.mkdir()
+            pass
+
+        '''load data'''
+        fn_1 = dir_in / 'par' / 'par.h5'
+        ff_1 = h5py.File(fn_1, 'r')
+
+        '''save data'''
+        fn_2 = dir_out / 'par.h5'
+        ff_2 = h5py.File(fn_2, 'w')
+
+        outdata = {}
+        for key in forcing:
+            dict_group_load = ff_1['data'][key][:]
+
+            if forcing[key]['is_perturbed']:
+                dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
+
+                std = dict_group_load * percentage
+
+                hh= dd * dict_group_load[None, :, :] + samples[:, None, None] * dd * std[None, :, :]
+
+                outdata[key] =hh
+            else:
+
+                outdata[key] = dict_group_load
+                pass
+
+        for ens in np.arange(self.ens):
+            dict_group = ff_2.create_group('ens_%s' % (ens + 1))
+            for key in outdata.keys():
+                if np.ndim(outdata[key]) == 2:
+                    dict_group[key] = outdata[key]
+                else:
+                    dict_group[key] = outdata[key][ens]
+
+        '''add the unpurturbed ens: defined as ens 0'''
+        dict_group = ff_2.create_group('ens_%s' % 0)
+        for key in outdata.keys():
+            dict_group[key] = ff_1['data'][key][:]
+
+        ff_1.close()
+        ff_2.close()
+
+        pass
+
+    def perturbe_coherent_forcing(self, percentage):
+
+        samples = self.Gaussian_perturbation(mean=0, std=1)
+
+        dir_in = Path(self.setting['dir']['in'])
+        dir_out = Path(self.setting['dir']['out'])
+
+        forcing = self.setting['forcing']
+
+        dir_out = dir_out / 'ens_forcing'
+
+        if dir_out.exists():
+            pass
+        else:
+            dir_out.mkdir()
+            pass
+
+        for month in self.monthlist:
+            print(month.strftime('%Y-%m'))
+
+            '''load data'''
+            fn_1 = dir_in / 'forcing' / ('%s.h5' % (month.strftime('%Y-%m')))
+            ff_1 = h5py.File(fn_1, 'r')
+
+            '''save data'''
+            fn_2 = dir_out / ('%s.h5' % (month.strftime('%Y-%m')))
+            ff_2 = h5py.File(fn_2, 'w')
+
+            outdata = {}
+            for key in forcing:
+                dict_group_load = ff_1['data'][key][:]
+
+                if forcing[key]['is_perturbed']:
+
+                    dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
+
+                    std = dict_group_load * percentage
+
+                    hh = dd * dict_group_load[None, :, :] + samples[:, None, None] * dd * std[None, :, :]
+
+                    outdata[key] = hh
+
+
+                else:
+
+                    outdata[key] = dict_group_load
+                    pass
+
+            for ens in np.arange(self.ens):
+                dict_group = ff_2.create_group('ens_%s' % (ens + 1))
+                for key in outdata.keys():
+                    if np.ndim(outdata[key]) == 2:
+                        dict_group[key] = outdata[key]
+                    else:
+                        dict_group[key] = outdata[key][ens]
+
+            '''add the unpurturbed ens: defined as ens 0'''
+            dict_group = ff_2.create_group('ens_%s' % 0)
+            for key in outdata.keys():
+                dict_group[key] = ff_1['data'][key][:]
+
+            ff_1.close()
+            ff_2.close()
+
+            '''generate perturbation'''
 
         pass
 

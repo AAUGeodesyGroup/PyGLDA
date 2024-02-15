@@ -85,7 +85,9 @@ class demo_OL_run:
         print('')
         print('Start to generate ensembles with given perturbation...')
         pp.perturbe_par()
-        pp.perturbe_forcing()
+        # pp.perturbe_forcing()
+        # pp.perturbe_coherent_par(percentage=0.4)
+        # pp.perturbe_coherent_forcing(percentage=0.3)
         print('Finished!')
 
         pass
@@ -260,14 +262,14 @@ def demo1():
     dd = demo_OL_run(case='OL_test', setting_dir='../settings/Ucloud_OL')
     dd.configure_time(begin_time='2000-01-01', end_time='2005-01-31')
     dd.configure_area()
-    dd.generate_settings()
+    # dd.generate_settings()
     # dd.preprocess()
     # dd.perturbation()
 
-    # dd.model_run()
+    dd.model_run()
     # dd.extract_signal()
 
-    dd.visualize_signal()
+    # dd.visualize_signal()
 
     pass
 
