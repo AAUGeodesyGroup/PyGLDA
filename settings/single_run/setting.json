@@ -31,8 +31,8 @@
     "input": {
         "meteo": "/media/user/My Book/Fan/W3RA_data/crop_input",
         "clim": "/media/user/My Book/Fan/W3RA_data/crop_input",
-        "pars": "/media/user/My Book/Fan/W3RA_data/crop_input/",
-        "mask_fn": "/media/user/My Book/Fan/W3RA_data/crop_input/"
+        "pars": "/media/user/My Book/Fan/W3RA_data/crop_input",
+        "mask_fn": "/media/user/My Book/Fan/W3RA_data/crop_input"
     },
     "output": {
         "dir": "/media/user/My Book/Fan/W3RA_data/output",

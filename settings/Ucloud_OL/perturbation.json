@@ -33,7 +33,7 @@
         "ER_frac_ref": {
             "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "normal",
+            "error_distribution": "triangle",
             "coefficients": [
                 0.4
             ]
@@ -81,7 +81,7 @@
         "FsoilEmax": {
             "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "normal",
+            "error_distribution": "triangle",
             "coefficients": [
                 0.4
             ]
@@ -105,7 +105,7 @@
         "InitLoss": {
             "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "normal",
+            "error_distribution": "triangle",
             "coefficients": [
                 0.4
             ]
@@ -185,7 +185,7 @@
         "PrefR": {
             "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "normal",
+            "error_distribution": "triangle",
             "coefficients": [
                 0.4
             ]
@@ -193,7 +193,7 @@
         "S0FC": {
             "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "normal",
+            "error_distribution": "triangle",
             "coefficients": [
                 0.4
             ]
@@ -209,7 +209,7 @@
         "S_sls": {
             "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "normal",
+            "error_distribution": "triangle",
             "coefficients": [
                 0.4
             ]
@@ -217,7 +217,7 @@
         "SdFC": {
             "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "normal",
+            "error_distribution": "triangle",
             "coefficients": [
                 0.4
             ]
@@ -249,7 +249,7 @@
         "SsFC": {
             "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "normal",
+            "error_distribution": "triangle",
             "coefficients": [
                 0.4
             ]
@@ -313,7 +313,7 @@
         "beta": {
             "is_perturbed": false,
             "perturbe_method": "multiplicative",
-            "error_distribution": "normal",
+            "error_distribution": "triangle",
             "coefficients": [
                 0.4
             ]

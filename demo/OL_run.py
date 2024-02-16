@@ -84,10 +84,12 @@ class demo_OL_run:
                                          month_end=self.time[1].strftime('%Y-%m'))
         print('')
         print('Start to generate ensembles with given perturbation...')
-        pp.perturbe_par()
+        # pp.perturbe_par()
         # pp.perturbe_forcing()
         # pp.perturbe_coherent_par(percentage=0.4)
         # pp.perturbe_coherent_forcing(percentage=0.3)
+        pp.perturbe_par_spatial_coherence()
+        pp.perturbe_forcing_spatial_coherence()
         print('Finished!')
 
         pass
@@ -266,8 +268,8 @@ def demo1():
     # dd.preprocess()
     # dd.perturbation()
 
-    dd.model_run()
-    # dd.extract_signal()
+    # dd.model_run()
+    dd.extract_signal()
 
     # dd.visualize_signal()
 

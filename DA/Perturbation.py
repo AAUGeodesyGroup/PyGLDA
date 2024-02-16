@@ -152,9 +152,152 @@ class perturbation:
 
         pass
 
+    def perturbe_forcing_spatial_coherence(self):
+
+        dir_in = Path(self.setting['dir']['in'])
+        dir_out = Path(self.setting['dir']['out'])
+
+        forcing = self.setting['forcing']
+
+        dir_out = dir_out / 'ens_forcing'
+
+        if dir_out.exists():
+            pass
+        else:
+            dir_out.mkdir()
+            pass
+
+        for month in self.monthlist:
+            print(month.strftime('%Y-%m'))
+
+            '''load data'''
+            fn_1 = dir_in / 'forcing' / ('%s.h5' % (month.strftime('%Y-%m')))
+            ff_1 = h5py.File(fn_1, 'r')
+
+            '''save data'''
+            fn_2 = dir_out / ('%s.h5' % (month.strftime('%Y-%m')))
+            ff_2 = h5py.File(fn_2, 'w')
+
+            outdata = {}
+            for key in forcing:
+                dict_group_load = ff_1['data'][key][:]
+
+                if forcing[key]['is_perturbed']:
+
+                    s_shape = tuple([self.ens, np.shape(dict_group_load)[0]])
+
+                    samples = self.Gaussian_perturbation(mean=0, std=1, size=s_shape)
+
+                    percentage = forcing[key]['coefficients'][0]
+
+                    dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
+
+                    std = dict_group_load * percentage
+
+                    hh = dd * dict_group_load[None, :, :] + samples[:, :, None] * dd * std[None, :, :]
+
+                    outdata[key] = hh
+
+                else:
+
+                    outdata[key] = dict_group_load
+                    pass
+
+            for ens in np.arange(self.ens):
+                dict_group = ff_2.create_group('ens_%s' % (ens + 1))
+                for key in outdata.keys():
+                    if np.ndim(outdata[key]) == 2:
+                        dict_group[key] = outdata[key]
+                    else:
+                        dict_group[key] = outdata[key][ens]
+
+            '''add the unpurturbed ens: defined as ens 0'''
+            dict_group = ff_2.create_group('ens_%s' % 0)
+            for key in outdata.keys():
+                dict_group[key] = ff_1['data'][key][:]
+
+            ff_1.close()
+            ff_2.close()
+
+            '''generate perturbation'''
+
+        pass
+
+    def perturbe_par_spatial_coherence(self):
+
+        dir_in = Path(self.setting['dir']['in'])
+        dir_out = Path(self.setting['dir']['out'])
+
+        forcing = self.setting['par']
+
+        dir_out = dir_out / 'ens_par'
+
+        if dir_out.exists():
+            pass
+        else:
+            dir_out.mkdir()
+            pass
+
+        '''load data'''
+        fn_1 = dir_in / 'par' / 'par.h5'
+        ff_1 = h5py.File(fn_1, 'r')
+
+        '''save data'''
+        fn_2 = dir_out / 'par.h5'
+        ff_2 = h5py.File(fn_2, 'w')
+
+        outdata = {}
+        for key in forcing:
+            dict_group_load = ff_1['data'][key][:]
+
+            if forcing[key]['is_perturbed']:
+
+                s_shape = tuple([self.ens, np.shape(dict_group_load)[0]])
+
+                percentage = forcing[key]['coefficients'][0]
+
+                if forcing[key]['error_distribution'] == error_distribution.triangle.name:
+                    samples = self.triangle_perturbation(mean=1, error_percentage=percentage, size=s_shape)
+                    dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
+
+                    hh = samples[:, :, None] * dd* dict_group_load[None, :, :]
+
+                else:
+                    samples = self.Gaussian_perturbation(mean=0, std=1, size=s_shape)
+                    dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
+
+                    std = dict_group_load * percentage
+
+                    hh = dd * dict_group_load[None, :, :] + samples[:, :, None] * dd * std[None, :, :]
+
+                outdata[key] = hh
+
+            else:
+
+                outdata[key] = dict_group_load
+                pass
+
+        for ens in np.arange(self.ens):
+            dict_group = ff_2.create_group('ens_%s' % (ens + 1))
+            for key in outdata.keys():
+                if np.ndim(outdata[key]) == 2:
+                    dict_group[key] = outdata[key]
+                else:
+                    dict_group[key] = outdata[key][ens]
+
+        '''add the unpurturbed ens: defined as ens 0'''
+        dict_group = ff_2.create_group('ens_%s' % 0)
+        for key in outdata.keys():
+            dict_group[key] = ff_1['data'][key][:]
+
+        ff_1.close()
+        ff_2.close()
+
+        pass
+
     def perturbe_coherent_par(self, percentage):
 
-        samples = self.Gaussian_perturbation(mean=0, std=1)
+        samples = self.Gaussian_perturbation(mean=0, std=1, size=self.ens)
 
         dir_in = Path(self.setting['dir']['in'])
         dir_out = Path(self.setting['dir']['out'])
@@ -186,9 +329,9 @@ class perturbation:
 
                 std = dict_group_load * percentage
 
-                hh= dd * dict_group_load[None, :, :] + samples[:, None, None] * dd * std[None, :, :]
+                hh = dd * dict_group_load[None, :, :] + samples[:, None, None] * dd * std[None, :, :]
 
-                outdata[key] =hh
+                outdata[key] = hh
             else:
 
                 outdata[key] = dict_group_load
@@ -214,7 +357,7 @@ class perturbation:
 
     def perturbe_coherent_forcing(self, percentage):
 
-        samples = self.Gaussian_perturbation(mean=0, std=1)
+        samples = self.Gaussian_perturbation(mean=0, std=1, size=self.ens)
 
         dir_in = Path(self.setting['dir']['in'])
         dir_out = Path(self.setting['dir']['out'])
@@ -307,12 +450,12 @@ class perturbation:
 
         return mean
 
-    def triangle_perturbation(self, mean, error_percentage):
+    def triangle_perturbation(self, mean, error_percentage, size =None):
         return np.random.triangular(left=mean - error_percentage * mean, mode=mean,
-                                    right=mean + error_percentage * mean)
+                                    right=mean + error_percentage * mean, size=size)
 
-    def Gaussian_perturbation(self, mean, std):
-        return np.random.normal(loc=mean, scale=std, size=self.ens)
+    def Gaussian_perturbation(self, mean, std, size=None):
+        return np.random.normal(loc=mean, scale=std, size=size)
 
     @staticmethod
     def save_default_json(sample_dir='/media/user/My Book/Fan/W3RA_data/perturbation_sample'):

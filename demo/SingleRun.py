@@ -184,8 +184,8 @@ def demo1():
     dd.configure_area()
     dd.generate_settings()
     dd.preprocess()
-    dd.model_run()
-    dd.extract_signal()
+    # dd.model_run()
+    # dd.extract_signal()
     # dd.visualize_signal()
 
     pass
