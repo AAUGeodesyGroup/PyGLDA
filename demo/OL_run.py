@@ -264,14 +264,14 @@ def demo1():
     dd = demo_OL_run(case='OL_test', setting_dir='../settings/Ucloud_OL')
     dd.configure_time(begin_time='2000-01-01', end_time='2005-01-31')
     dd.configure_area()
-    # dd.generate_settings()
+    dd.generate_settings()
     # dd.preprocess()
     # dd.perturbation()
 
     # dd.model_run()
-    dd.extract_signal()
+    # dd.extract_signal()
 
-    # dd.visualize_signal()
+    dd.visualize_signal()
 
     pass
 
