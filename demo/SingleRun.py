@@ -183,8 +183,8 @@ def demo1():
     dd.configure_time(begin_time='2000-01-01', end_time='2005-01-31')
     dd.configure_area()
     dd.generate_settings()
-    dd.preprocess()
-    # dd.model_run()
+    # dd.preprocess()
+    dd.model_run()
     # dd.extract_signal()
     # dd.visualize_signal()
 

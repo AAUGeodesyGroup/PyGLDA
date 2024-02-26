@@ -17,6 +17,7 @@ class basin_shp_process:
         self._save_dir = Path(save_dir)
 
         self.collect_mask = None
+        self.NaN_mask = None
         pass
 
     def shp_to_mask(self, shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp', issave=False):
@@ -97,6 +98,30 @@ class basin_shp_process:
             mask_1D[k] = mask_1D[k].astype(bool)
 
         self.collect_mask = (mask_2D, mask_1D, lat, lon, res)
+        return self
+
+    def mask_nan(self, sample='/media/user/My Book/Fan/W3RA_data/states_sample/state.h5'):
+        """
+        this is done for masking out the NaN values in states. And to do this work, one sample state file is necessary.
+        NaN likely exists because of the mismatch between forcing field and model parameters/mask.
+        """
+
+        h5_fn = h5py.File(Path(sample), 'r')
+        sample = h5_fn['FreeWater'][0, :]
+
+        NaN_mask = (1 - np.isnan(sample)).astype(bool)
+
+        mask_2D, mask_1D, lat, lon, res = self.collect_mask
+
+        for k, v in mask_2D.items():
+            mask_2D[k][mask_2D[k]] = NaN_mask[mask_1D[k]]
+            pass
+
+        for k, v in mask_1D.items():
+            mask_1D[k] = mask_1D[k] * NaN_mask
+
+        self.collect_mask = (mask_2D, mask_1D, lat, lon, res)
+
         return self
 
 

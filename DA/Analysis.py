@@ -152,11 +152,24 @@ class BasinSignalAnalysis:
                 if key == 'Mleaf':
                     vv *= 4
                 for basin, bm in mask_1D.items():
-                    basin_average = np.nansum(vv[bm] * lat_basin[basin]) / np.sum(lat_basin[basin][nan_mask[basin]])
+                    basin_average = np.sum(vv[bm][nan_mask[basin]] * lat_basin[basin][nan_mask[basin]] ) / \
+                                    np.sum(lat_basin[basin][nan_mask[basin]])
                     # basin_average = np.sum(vv[bm] * lat_basin[basin]) / np.sum(lat_basin[basin])
                     map_average[basin][key].append(basin_average)
                     pass
             hf.close()
+
+        # '''test TWS'''
+        # tws = {}
+        # for basin in mask_1D.keys():
+        #     tws[basin] =0
+        #
+        # for basin in mask_1D.keys():
+        #     for state in statesnn:
+        #         if state != 'Mleaf':
+        #             tws[basin] += map_average[basin][state][0]
+        #         else:
+        #             tws[basin] += map_average[basin][state][0]
 
         if save:
             hf = h5py.File(str(Path(save_dir) / 'basin_ts.h5'), 'w')
@@ -173,14 +186,15 @@ def demo1():
     bs = basin_shp_process(res=0.1, basin_name='MDB').shp_to_mask(
         shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
 
-    bs.mask_to_vec()
+    bs.mask_to_vec(model_mask_global='/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test/mask/mask_global.h5')
+    # bs.mask_nan()
 
-    an = BasinSignalAnalysis(basin_mask=bs, state_dir='/media/user/My Book/Fan/W3RA_data/output/state_test',
-                             par_dir="/media/user/My Book/Fan/W3RA_data/crop_input/test/par")
+    an = BasinSignalAnalysis(basin_mask=bs, state_dir='/media/user/My Book/Fan/W3RA_data/output/state_single_run_test',
+                             par_dir="/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test/par")
 
     # an.configure_mask2D().get_2D_map(this_day=datetime.strptime('2001-01-07', '%Y-%m-%d'), save=True)
 
-    an.get_basin_average(save=True, date_begin='2000-01-01', date_end='2022-12-31')
+    an.get_basin_average(save=True, date_begin='2002-04-01', date_end='2002-04-02')
 
     pass
 
