@@ -164,6 +164,10 @@ class DM_basin_average:
     def getDM(self):
         return self._A.copy()
 
+    def operator(self, states):
+
+        return self.getDM()@states
+
     def saveDM(self, out_path: str):
 
         fn = h5py.File(Path(out_path) / 'DM.hdf5', 'w')

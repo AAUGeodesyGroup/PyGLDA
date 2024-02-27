@@ -7,7 +7,7 @@ from src.GeoMathKit import GeoMathKit
 from DA.ObsDesignMatrix import DM_basin_average
 
 
-class reorder_states:
+class extract_states:
 
     def __init__(self, DM: DM_basin_average):
         self.DM = DM
@@ -64,6 +64,80 @@ class reorder_states:
         return ts
 
 
+class EnsStates:
+    """
+    to extract the states of the ensembles
+    """
+
+    def __init__(self, DM: DM_basin_average, Ens=30):
+        self.DM = DM
+        mask_2D, mask_1D, lat, lon, res = self.DM.shp.collect_mask
+        self.mask_1D = mask_1D
+        self.__basin_num = len(list(mask_1D.keys())) - 1
+        self.__basin_valid_num = np.sum(mask_1D['basin_0'].astype(int))
+        self.Ens = Ens
+
+        pass
+
+    def configure_dir(self, states_dir: str):
+        self.__states_dir = states_dir
+        return self
+
+    def get_states_from_date(self, date='2002-04-01'):
+
+        states_assemble = []
+
+        for i in range(1, self.Ens + 1):
+
+            fn = Path(self.__states_dir + '_ensemble_%s' % i) / (
+                    'state.%s.h5' % datetime.strptime(date, '%Y-%m-%d').strftime('%Y%m%d'))
+
+            fn_h5 = h5py.File(fn, 'r')
+
+            ss = np.zeros((0, self.__basin_valid_num))
+            for key in self.DM.statesnn:
+                if (key == states_var.Sg) or (key == states_var.Sr):
+                    k = 1
+                else:
+                    k = 2
+                vv = fn_h5[key.name][0:k, self.mask_1D['basin_0']]
+                ss = np.vstack((ss, vv))
+
+            states_assemble.append(ss.T.flatten())
+
+        states_assemble = np.array(states_assemble)
+
+        '''this could lead to a memory error because of a very huge matrix, so that it is not allowed'''
+        # cov = np.cov(states_assemble)
+        '''return the states instead of cov'''
+        return states_assemble.T
+
+    def get_states_by_transfer(self, states_ens: dict):
+
+        states_assemble = []
+        for i in range(1, self.Ens + 1):
+
+            states = states_ens[i]
+
+            ss = np.zeros((0, self.__basin_valid_num))
+            for key in self.DM.statesnn:
+                if (key == states_var.Sg) or (key == states_var.Sr):
+                    k = 1
+                else:
+                    k = 2
+                vv = states[key.name][0:k, self.mask_1D['basin_0']]
+                ss = np.vstack((ss, vv))
+
+            states_assemble.append(ss.T.flatten())
+
+        states_assemble = np.array(states_assemble)
+
+        '''this could lead to a memory error because of a very huge matrix, so that it is not allowed'''
+        # cov = np.cov(states_assemble)
+        '''return the states instead of cov'''
+        return states_assemble.T
+
+
 def demo1():
     from DA.Analysis import basin_shp_process
     bs = basin_shp_process(res=0.1, basin_name='MDB').shp_to_mask(
@@ -88,7 +162,7 @@ def demo1():
                           par_dir="/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test/par",
                           LoadfromDisk=True, dir='../temp')
 
-    rs = reorder_states(DM=dm).configure_dir(states_dir= '/media/user/My Book/Fan/W3RA_data/output/state_single_run_test')
+    rs = extract_states(DM=dm).configure_dir(states_dir= '/media/user/My Book/Fan/W3RA_data/output/state_single_run_test')
 
     states = rs.get_states_from_date(date='2002-04-01')
 

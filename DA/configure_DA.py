@@ -62,6 +62,7 @@ class config_DA:
             self.todate = '2000-01-31'
             self.basin = 'MDB'
             self.basin_shp = '../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp'
+            self.ensemble = 30
             pass
 
 
