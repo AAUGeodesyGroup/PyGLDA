@@ -5,6 +5,7 @@ from DA.observations import GRACE_obs
 from DA.ExtracStates import EnsStates
 from DA.ObsDesignMatrix import DM_basin_average
 import numpy as np
+from mpi4py import MPI
 
 
 class DataAssimilation:
@@ -73,16 +74,36 @@ class DataAssimilation:
 
         return self
 
-    def run(self):
+    def run_mpi(self):
+        """
+        parallelized running with MPI4py
+        """
+
+        '''main process'''
+        main_thread = 1
+
+        '''OL process: no perturbation'''
+        OL_thread = 0
+
+        '''preparation'''
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        size = comm.Get_size()
+
+        '''make sure that each ensemble is given a process'''
+        assert size == self.DA_setting.basic.ensemble+1
+
+        '''configure setting'''
         daylist = GeoMathKit.dayListByDay(begin=self.DA_setting.basic.fromdate,
                                           end=self.DA_setting.basic.todate)
 
+        '''assign job to each ensemble'''
         for day in daylist:
 
             today = day.strftime('%Y-%m-%d')
 
             '''kalman filter: prediction step'''
-            self.predict(today=today)
+            self.predict(today=today, states=self._states_predict)
 
             '''obtain obs'''
             self._obs.set_date(date=today)
@@ -92,10 +113,29 @@ class DataAssimilation:
                 pass
                 continue
 
-            '''kalman filter: update step'''
-            '''load ensemble states'''
-            ens_states = self._sv.get_states_from_date(date=today)
-            self.update(obs=obs, obs_cov=obs_cov, ens_states=ens_states)
+            '''synchronization to prepare for the data assimilation'''
+            this_day = comm.gather(today, root=main_thread)
+            if rank == main_thread:
+                for i in this_day:
+                    '''confirm the synchronization again'''
+                    assert this_day[i] == today
+
+            '''collect states from each ensemble'''
+            ens_states = comm.gather(root=main_thread, sendobj=self._states_predict)
+
+            if rank != main_thread:
+                pass
+            else:
+                '''kalman filter: update step'''
+                '''load ensemble states'''
+                ens_states = self._sv.get_states_by_transfer(states_ens=ens_states)
+                self.update(obs=obs, obs_cov=obs_cov, ens_states=ens_states)
+
+            '''every thread should wait until the main thread finishes its job'''
+            states_predict = comm.scatter(sendobj=self._states_update.T, root=main_thread)
+            if rank != OL_thread:
+                '''do not update the OL thread'''
+                self._states_predict = states_predict.flatten()
 
         pass
 

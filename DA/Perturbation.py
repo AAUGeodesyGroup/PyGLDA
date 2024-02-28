@@ -25,9 +25,9 @@ class error_distribution(Enum):
 
 class perturbation:
 
-    def __init__(self, ens=30, dp='../settings/perturbation.json'):
-        self.ens = ens
+    def __init__(self, dp='../settings/perturbation.json'):
         self.setting = json.load(open(dp, 'r'))
+        self.ens = self.setting['ensemble']
         pass
 
     def setDate(self, month_begin='2002-04', month_end='2002-04'):
@@ -35,7 +35,7 @@ class perturbation:
 
         return self
 
-    def perturbe_forcing(self):
+    def perturb_forcing(self):
 
         dir_in = Path(self.setting['dir']['in'])
         dir_out = Path(self.setting['dir']['out'])
@@ -84,7 +84,7 @@ class perturbation:
                     else:
                         dict_group[key] = outdata[key][ens]
 
-            '''add the unpurturbed ens: defined as ens 0'''
+            '''add the unperturbed ens: defined as ens 0'''
             dict_group = ff_2.create_group('ens_%s' % 0)
             for key in outdata.keys():
                 dict_group[key] = ff_1['data'][key][:]
@@ -96,7 +96,7 @@ class perturbation:
 
         pass
 
-    def perturbe_par(self):
+    def perturb_par(self):
 
         dir_in = Path(self.setting['dir']['in'])
         dir_out = Path(self.setting['dir']['out'])
@@ -152,7 +152,7 @@ class perturbation:
 
         pass
 
-    def perturbe_forcing_spatial_coherence(self):
+    def perturb_forcing_spatial_coherence(self):
 
         dir_in = Path(self.setting['dir']['in'])
         dir_out = Path(self.setting['dir']['out'])
@@ -223,7 +223,7 @@ class perturbation:
 
         pass
 
-    def perturbe_par_spatial_coherence(self):
+    def perturb_par_spatial_coherence(self):
 
         dir_in = Path(self.setting['dir']['in'])
         dir_out = Path(self.setting['dir']['out'])
@@ -295,7 +295,7 @@ class perturbation:
 
         pass
 
-    def perturbe_coherent_par(self, percentage):
+    def perturb_coherent_par(self, percentage):
 
         samples = self.Gaussian_perturbation(mean=0, std=1, size=self.ens)
 
@@ -355,7 +355,7 @@ class perturbation:
 
         pass
 
-    def perturbe_coherent_forcing(self, percentage):
+    def perturb_coherent_forcing(self, percentage):
 
         samples = self.Gaussian_perturbation(mean=0, std=1, size=self.ens)
 
@@ -468,6 +468,7 @@ class perturbation:
         ff.close()
 
         perturbation_dict = {
+            'ensemble': 30,
             'dir': {
                 'in': '/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test',
                 'out': '/media/user/My Book/Fan/W3RA_data/crop_input/ens'
@@ -498,10 +499,10 @@ class perturbation:
 
 def demo1():
     dp = perturbation.save_default_json()
-    dp = '../settings/perturbation_2.json'
-    pp = perturbation(dp=dp).setDate(month_begin='1999-12', month_end='2023-05')
-
-    pp.perturbe_forcing()
+    # dp = '../settings/perturbation_2.json'
+    # pp = perturbation(dp=dp).setDate(month_begin='1999-12', month_end='2023-05')
+    #
+    # pp.perturbe_forcing()
     # pp.perturbe_par()
 
     pass

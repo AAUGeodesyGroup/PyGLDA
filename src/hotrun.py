@@ -119,12 +119,7 @@ class model_run_daily:
 
         '''save the state of the final epoch or save everyday'''
         if settings.run.save_states_every_day:
-            fn = Path(settings.statedir) / ('state.%04d%02d%02d.h5' % (day.year, day.month, day.day))
-            f_w = h5py.File(fn, 'w')
-            statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
-            for key in statesnn:
-                f_w.create_dataset(data=states[states_var[key]], name=key)
-            f_w.close()
+            self.save(states=states, day=day.strftime('%Y-%m-%d'))
 
         '''save the output everyday'''
         if settings.run.save_output_every_day:
@@ -139,6 +134,18 @@ class model_run_daily:
             f_w.close()
 
         return states
+
+    def save(self, states, day='2002-02-04'):
+        settings = self.__settings
+        day = datetime.strptime(day, '%Y-%m-%d')
+
+        fn = Path(settings.statedir) / ('state.%04d%02d%02d.h5' % (day.year, day.month, day.day))
+        f_w = h5py.File(fn, 'w')
+        statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
+        for key in statesnn:
+            f_w.create_dataset(data=states[states_var[key]], name=key)
+        f_w.close()
+        pass
 
 
 def demo1():

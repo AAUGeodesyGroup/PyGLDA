@@ -1,4 +1,5 @@
 {
+    "ensemble": 2,
     "dir": {
         "in": "/media/user/My Book/Fan/W3RA_data/crop_input/OL_test",
         "out": "/media/user/My Book/Fan/W3RA_data/crop_input/OL_test"

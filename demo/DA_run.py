@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 
-class demo_OL_run:
+class demo_DA_run:
 
     def __init__(self, case='test', setting_dir='../settings/OL_run'):
         self.case = case
@@ -80,7 +80,7 @@ class demo_OL_run:
         from DA.Perturbation import perturbation
 
         dp = self.setting_dir / 'perturbation.json'
-        pp = perturbation(dp=dp).setDate(month_begin=self.time[0].strftime('%Y-%m'),
+        pp = perturbation(dp=dp, ens=30).setDate(month_begin=self.time[0].strftime('%Y-%m'),
                                          month_end=self.time[1].strftime('%Y-%m'))
         print('')
         print('Start to generate ensembles with given perturbation...')
@@ -261,7 +261,8 @@ class demo_OL_run:
 
 
 def demo1():
-    dd = demo_OL_run(case='OL_test', setting_dir='../settings/Ucloud_OL')
+
+    dd = demo_DA_run(case='DA_exp', setting_dir='../settings/DA_local')
     dd.configure_time(begin_time='2000-01-01', end_time='2005-01-31')
     dd.configure_area()
     dd.generate_settings()

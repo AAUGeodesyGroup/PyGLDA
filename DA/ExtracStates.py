@@ -107,15 +107,12 @@ class EnsStates:
 
         states_assemble = np.array(states_assemble)
 
-        '''this could lead to a memory error because of a very huge matrix, so that it is not allowed'''
-        # cov = np.cov(states_assemble)
-        '''return the states instead of cov'''
         return states_assemble.T
 
-    def get_states_by_transfer(self, states_ens: dict):
+    def get_states_by_transfer(self, states_ens: list):
 
         states_assemble = []
-        for i in range(1, self.Ens + 1):
+        for i in range(len(states_ens)):
 
             states = states_ens[i]
 
@@ -132,9 +129,6 @@ class EnsStates:
 
         states_assemble = np.array(states_assemble)
 
-        '''this could lead to a memory error because of a very huge matrix, so that it is not allowed'''
-        # cov = np.cov(states_assemble)
-        '''return the states instead of cov'''
         return states_assemble.T
 
 

@@ -29,7 +29,7 @@ class GRACE_obs:
 
         return self
 
-    def perturbe_TWS(self):
+    def perturb_TWS(self):
 
         in_dir = self.__input_dir
 
@@ -51,6 +51,8 @@ class GRACE_obs:
         un_TWS = []
         COV = []
         new_time = []
+        print('')
+        print('Start to perturb GRACE to obtain appropriate observations...')
         for month in self.__monthlist:
 
             '''to confirm this month exists in the list'''
@@ -90,6 +92,7 @@ class GRACE_obs:
         self.TWS['unperturbation'] = un_TWS
         self.TWS['ens'] = np.array(TWS)
 
+        print('Finished')
         return self
 
     def remove_temporal_mean(self):
@@ -129,7 +132,7 @@ def demo2():
     ob.configure_dir(input_dir='/home/user/test/output', obs_dir='/home/user/test/obs'). \
         configure_time(month_begin='2002-04', month_end='2023-09')
 
-    ob.perturbe_TWS().save()
+    ob.perturb_TWS().save()
     pass
 
 

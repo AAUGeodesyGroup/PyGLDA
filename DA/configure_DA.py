@@ -76,7 +76,12 @@ class config_DA:
 
         def __init__(self):
             self.name = 'GRACE'
-            self.dir = '/home/user/test/obs'
+            self.dir = '/media/user/My Book/Fan/GRACE/obs'
+            self.GRACE = {
+                'EWH_grid_dir': '/media/user/My Book/Fan/GRACE/ewh',
+                'cov_dir': '/media/user/My Book/Fan/GRACE/DDK3_timeseries',
+                'preprocess_res': '/media/user/My Book/Fan/GRACE/output'
+            }
 
 
     class config_method:

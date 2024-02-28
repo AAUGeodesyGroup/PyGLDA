@@ -8,14 +8,14 @@
             112.4,
             154.3
         ],
-        "prefix": "single_run_test"
+        "prefix": "DA_test"
     },
     "init": {
         "mode": "cold",
         "date": "2002-12-31",
         "spinup": [
-            "2000-01-01",
-            "2000-01-31"
+            "2005-01-01",
+            "2005-01-31"
         ],
         "dir": "/media/user/My Book/Fan/W3RA_data/init",
         "spec": ""
@@ -32,7 +32,9 @@
         "meteo": "/media/user/My Book/Fan/W3RA_data/crop_input",
         "clim": "/media/user/My Book/Fan/W3RA_data/crop_input",
         "pars": "/media/user/My Book/Fan/W3RA_data/crop_input",
-        "mask_fn": "/media/user/My Book/Fan/W3RA_data/crop_input"
+        "mask_fn": "/media/user/My Book/Fan/W3RA_data/crop_input",
+        "par": "/media/user/My Book/Fan/W3RA_data/crop_input",
+        "mask": "/media/user/My Book/Fan/W3RA_data/crop_input"
     },
     "output": {
         "dir": "/media/user/My Book/Fan/W3RA_data/output",

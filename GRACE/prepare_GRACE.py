@@ -67,6 +67,8 @@ class GRACE_preparation:
         monthlist = GeoMathKit.monthListByMonth(begin=month_begin, end=month_end)
 
         TWS = {}
+        print()
+        print('Start to pre-process GRACE to obtain signal over places of interest...')
         for i in range(1, basins_num + 1):
             TWS['sub_basin_%d' % i] = []
             pass
@@ -112,6 +114,7 @@ class GRACE_preparation:
         hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
 
         hm.close()
+        print('Finished')
         pass
 
     def basin_COV(self, month_begin='2002-04', month_end='2002-04',
@@ -151,6 +154,9 @@ class GRACE_preparation:
 
         COV = []
         time_epoch = []
+
+        print()
+        print('Start to pre-process GRACE to obtain COV over places of interest...')
         for month in monthlist:
 
             '''search for the file'''
@@ -167,7 +173,8 @@ class GRACE_preparation:
             time_epoch.append(fn)
             fn = directory / tn
 
-            tws_one_month = np.load(fn)
+
+            tws_one_month = np.load(str(fn))
 
             vv = []
             for i in range(1, basins_num + 1):
@@ -193,7 +200,7 @@ class GRACE_preparation:
         hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
 
         hm.close()
-        pass
+        print('Finished')
 
         pass
 

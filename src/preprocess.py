@@ -85,7 +85,7 @@ class preprocess_base:
 
     def _crop_forcing_field(self, data_path: str, date_begin='', date_end=''):
 
-        print('*************forcing field******************')
+        # print('*************forcing field******************')
 
         dl = self._RoI
         lat0, lat1, lon0, lon1 = self._CoorRoI

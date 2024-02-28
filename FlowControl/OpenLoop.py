@@ -1,29 +1,16 @@
-import sys
-
-sys.path.append('../')
-
 from datetime import datetime
 from pathlib import Path
 import numpy as np
+import sys
+from FlowControl.SingleModel import SingleModel
 
 
-class demo_OL_run:
+class OpenLoop(SingleModel):
 
-    def __init__(self, case='test', setting_dir='../settings/OL_run'):
-        self.case = case
-        self.setting_dir = Path(setting_dir)
-
-        print('Welcome to PyW3RA, the user case is: %s' % case)
+    def __init__(self, case='test', setting_dir='../settings/OL_run', ens=3):
+        super().__init__(case, setting_dir)
+        self.ens = ens
         pass
-
-    def configure_time(self, begin_time='2000-01-01', end_time='2000-01-31'):
-        self.time = [datetime.strptime(begin_time, '%Y-%m-%d'), datetime.strptime(end_time, '%Y-%m-%d')]
-        return self
-
-    def configure_area(self, box=[-9.9, -43.8, 112.4, 154.3], basin='MDB'):
-        self.box = box
-        self.basin = basin
-        return self
 
     def generate_settings(self):
         import json
@@ -55,26 +42,14 @@ class demo_OL_run:
         dp3 = json.load(open(dp_dir, 'r'))
         dp3['dir']["in"] = str(Path(dp2['out_dir']) / self.case)
         dp3['dir']["out"] = str(Path(dp2['out_dir']) / self.case)
+        dp3['ensemble'] = self.ens
 
         with open(dp_dir, 'w') as f:
             json.dump(dp3, f, indent=4)
 
-        self.__outdir = dp2['out_dir']
-        self.__outdir2 = dp1['output']['dir']
+        self._outdir = dp2['out_dir']
+        self._outdir2 = dp1['output']['dir']
         return self
-
-    def preprocess(self):
-        from src.preprocess import preprocess_base
-        print()
-        print('Data preparation...')
-        '''preprocess'''
-        dp1 = self.setting_dir / 'setting.json'
-        pre = preprocess_base(dp1=str(dp1))
-
-        dp2 = self.setting_dir / 'pre_process.json'
-        pre.process(dp2=str(dp2))
-        print('Finished')
-        pass
 
     def perturbation(self):
         from DA.Perturbation import perturbation
@@ -140,8 +115,8 @@ class demo_OL_run:
         dp2 = json.load(open(dp_dir, 'r'))
         dp_dir = self.setting_dir / 'setting.json'
         dp1 = json.load(open(dp_dir, 'r'))
-        self.__outdir = dp2['out_dir']
-        self.__outdir2 = dp1['output']['dir']
+        self._outdir = dp2['out_dir']
+        self._outdir2 = dp1['output']['dir']
 
         '''search for the shape file'''
         pp = Path('../data/basin/shp/')
@@ -153,10 +128,10 @@ class demo_OL_run:
         assert len(target) == 1
 
         '''generate mask and vec files for given basin'''
-        outdir = Path(self.__outdir)
+        outdir = Path(self._outdir)
         bs = basin_shp_process(res=0.1, basin_name=self.basin).shp_to_mask(
             shp_path=str(target[0]), issave=False)
-        statedir = Path(self.__outdir2)
+        statedir = Path(self._outdir2)
         bs.mask_to_vec(model_mask_global=str(outdir / self.case / 'mask' / 'mask_global.h5'))
 
         '''basin analysis'''
@@ -176,7 +151,7 @@ class demo_OL_run:
         print('Finished')
         pass
 
-    def visualize_signal(self):
+    def visualize_signal(self, fig_path: str, postfix='0'):
         import pygmt
         import h5py
         from src.GeoMathKit import GeoMathKit
@@ -184,10 +159,10 @@ class demo_OL_run:
         '''basin average time-series'''
 
         '''load my result: MDB'''
-        statedir = Path(self.__outdir2)
-        ens_numbers = 31
+        statedir = Path(self._outdir2)
+        ens_numbers = self.ens + 1
 
-        fan_dict= {}
+        fan_dict = {}
         for ens in range(ens_numbers):
             hf = h5py.File(statedir / ('output_%s_ensemble_%s' % (self.case, ens)) / 'basin_ts.h5', 'r')
             fan = hf['basin_0']
@@ -239,42 +214,22 @@ class demo_OL_run:
             fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
                         frame=["WSne", "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
 
-            for ens in range(ens_numbers):
+            for ens in reversed(range(ens_numbers)):
                 if state == 'TWS':
                     vv = tws[ens]
                 else:
                     fan = fan_dict[ens]
                     vv = fan[state][:]
 
-                if ens==0:
-                    fig.plot(x=fan_time, y=vv, pen="0.8p,blue", label='%s' % (state))
+                if ens == 0:
+                    fig.plot(x=fan_time, y=vv, pen="1p,blue", label='%s' % (state), transparency=30)
                 else:
                     fig.plot(x=fan_time, y=vv, pen="0.3p,grey")
 
             fig.legend(position='jTR', box='+gwhite+p0.5p')
             fig.shift_origin(yshift='-4c')
 
-        fig.savefig(statedir / ('output_%s' % self.case) / 'result.pdf')
-        fig.savefig(statedir / ('output_%s' % self.case) / 'result.png')
+        fig.savefig(str(Path(fig_path) / ('%s_%s.pdf' % (self.case, postfix))))
+        fig.savefig(str(Path(fig_path) / ('%s_%s.png' % (self.case, postfix))))
         # fig.show()
         pass
-
-
-def demo1():
-    dd = demo_OL_run(case='OL_test', setting_dir='../settings/Ucloud_OL')
-    dd.configure_time(begin_time='2000-01-01', end_time='2005-01-31')
-    dd.configure_area()
-    dd.generate_settings()
-    # dd.preprocess()
-    # dd.perturbation()
-
-    # dd.model_run()
-    # dd.extract_signal()
-
-    dd.visualize_signal()
-
-    pass
-
-
-if __name__ == '__main__':
-    demo1()
