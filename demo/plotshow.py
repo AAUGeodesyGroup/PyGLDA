@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 import pygmt
 import h5py
-from src.GeoMathKit import GeoMathKit
+from src_hydro.GeoMathKit import GeoMathKit
 
 
 def model_component_comparison_to_Leire():
@@ -95,9 +95,9 @@ def compariosn_to_GRACE():
 
     hf.close()
 
-    '''load GRACE'''
+    '''load src_GRACE'''
     data_path = Path('/media/user/My Book/Fan/W3/exp/comparison_GRACE_W3_Aus')
-    grace = h5py.File(data_path / 'GRACE.hdf5', 'r')
+    grace = h5py.File(data_path / 'src_GRACE.hdf5', 'r')
     grace_time = grace['year_fraction'][:]
 
     '''figure'''
@@ -115,7 +115,7 @@ def compariosn_to_GRACE():
         w3ra = tws_dict['basin_%s'%id]
         fig.plot(x=fan_time, y=w3ra-np.mean(w3ra), pen="0.5p,black", label='W3RA')
 
-        fig.plot(x=grace_time, y=grace_tws * 1000/grace_scale_factor, pen="0.5p,blue", label='GRACE')
+        fig.plot(x=grace_time, y=grace_tws * 1000/grace_scale_factor, pen="0.5p,blue", label='src_GRACE')
         fig.legend(position='jBR', box='+gwhite+p0.5p')
 
         fig.shift_origin(yshift='-4.5c')
@@ -133,7 +133,7 @@ def compariosn_to_GRACE():
         w3ra = tws_dict['basin_%s'%id]
         fig.plot(x=fan_time, y=w3ra-np.mean(w3ra), pen="0.5p,black", label='W3RA')
 
-        fig.plot(x=grace_time, y=grace_tws * 1000/grace_scale_factor, pen="0.5p,blue", label='GRACE')
+        fig.plot(x=grace_time, y=grace_tws * 1000/grace_scale_factor, pen="0.5p,blue", label='src_GRACE')
         fig.legend(position='jBR', box='+gwhite+p0.5p')
 
         fig.shift_origin(yshift='-4.5c')

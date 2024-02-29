@@ -5,9 +5,9 @@ sys.path.append('../')
 import numpy as np
 from pathlib import Path
 import h5py
-from DA.shp2mask import basin_shp_process
+from src_DA.shp2mask import basin_shp_process
 from datetime import datetime
-from src.GeoMathKit import GeoMathKit
+from src_hydro.GeoMathKit import GeoMathKit
 
 
 class BasinSignalAnalysis:

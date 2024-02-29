@@ -4,8 +4,8 @@ sys.path.append('../')
 
 import numpy as np
 import h5py
-from DA.shp2mask import basin_shp_process
-from src.GeoMathKit import GeoMathKit
+from src_DA.shp2mask import basin_shp_process
+from src_hydro.GeoMathKit import GeoMathKit
 import os
 from pathlib import Path
 
@@ -33,7 +33,7 @@ class GRACE_preparation:
         pass
 
     def basin_TWS(self, month_begin='2002-04', month_end='2002-04',
-                  dir_in='/media/user/My Book/Fan/GRACE/ewh', dir_out='/media/user/My Book/Fan/GRACE/output'):
+                  dir_in='/media/user/My Book/Fan/src_GRACE/ewh', dir_out='/media/user/My Book/Fan/src_GRACE/output'):
         """
         basin averaged TWS, monthly time-series, [mm]
         Be careful to deal with mask and TWS.
@@ -68,7 +68,7 @@ class GRACE_preparation:
 
         TWS = {}
         print()
-        print('Start to pre-process GRACE to obtain signal over places of interest...')
+        print('Start to pre-process src_GRACE to obtain signal over places of interest...')
         for i in range(1, basins_num + 1):
             TWS['sub_basin_%d' % i] = []
             pass
@@ -118,8 +118,8 @@ class GRACE_preparation:
         pass
 
     def basin_COV(self, month_begin='2002-04', month_end='2002-04',
-                  dir_in='/media/user/My Book/Fan/GRACE/DDK3_timeseries',
-                  dir_out='/media/user/My Book/Fan/GRACE/output'):
+                  dir_in='/media/user/My Book/Fan/src_GRACE/DDK3_timeseries',
+                  dir_out='/media/user/My Book/Fan/src_GRACE/output'):
         """
         COV of subbasins, monthly time-series.
         Be careful to deal with mask and TWS.
@@ -156,7 +156,7 @@ class GRACE_preparation:
         time_epoch = []
 
         print()
-        print('Start to pre-process GRACE to obtain COV over places of interest...')
+        print('Start to pre-process src_GRACE to obtain COV over places of interest...')
         for month in monthlist:
 
             '''search for the file'''

@@ -13,7 +13,7 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 
-for ff in range(2):
+for ff in range(10):
     # if ff == 50:
     #     # comm.barrier()
 
@@ -23,6 +23,8 @@ for ff in range(2):
         d = np.mean(np.array(c))
     else:
         d = None
+
+    print(c)
 
     data = comm.bcast(d, root=0)
 

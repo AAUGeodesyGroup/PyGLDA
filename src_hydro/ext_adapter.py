@@ -1,9 +1,9 @@
-from src.config_settings import config_settings
-from src.config_parameters import config_parameters
-from src.climatologies import climatologies
-from src.ext_forcing import load_forcing
-from src.EnumType import states_var, forcing
-from src.GeoMathKit import GeoMathKit
+from src_hydro.config_settings import config_settings
+from src_hydro.config_parameters import config_parameters
+from src_hydro.climatologies import climatologies
+from src_hydro.ext_forcing import load_forcing
+from src_hydro.EnumType import states_var, forcing
+from src_hydro.GeoMathKit import GeoMathKit
 from datetime import datetime
 from pathlib import Path
 import numpy as np

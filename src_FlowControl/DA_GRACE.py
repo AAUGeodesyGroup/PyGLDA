@@ -1,12 +1,12 @@
 from datetime import datetime
 from pathlib import Path
-from FlowControl.OpenLoop import OpenLoop
-from GRACE.prepare_GRACE import GRACE_preparation
-from DA.configure_DA import config_DA
-from GRACE.GRACE_observation import GRACE_obs
-from src.EnumType import states_var
-from DA.shp2mask import basin_shp_process
-from DA.ObsDesignMatrix import DM_basin_average
+from src_FlowControl.OpenLoop import OpenLoop
+from src_GRACE.prepare_GRACE import GRACE_preparation
+from src_DA.configure_DA import config_DA
+from src_GRACE.GRACE_perturbation import GRACE_perturbed_obs
+from src_hydro.EnumType import states_var
+from src_DA.shp2mask import basin_shp_process
+from src_DA.ObsDesignMatrix import DM_basin_average
 import h5py
 import numpy as np
 import sys
@@ -90,7 +90,7 @@ class DA_GRACE(OpenLoop):
         basin = configDA.basic.basin
         shp_path = configDA.basic.basin_shp
 
-        '''pre-process of GRACE'''
+        '''pre-process of src_GRACE'''
         GR = GRACE_preparation(basin_name=basin,
                                shp_path=shp_path)
         GR.generate_mask()
@@ -159,7 +159,7 @@ class DA_GRACE(OpenLoop):
         begin_day = datetime.strptime(configDA.basic.fromdate, '%Y-%m-%d')
         end_day = datetime.strptime(configDA.basic.todate, '%Y-%m-%d')
 
-        ob = GRACE_obs(ens=configDA.basic.ensemble, basin_name=configDA.basic.basin)
+        ob = GRACE_perturbed_obs(ens=configDA.basic.ensemble, basin_name=configDA.basic.basin)
         ob.configure_dir(input_dir=configDA.obs.GRACE['preprocess_res'],
                          obs_dir=configDA.obs.dir). \
             configure_time(month_begin=begin_day.strftime('%Y-%m'), month_end=end_day.strftime('%Y-%m'))

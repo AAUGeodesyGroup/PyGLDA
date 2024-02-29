@@ -4,12 +4,12 @@ sys.path.append('../')
 
 import numpy as np
 import h5py
-from src.GeoMathKit import GeoMathKit
+from src_hydro.GeoMathKit import GeoMathKit
 import os
 from pathlib import Path
 
 
-class GRACE_obs:
+class GRACE_perturbed_obs:
 
     def __init__(self, ens=30, basin_name='MDB'):
         self.ens = ens
@@ -17,8 +17,8 @@ class GRACE_obs:
         self.TWS = None
         pass
 
-    def configure_dir(self, input_dir='/media/user/My Book/Fan/GRACE/output',
-                      obs_dir='/media/user/My Book/Fan/GRACE/obs'):
+    def configure_dir(self, input_dir='/media/user/My Book/Fan/src_GRACE/output',
+                      obs_dir='/media/user/My Book/Fan/src_GRACE/obs'):
 
         self.__input_dir = Path(input_dir)
         self.__obs_dir = Path(obs_dir)
@@ -52,7 +52,7 @@ class GRACE_obs:
         COV = []
         new_time = []
         print('')
-        print('Start to perturb GRACE to obtain appropriate observations...')
+        print('Start to perturb src_GRACE to obtain appropriate observations...')
         for month in self.__monthlist:
 
             '''to confirm this month exists in the list'''
@@ -65,7 +65,7 @@ class GRACE_obs:
                 continue
 
             '''to confirm if cov is consistent with signal. '''
-            assert month.strftime('%Y-%m') in time_epochs_2[index], 'GRACE signal is likely incompatible with its cov!'
+            assert month.strftime('%Y-%m') in time_epochs_2[index], 'src_GRACE signal is likely incompatible with its cov!'
 
             '''obtain the cov of this month'''
             cov = C_h5fn['data'][index]
@@ -133,7 +133,7 @@ class GRACE_obs:
 
 def demo2():
     # ob = GRACE_obs(ens=30, basin_name='MDB')
-    ob = GRACE_obs(ens=30, basin_name='Brahmaputra')
+    ob = GRACE_perturbed_obs(ens=30, basin_name='Brahmaputra')
     ob.configure_dir(input_dir='/home/user/test/output', obs_dir='/home/user/test/obs'). \
         configure_time(month_begin='2002-04', month_end='2023-09')
 
@@ -183,13 +183,13 @@ def visualization():
             vv = obs['ens_%s' % ens][:, id]
 
             if ens == 1:
-                fig.plot(x=time, y=vv, pen="0.3p,grey", label='Perturbed GRACE')
+                fig.plot(x=time, y=vv, pen="0.3p,grey", label='Perturbed src_GRACE')
             else:
                 fig.plot(x=time, y=vv, pen="0.3p,grey")
 
         ens = 0
         vv = obs['ens_%s' % ens][:, id]
-        fig.plot(x=time, y=vv, pen="0.8p,blue", label='Unperturbed GRACE')
+        fig.plot(x=time, y=vv, pen="0.8p,blue", label='Unperturbed src_GRACE')
 
         fig.legend(position='jTR', box='+gwhite+p0.5p')
         fig.shift_origin(yshift='-4.5c')

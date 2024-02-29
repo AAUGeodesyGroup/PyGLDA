@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import time
 import numpy as np
-from src.EnumType import init_mode, forcingSource
+from src_hydro.EnumType import init_mode, forcingSource
 import netCDF4 as nc
 import h5py
 

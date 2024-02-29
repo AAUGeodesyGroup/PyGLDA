@@ -2,7 +2,7 @@ from datetime import datetime
 from pathlib import Path
 import numpy as np
 import sys
-from FlowControl.SingleModel import SingleModel
+from src_FlowControl.SingleModel import SingleModel
 
 
 class OpenLoop(SingleModel):
@@ -52,7 +52,7 @@ class OpenLoop(SingleModel):
         return self
 
     def perturbation(self):
-        from DA.Perturbation import perturbation
+        from src_DA.Perturbation import perturbation
 
         dp = self.setting_dir / 'perturbation.json'
         pp = perturbation(dp=dp).setDate(month_begin=self.period[0].strftime('%Y-%m'),
@@ -70,11 +70,11 @@ class OpenLoop(SingleModel):
         pass
 
     def model_run(self):
-        from src.config_settings import config_settings
-        from src.config_parameters import config_parameters
-        from src.model_initialise import model_initialise
-        from src.ext_adapter import ext_adapter
-        from src.hotrun import model_run
+        from src_hydro.config_settings import config_settings
+        from src_hydro.config_parameters import config_parameters
+        from src_hydro.model_initialise import model_initialise
+        from src_hydro.ext_adapter import ext_adapter
+        from src_hydro.hotrun import model_run
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
@@ -95,8 +95,8 @@ class OpenLoop(SingleModel):
         pass
 
     def extract_signal(self):
-        from DA.shp2mask import basin_shp_process
-        from DA.Analysis import BasinSignalAnalysis
+        from src_DA.shp2mask import basin_shp_process
+        from src_DA.Analysis import BasinSignalAnalysis
         import os
         import json
         from mpi4py import MPI
@@ -154,7 +154,7 @@ class OpenLoop(SingleModel):
     def visualize_signal(self, fig_path: str, postfix='0'):
         import pygmt
         import h5py
-        from src.GeoMathKit import GeoMathKit
+        from src_hydro.GeoMathKit import GeoMathKit
 
         '''basin average time-series'''
 

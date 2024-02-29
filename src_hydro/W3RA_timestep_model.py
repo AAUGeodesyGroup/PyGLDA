@@ -31,16 +31,16 @@ Modified from matlab to python by Fan Yang (fany@plan.aau.dk) in Aalborg Univers
 
 import numpy as np
 
-from src.config_settings import config_settings
-from src.config_parameters import config_parameters
-from src.EnumType import states_var, output_var, forcing
-from src.GeoMathKit import GeoMathKit
-from src.ext_adapter import ext_adapter
-from src.snow_submodel import snow_submodel
+from src_hydro.config_settings import config_settings
+from src_hydro.config_parameters import config_parameters
+from src_hydro.EnumType import states_var, output_var, forcing
+from src_hydro.GeoMathKit import GeoMathKit
+from src_hydro.ext_adapter import ext_adapter
+from src_hydro.snow_submodel import snow_submodel
 
 
 class timestep_model:
-    """This version is adapted by AAU: removing all DA-relevant matters """
+    """This version is adapted by AAU: removing all src_DA-relevant matters """
 
     def __init__(self, par: config_parameters, settings: config_settings, ext: ext_adapter):
         self.__output = {}

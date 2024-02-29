@@ -22,7 +22,7 @@ import calendar
 import json
 import cdsapi
 from pathlib import Path
-from src.GeoMathKit import GeoMathKit
+from src_hydro.GeoMathKit import GeoMathKit
 import requests
 
 

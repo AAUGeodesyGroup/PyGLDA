@@ -1,5 +1,5 @@
-from FlowControl.SingleModel import SingleModel
-from src.EnumType import init_mode
+from src_FlowControl.SingleModel import SingleModel
+from src_hydro.EnumType import init_mode
 from datetime import datetime,timedelta
 
 case = 'single_run_test'
@@ -10,7 +10,7 @@ basin = 'MDB'
 mode = init_mode.cold
 
 cold_begin_time = '2000-01-01'
-cold_end_time = '2000-01-31'
+cold_end_time = '2010-01-31'
 
 warm_begin_time = '2000-01-01'
 warm_end_time = '2000-01-31'

@@ -2,15 +2,15 @@ import sys
 
 sys.path.append('../')
 
-from src.config_settings import config_settings
-from src.config_parameters import config_parameters
-from src.EnumType import states_var
-from src.GeoMathKit import GeoMathKit
+from src_hydro.config_settings import config_settings
+from src_hydro.config_parameters import config_parameters
+from src_hydro.EnumType import states_var
+from src_hydro.GeoMathKit import GeoMathKit
 from pathlib import Path
 import numpy as np
-from src.W3RA_timestep_model import timestep_model
-from src.ext_adapter import ext_adapter
-from src.model_initialise import model_initialise
+from src_hydro.W3RA_timestep_model import timestep_model
+from src_hydro.ext_adapter import ext_adapter
+from src_hydro.model_initialise import model_initialise
 import h5py
 from datetime import datetime
 

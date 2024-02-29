@@ -1,10 +1,10 @@
-from src.EnumType import states_var
+from src_hydro.EnumType import states_var
 import numpy as np
 import h5py
 from pathlib import Path
 from datetime import datetime
-from src.GeoMathKit import GeoMathKit
-from DA.ObsDesignMatrix import DM_basin_average
+from src_hydro.GeoMathKit import GeoMathKit
+from src_DA.ObsDesignMatrix import DM_basin_average
 
 
 class extract_states:
@@ -175,7 +175,7 @@ class EnsStates:
         return old_states
 
 def demo1():
-    from DA.Analysis import basin_shp_process
+    from src_DA.Analysis import basin_shp_process
     bs = basin_shp_process(res=0.1, basin_name='MDB').shp_to_mask(
         shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
 

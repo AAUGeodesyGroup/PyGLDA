@@ -2,7 +2,7 @@ import sys
 
 sys.path.append('../')
 
-from FlowControl.DA_GRACE import DA_GRACE
+from src_FlowControl.DA_GRACE import DA_GRACE
 
 case = 'DA_test'
 setting_dir = '../settings/DA_local'
@@ -72,7 +72,7 @@ def demo_fc_DA_step_2():
 
 def demo_fc_DA_step_3():
     """
-    preparation for DA running
+    preparation for src_DA running
     """
 
     '''configuration'''
@@ -84,10 +84,10 @@ def demo_fc_DA_step_3():
     '''gather the mean value of the open loop: ensemble mean of the temporal mean'''
     demo.gather_OLmean()
 
-    '''prepare the GRACE observation'''
+    '''prepare the src_GRACE observation'''
     # demo.GRACE_obs_preprocess()
 
-    '''perturb the GRACE obs for later use'''
+    '''perturb the src_GRACE obs for later use'''
     # demo.generate_perturbed_GRACE_obs()
 
     '''prepare the design matrix'''

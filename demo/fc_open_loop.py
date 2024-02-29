@@ -2,7 +2,7 @@ import sys
 
 sys.path.append('../')
 
-from FlowControl.OpenLoop import OpenLoop
+from src_FlowControl.OpenLoop import OpenLoop
 
 case = 'OL_test'
 setting_dir = '../settings/OL_run'

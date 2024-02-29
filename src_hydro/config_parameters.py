@@ -4,7 +4,7 @@ from pathlib import Path
 import time
 import numpy as np
 import h5py
-from src.config_settings import config_settings
+from src_hydro.config_settings import config_settings
 
 
 class config_parameters:

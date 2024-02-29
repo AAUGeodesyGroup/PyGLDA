@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 import numpy as np
-from src.EnumType import init_mode
+from src_hydro.EnumType import init_mode
 
 
 class SingleModel:
@@ -62,7 +62,7 @@ class SingleModel:
         return self
 
     def preprocess(self):
-        from src.preprocess import preprocess_base
+        from src_hydro.preprocess import preprocess_base
         print()
         print('Data preparation...')
         '''preprocess'''
@@ -75,11 +75,11 @@ class SingleModel:
         pass
 
     def model_run(self, arg='resume'):
-        from src.config_settings import config_settings
-        from src.config_parameters import config_parameters
-        from src.model_initialise import model_initialise
-        from src.ext_adapter import ext_adapter
-        from src.hotrun import model_run
+        from src_hydro.config_settings import config_settings
+        from src_hydro.config_parameters import config_parameters
+        from src_hydro.model_initialise import model_initialise
+        from src_hydro.ext_adapter import ext_adapter
+        from src_hydro.hotrun import model_run
 
         print()
         print('Model is going to start running...')
@@ -95,7 +95,7 @@ class SingleModel:
 
     def create_ini_states(self, mode: init_mode, modifydate: str):
         import shutil
-        from src.config_settings import config_settings
+        from src_hydro.config_settings import config_settings
         import os
         """place the state of the last day into the ini folder"""
         dp = self.setting_dir / 'setting.json'
@@ -119,8 +119,8 @@ class SingleModel:
         pass
 
     def extract_signal(self):
-        from DA.shp2mask import basin_shp_process
-        from DA.Analysis import BasinSignalAnalysis
+        from src_DA.shp2mask import basin_shp_process
+        from src_DA.Analysis import BasinSignalAnalysis
         import os
 
         print()
@@ -158,7 +158,7 @@ class SingleModel:
     def visualize_signal(self, fig_path: str, postfix='0'):
         import pygmt
         import h5py
-        from src.GeoMathKit import GeoMathKit
+        from src_hydro.GeoMathKit import GeoMathKit
 
         '''basin average time-series'''
 

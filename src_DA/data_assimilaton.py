@@ -1,9 +1,9 @@
-from src.hotrun import model_run_daily
-from DA.configure_DA import config_DA
-from src.GeoMathKit import GeoMathKit
-from DA.observations import GRACE_obs
-from DA.ExtracStates import EnsStates
-from DA.ObsDesignMatrix import DM_basin_average
+from src_hydro.hotrun import model_run_daily
+from src_DA.configure_DA import config_DA
+from src_hydro.GeoMathKit import GeoMathKit
+from src_DA.observations import GRACE_obs
+from src_DA.ExtracStates import EnsStates
+from src_DA.ObsDesignMatrix import DM_basin_average
 import numpy as np
 from mpi4py import MPI
 
@@ -112,7 +112,7 @@ class DataAssimilation:
                 obs_cov = self._obs.get_cov()
 
             if obs is None:
-                '''GRACE is not available at this time epoch'''
+                '''src_GRACE is not available at this time epoch'''
                 pass
                 continue
 

@@ -51,7 +51,7 @@ class demo_single_run:
         return self
 
     def preprocess(self):
-        from src.preprocess import preprocess_base
+        from src_hydro.preprocess import preprocess_base
         print()
         print('Data preparation...')
         '''preprocess'''
@@ -64,11 +64,11 @@ class demo_single_run:
         pass
 
     def model_run(self, arg= 'resume'):
-        from src.config_settings import config_settings
-        from src.config_parameters import config_parameters
-        from src.model_initialise import model_initialise
-        from src.ext_adapter import ext_adapter
-        from src.hotrun import model_run
+        from src_hydro.config_settings import config_settings
+        from src_hydro.config_parameters import config_parameters
+        from src_hydro.model_initialise import model_initialise
+        from src_hydro.ext_adapter import ext_adapter
+        from src_hydro.hotrun import model_run
 
         print()
         print('Model is going to start running...')
@@ -83,8 +83,8 @@ class demo_single_run:
         pass
 
     def extract_signal(self):
-        from DA.shp2mask import basin_shp_process
-        from DA.Analysis import BasinSignalAnalysis
+        from src_DA.shp2mask import basin_shp_process
+        from src_DA.Analysis import BasinSignalAnalysis
         import os
 
         print()
@@ -122,7 +122,7 @@ class demo_single_run:
     def visualize_signal(self):
         import pygmt
         import h5py
-        from src.GeoMathKit import GeoMathKit
+        from src_hydro.GeoMathKit import GeoMathKit
 
         '''basin average time-series'''
 

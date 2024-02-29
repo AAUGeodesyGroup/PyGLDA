@@ -64,7 +64,7 @@ class demo_DA_run:
         return self
 
     def preprocess(self):
-        from src.preprocess import preprocess_base
+        from src_hydro.preprocess import preprocess_base
         print()
         print('Data preparation...')
         '''preprocess'''
@@ -77,7 +77,7 @@ class demo_DA_run:
         pass
 
     def perturbation(self):
-        from DA.Perturbation import perturbation
+        from src_DA.Perturbation import perturbation
 
         dp = self.setting_dir / 'perturbation.json'
         pp = perturbation(dp=dp, ens=30).setDate(month_begin=self.time[0].strftime('%Y-%m'),
@@ -95,11 +95,11 @@ class demo_DA_run:
         pass
 
     def model_run(self):
-        from src.config_settings import config_settings
-        from src.config_parameters import config_parameters
-        from src.model_initialise import model_initialise
-        from src.ext_adapter import ext_adapter
-        from src.hotrun import model_run
+        from src_hydro.config_settings import config_settings
+        from src_hydro.config_parameters import config_parameters
+        from src_hydro.model_initialise import model_initialise
+        from src_hydro.ext_adapter import ext_adapter
+        from src_hydro.hotrun import model_run
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
@@ -120,8 +120,8 @@ class demo_DA_run:
         pass
 
     def extract_signal(self):
-        from DA.shp2mask import basin_shp_process
-        from DA.Analysis import BasinSignalAnalysis
+        from src_DA.shp2mask import basin_shp_process
+        from src_DA.Analysis import BasinSignalAnalysis
         import os
         import json
         from mpi4py import MPI
@@ -179,7 +179,7 @@ class demo_DA_run:
     def visualize_signal(self):
         import pygmt
         import h5py
-        from src.GeoMathKit import GeoMathKit
+        from src_hydro.GeoMathKit import GeoMathKit
 
         '''basin average time-series'''
 
