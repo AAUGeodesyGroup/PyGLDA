@@ -2,11 +2,12 @@ import json
 from pathlib import Path
 import numpy as np
 from DA.EnumDA import HydroModel, FusionMethod
+from src.EnumType import states_var
+
 
 class config_DA:
 
     def __init__(self):
-
         self.basic = self.config_basic().__dict__
         self.obs = self.config_obs().__dict__
         self.model = self.config_model().__dict__
@@ -23,7 +24,6 @@ class config_DA:
             json.dump(tc_dic, f, indent=4)
         return default_path
 
-
     @staticmethod
     def loadjson(js):
         Obj = config_DA()
@@ -32,9 +32,7 @@ class config_DA:
         Obj.__dict__ = dict1
         return Obj
 
-
     def process(self):
-
         '''assign the settings into class attributes'''
         basic = self.basic
         self.basic = self.config_basic()
@@ -63,14 +61,22 @@ class config_DA:
             self.basin = 'MDB'
             self.basin_shp = '../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp'
             self.ensemble = 30
+            self.layer = {
+                states_var.S0.name: True,
+                states_var.Ss.name: True,
+                states_var.Sd.name: True,
+                states_var.Sr.name: True,
+                states_var.Sg.name: True,
+                states_var.Mleaf.name: True,
+                states_var.FreeWater.name: True,
+                states_var.DrySnow.name: True
+            }
             pass
-
 
     class config_model:
 
         def __init__(self):
             self.name = HydroModel.w3ra_v0.name
-
 
     class config_obs:
 
@@ -80,9 +86,9 @@ class config_DA:
             self.GRACE = {
                 'EWH_grid_dir': '/media/user/My Book/Fan/GRACE/ewh',
                 'cov_dir': '/media/user/My Book/Fan/GRACE/DDK3_timeseries',
-                'preprocess_res': '/media/user/My Book/Fan/GRACE/output'
+                'preprocess_res': '/media/user/My Book/Fan/GRACE/output',
+                'OL_mean': '/media/user/My Book/Fan/GRACE/OLmean'
             }
-
 
     class config_method:
 
@@ -91,7 +97,6 @@ class config_DA:
 
 
 def demo1():
-
     dp = config_DA.save_default()
     a = config_DA.loadjson(dp).process()
 

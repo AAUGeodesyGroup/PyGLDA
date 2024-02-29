@@ -38,6 +38,28 @@ class extract_states:
 
         return ss.T.flatten()
 
+    def restore_states(self, old_states: dict, new_states):
+        """
+        update the old states
+        """
+
+        new_states = new_states.reshape((-1, len(self.DM.statesnn)))
+        new_states = new_states.T
+
+        m = 0
+        for key in self.DM.statesnn:
+
+            if (key == states_var.Sg) or (key == states_var.Sr):
+                k = 1
+            else:
+                k = 2
+
+            n = m + k
+            old_states[key][0:k, self.mask_1D['basin_0']] = new_states[m:n]
+            m = n
+
+        return old_states
+
     def get_states_by_transfer(self, states: dict):
 
         ss = np.zeros((0, self.__basin_valid_num))
@@ -46,7 +68,7 @@ class extract_states:
                 k = 1
             else:
                 k = 2
-            vv = states[key.name][0:k, self.mask_1D['basin_0']]
+            vv = states[key][0:k, self.mask_1D['basin_0']]
             ss = np.vstack((ss, vv))
 
         return ss.T.flatten()
@@ -58,7 +80,6 @@ class extract_states:
         daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
 
         for day in daylist:
-
             ts.append(self.get_states_from_date(date=day))
 
         return ts
@@ -122,7 +143,7 @@ class EnsStates:
                     k = 1
                 else:
                     k = 2
-                vv = states[key.name][0:k, self.mask_1D['basin_0']]
+                vv = states[key][0:k, self.mask_1D['basin_0']]
                 ss = np.vstack((ss, vv))
 
             states_assemble.append(ss.T.flatten())
@@ -131,6 +152,27 @@ class EnsStates:
 
         return states_assemble.T
 
+    def restore_states(self, old_states: dict, new_states):
+        """
+        update the old states: for only one state
+        """
+
+        new_states = new_states.reshape((-1, len(self.DM.statesnn)))
+        new_states = new_states.T
+
+        m = 0
+        for key in self.DM.statesnn:
+
+            if (key == states_var.Sg) or (key == states_var.Sr):
+                k = 1
+            else:
+                k = 2
+
+            n = m + k
+            old_states[key][0:k, self.mask_1D['basin_0']] = new_states[m:n]
+            m = n
+
+        return old_states
 
 def demo1():
     from DA.Analysis import basin_shp_process
@@ -156,11 +198,12 @@ def demo1():
                           par_dir="/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test/par",
                           LoadfromDisk=True, dir='../temp')
 
-    rs = extract_states(DM=dm).configure_dir(states_dir= '/media/user/My Book/Fan/W3RA_data/output/state_single_run_test')
+    rs = extract_states(DM=dm).configure_dir(
+        states_dir='/media/user/My Book/Fan/W3RA_data/output/state_single_run_test')
 
     states = rs.get_states_from_date(date='2002-04-01')
 
-    tws = dm.getDM()@states
+    tws = dm.getDM() @ states
     '''verified!'''
 
     pass

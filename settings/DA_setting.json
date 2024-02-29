@@ -4,15 +4,26 @@
         "todate": "2000-01-31",
         "basin": "MDB",
         "basin_shp": "../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp",
-        "ensemble": 30
+        "ensemble": 30,
+        "layer": {
+            "S0": true,
+            "Ss": true,
+            "Sd": true,
+            "Sr": true,
+            "Sg": true,
+            "Mleaf": true,
+            "FreeWater": true,
+            "DrySnow": true
+        }
     },
     "obs": {
         "name": "GRACE",
         "dir": "/media/user/My Book/Fan/GRACE/obs",
         "GRACE": {
             "EWH_grid_dir": "/media/user/My Book/Fan/GRACE/ewh",
-            "cov_dir": "/media/user/My Book/Fan/GRACE/ewh",
-            "preprocess_res": "/media/user/My Book/Fan/GRACE/output"
+            "cov_dir": "/media/user/My Book/Fan/GRACE/DDK3_timeseries",
+            "preprocess_res": "/media/user/My Book/Fan/GRACE/output",
+            "OL_mean": "/media/user/My Book/Fan/GRACE/OLmean"
         }
     },
     "model": {

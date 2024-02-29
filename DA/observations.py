@@ -6,7 +6,7 @@ import h5py
 
 class GRACE_obs:
 
-    def __init__(self, basin='MDB', dir_obs='/home/user/test/obs/', ens=0):
+    def __init__(self, basin='MDB', dir_obs='/home/user/test/obs/', ens_id=0):
         self.__time_list = None
 
         '''load the pre-stored observations as well as the covariance matrix'''
@@ -15,7 +15,7 @@ class GRACE_obs:
 
         self.__time_list = list(obs_h5['time_epoch'][:].astype('str'))
 
-        self.__obs = obs_h5['ens_%s' % ens][:]
+        self.__obs = obs_h5['ens_%s' % ens_id][:]
 
         self.__cov = obs_h5['cov'][:]
 

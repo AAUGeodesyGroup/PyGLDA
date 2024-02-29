@@ -18,7 +18,7 @@ fig_postfix = '0'
 
 def demo_fc_DA_step_1():
     """
-    A demo for single running of the model: step-1, no parallelization
+    preparation for open-loop running
     """
 
     '''configuration'''
@@ -35,19 +35,12 @@ def demo_fc_DA_step_1():
     '''generate the perturbation for the data'''
     demo.perturbation()
 
-    '''prepare the GRACE observation'''
-    demo.GRACE_obs_preprocess()
-
-    '''perturb the GRACE obs for later use'''
-    demo.generate_perturbed_GRACE_obs()
-
-    '''prepare the design matrix'''
-    # demo.visualize_signal()
     pass
+
 
 def demo_fc_DA_step_2():
     """
-    A demo for single running of the model: step-2, with parallelization
+    A demo for open-loop running of the model: step-2, with parallelization
     """
     import sys
     temp = sys.stdout
@@ -77,6 +70,32 @@ def demo_fc_DA_step_2():
     pass
 
 
+def demo_fc_DA_step_3():
+    """
+    preparation for DA running
+    """
+
+    '''configuration'''
+    demo = DA_GRACE(case=case, setting_dir=setting_dir, ens=ens)
+    demo.configure_time(begin_time=begin_time, end_time=end_time)
+    demo.configure_area(box=box, basin=basin)
+    demo.generate_settings()
+
+    '''gather the mean value of the open loop: ensemble mean of the temporal mean'''
+    demo.gather_OLmean()
+
+    '''prepare the GRACE observation'''
+    # demo.GRACE_obs_preprocess()
+
+    '''perturb the GRACE obs for later use'''
+    # demo.generate_perturbed_GRACE_obs()
+
+    '''prepare the design matrix'''
+    # demo.prepare_design_matrix()
+    # demo.visualize_signal()
+
+    pass
+
 def demo_visualization():
     """
     A demo for visualization of the time-series of model states
@@ -94,6 +113,7 @@ def demo_visualization():
 
 
 if __name__ == '__main__':
-    demo_fc_DA_step_1()
+    # demo_fc_DA_step_1()
     # demo_fc_DA_step_2()
+    demo_fc_DA_step_3()
     # demo_visualization()

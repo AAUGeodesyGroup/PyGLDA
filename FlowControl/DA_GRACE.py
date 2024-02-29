@@ -4,6 +4,10 @@ from FlowControl.OpenLoop import OpenLoop
 from GRACE.prepare_GRACE import GRACE_preparation
 from DA.configure_DA import config_DA
 from GRACE.GRACE_observation import GRACE_obs
+from src.EnumType import states_var
+from DA.shp2mask import basin_shp_process
+from DA.ObsDesignMatrix import DM_basin_average
+import h5py
 import numpy as np
 import sys
 
@@ -22,14 +26,14 @@ class DA_GRACE(OpenLoop):
         '''modify dp2'''
         dp_dir = self.setting_dir / 'pre_process.json'
         dp2 = json.load(open(dp_dir, 'r'))
-        dp2['date_begin'], dp2['date_end'] = [self.time[0].strftime('%Y-%m'), self.time[1].strftime('%Y-%m')]
+        dp2['date_begin'], dp2['date_end'] = [self.period[0].strftime('%Y-%m'), self.period[1].strftime('%Y-%m')]
         with open(dp_dir, 'w') as f:
             json.dump(dp2, f, indent=4)
 
         '''modify dp1'''
         dp_dir = self.setting_dir / 'setting.json'
         dp1 = json.load(open(dp_dir, 'r'))
-        dp1['init']['spinup'] = [self.time[0].strftime('%Y-%m-%d'), self.time[1].strftime('%Y-%m-%d')]
+        dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
         dp1['init']['mode'] = 'cold'
         dp1['bounds']['lat'] = self.box[:2]
         dp1['bounds']['lon'] = self.box[2:4]
@@ -59,8 +63,8 @@ class DA_GRACE(OpenLoop):
         dp_dir = self.setting_dir / 'DA_setting.json'
         dp4 = json.load(open(dp_dir, 'r'))
         dp4['basic']['ensemble'] = self.ens
-        dp4['basic']['fromdate'] = self.time[0].strftime('%Y-%m-%d')
-        dp4['basic']['todate'] = self.time[1].strftime('%Y-%m-%d')
+        dp4['basic']['fromdate'] = self.period[0].strftime('%Y-%m-%d')
+        dp4['basic']['todate'] = self.period[1].strftime('%Y-%m-%d')
         dp4['basic']['basin'] = self.basin
 
         '''search for the shape file'''
@@ -106,6 +110,47 @@ class DA_GRACE(OpenLoop):
 
         pass
 
+    def gather_OLmean(self):
+
+        dp_dir = self.setting_dir / 'DA_setting.json'
+        configDA = config_DA.loadjson(dp_dir).process()
+
+        ens_TWS = []
+        for ens_id in range(0, self.ens + 1):
+            statedir = Path(self._outdir2)
+            ens_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, ens_id)))
+            mm = h5py.File(str(Path(ens_dir) / 'basin_ts.h5'), 'r')
+
+            subbasin_num = len(list(mm.keys())) - 1
+
+            basin_tws = []
+            for subbasin in range(1, subbasin_num + 1):
+
+                nn = mm['basin_%s' % subbasin]
+
+                tws_temporal_mean = 0
+                for component in nn.keys():
+                    tws_temporal_mean += np.mean(nn[component][:])
+
+                basin_tws.append(tws_temporal_mean)
+
+                pass
+
+            ens_TWS.append(basin_tws)
+
+        ens_TWS = np.array(ens_TWS)
+
+        mean_0 = ens_TWS[0]
+        mean_1 = np.mean(ens_TWS[1:], axis=0)
+
+        fn = Path(configDA.obs.GRACE['OL_mean']) / ('%s_%s.hdf5' % (self.case, self.basin))
+        ww = h5py.File(fn, 'w')
+        ww.create_dataset(data=mean_0, name='mean_unperturbed')
+        ww.create_dataset(data=mean_1, name='mean_ensemble')
+        ww.close()
+
+        pass
+
     def generate_perturbed_GRACE_obs(self):
 
         dp_dir = self.setting_dir / 'DA_setting.json'
@@ -119,6 +164,33 @@ class DA_GRACE(OpenLoop):
                          obs_dir=configDA.obs.dir). \
             configure_time(month_begin=begin_day.strftime('%Y-%m'), month_end=end_day.strftime('%Y-%m'))
 
-        ob.perturb_TWS().save()
+        ob.perturb_TWS().remove_temporal_mean()
+        ob.add_temporal_mean()
+        ob.save()
+
+        pass
+
+    def prepare_design_matrix(self):
+        dp_dir = self.setting_dir / 'DA_setting.json'
+        configDA = config_DA.loadjson(dp_dir).process()
+
+        basin = configDA.basic.basin
+        shp_path = configDA.basic.basin_shp
+
+        layer = {}
+        for key, vv in configDA.basic.layer.items():
+            layer[states_var[key]] = vv
+
+        bs = basin_shp_process(res=0.1, basin_name=basin).shp_to_mask(shp_path=shp_path)
+
+        land_mask = str(self._outdir / self.case / 'mask' / 'mask_global.h5')
+        bs.mask_to_vec(model_mask_global=land_mask)
+        bs.mask_nan(sample='/media/user/My Book/Fan/W3RA_data/states_sample/state.h5')
+
+        par_dir = str(self._outdir / self.case / 'par')
+        dm_save_dir = '../temp'
+        dm = DM_basin_average(shp=bs, layer=layer, par_dir=par_dir)
+        dm.vertical_aggregation(isVec=True).basin_average()
+        dm.saveDM(out_path=dm_save_dir)
 
         pass

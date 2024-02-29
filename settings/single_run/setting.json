@@ -12,17 +12,17 @@
     },
     "init": {
         "mode": "cold",
-        "date": "2002-12-31",
+        "date": "2005-01-30",
         "spinup": [
             "2000-01-01",
-            "2000-01-31"
+            "2010-01-31"
         ],
-        "dir": "/media/user/My Book/Fan/W3RA_data/init",
+        "dir": "/media/user/My Book/Fan/W3RA_data/initial_states",
         "spec": ""
     },
     "run": {
-        "fromdate": "2003-01-01",
-        "todate": "2003-01-31",
+        "fromdate": "2005-01-31",
+        "todate": "2005-02-20",
         "res": 0.1,
         "exttype": "ERA5",
         "save_states_every_day": true,

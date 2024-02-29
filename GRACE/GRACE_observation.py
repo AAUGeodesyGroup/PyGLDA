@@ -78,7 +78,7 @@ class GRACE_obs:
             a = np.array(a)
 
             '''perturb the signal'''
-            perturbed_TWS = np.random.multivariate_normal(a, cov, 30)
+            perturbed_TWS = np.random.multivariate_normal(a, cov, self.ens)
 
             new_time.append(time_epochs[index])
             COV.append(cov)
@@ -89,13 +89,18 @@ class GRACE_obs:
 
         self.TWS['time'] = new_time
         self.TWS['cov'] = COV
-        self.TWS['unperturbation'] = un_TWS
+        self.TWS['unperturbation'] = np.array(un_TWS)
         self.TWS['ens'] = np.array(TWS)
 
         print('Finished')
         return self
 
     def remove_temporal_mean(self):
+
+        meanTWs = np.mean(self.TWS['unperturbation'], 0)
+
+        self.TWS['ens'] -= meanTWs
+
         return self
 
     def add_temporal_mean(self):

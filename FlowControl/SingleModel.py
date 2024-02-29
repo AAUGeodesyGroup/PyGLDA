@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 import numpy as np
+from src.EnumType import init_mode
 
 
 class SingleModel:
@@ -16,7 +17,7 @@ class SingleModel:
         pass
 
     def configure_time(self, begin_time='2000-01-01', end_time='2000-01-31'):
-        self.time = [datetime.strptime(begin_time, '%Y-%m-%d'), datetime.strptime(end_time, '%Y-%m-%d')]
+        self.period = [datetime.strptime(begin_time, '%Y-%m-%d'), datetime.strptime(end_time, '%Y-%m-%d')]
         return self
 
     def configure_area(self, box=[-9.9, -43.8, 112.4, 154.3], basin='MDB'):
@@ -24,20 +25,19 @@ class SingleModel:
         self.basin = basin
         return self
 
-    def generate_settings(self):
+    def generate_settings(self, mode: init_mode):
         import json
+        from datetime import datetime, timedelta
         '''modify dp2'''
         dp_dir = self.setting_dir / 'pre_process.json'
         dp2 = json.load(open(dp_dir, 'r'))
-        dp2['date_begin'], dp2['date_end'] = [self.time[0].strftime('%Y-%m'), self.time[1].strftime('%Y-%m')]
+        dp2['date_begin'], dp2['date_end'] = [self.period[0].strftime('%Y-%m'), self.period[1].strftime('%Y-%m')]
         with open(dp_dir, 'w') as f:
             json.dump(dp2, f, indent=4)
 
         '''modify dp1'''
         dp_dir = self.setting_dir / 'setting.json'
         dp1 = json.load(open(dp_dir, 'r'))
-        dp1['init']['spinup'] = [self.time[0].strftime('%Y-%m-%d'), self.time[1].strftime('%Y-%m-%d')]
-        dp1['init']['mode'] = 'cold'
         dp1['bounds']['lat'] = self.box[:2]
         dp1['bounds']['lon'] = self.box[2:4]
         dp1['bounds']['prefix'] = self.case
@@ -45,6 +45,14 @@ class SingleModel:
         dp1['input']["pars"] = dp2['out_dir']
         dp1['input']["clim"] = dp2['out_dir']
         dp1['input']["mask_fn"] = dp2['out_dir']
+
+        dp1['init']['mode'] = mode.name
+        if mode == init_mode.cold:
+            dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
+        else:
+            dp1['run']['fromdate'] = self.period[0].strftime('%Y-%m-%d')
+            dp1['run']['todate'] = self.period[1].strftime('%Y-%m-%d')
+            dp1['init']['date'] = (self.period[0] - timedelta(days=1)).strftime('%Y-%m-%d')
 
         with open(dp_dir, 'w') as f:
             json.dump(dp1, f, indent=4)
@@ -85,6 +93,31 @@ class SingleModel:
         print('\nFinished')
         pass
 
+    def create_ini_states(self, mode: init_mode, modifydate: str):
+        import shutil
+        from src.config_settings import config_settings
+        import os
+        """place the state of the last day into the ini folder"""
+        dp = self.setting_dir / 'setting.json'
+        settings = config_settings.loadjson(dp).process()
+
+        if mode == init_mode.cold:
+            the_last_day = settings.init.spinup[-1]
+        else:
+            the_last_day = settings.run.todate
+
+        sd = Path(self._outdir2) / ('state_%s' % self.case)
+        source_file = sd / ('state.%s.h5' % datetime.strptime(the_last_day, '%Y-%m-%d').strftime('%Y%m%d'))
+        target_folder = Path(settings.init.dir)
+
+        shutil.copy(source_file, target_folder)
+
+        oldname = 'state.%s.h5' % datetime.strptime(the_last_day, '%Y-%m-%d').strftime('%Y%m%d')
+        x = oldname.split('.')
+        newname = x[0]+'.'+modifydate+'.'+x[2]
+        os.rename(target_folder/oldname, target_folder/newname)
+        pass
+
     def extract_signal(self):
         from DA.shp2mask import basin_shp_process
         from DA.Analysis import BasinSignalAnalysis
@@ -116,8 +149,8 @@ class SingleModel:
 
         # an.configure_mask2D().get_2D_map(this_day=datetime.strptime('2001-01-07', '%Y-%m-%d'), save=True)
 
-        an.get_basin_average(save=True, date_begin=self.time[0].strftime('%Y-%m-%d'),
-                             date_end=self.time[1].strftime('%Y-%m-%d'),
+        an.get_basin_average(save=True, date_begin=self.period[0].strftime('%Y-%m-%d'),
+                             date_end=self.period[1].strftime('%Y-%m-%d'),
                              save_dir=str(statedir / ('output_%s' % self.case)))
         print('Finished')
         pass
@@ -133,8 +166,8 @@ class SingleModel:
         statedir = Path(self._outdir2)
         hf = h5py.File(statedir / ('output_%s' % self.case) / 'basin_ts.h5', 'r')
         fan = hf['basin_0']
-        date_begin = self.time[0].strftime('%Y-%m-%d')
-        date_end = self.time[1].strftime('%Y-%m-%d')
+        date_begin = self.period[0].strftime('%Y-%m-%d')
+        date_end = self.period[1].strftime('%Y-%m-%d')
         daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
         day_first = daylist[0].year + (daylist[0].month - 1) / 12 + daylist[0].day / 365.25
         fan_time = day_first + np.arange(len(daylist)) / 365.25

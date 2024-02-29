@@ -17,14 +17,14 @@ class OpenLoop(SingleModel):
         '''modify dp2'''
         dp_dir = self.setting_dir / 'pre_process.json'
         dp2 = json.load(open(dp_dir, 'r'))
-        dp2['date_begin'], dp2['date_end'] = [self.time[0].strftime('%Y-%m'), self.time[1].strftime('%Y-%m')]
+        dp2['date_begin'], dp2['date_end'] = [self.period[0].strftime('%Y-%m'), self.period[1].strftime('%Y-%m')]
         with open(dp_dir, 'w') as f:
             json.dump(dp2, f, indent=4)
 
         '''modify dp1'''
         dp_dir = self.setting_dir / 'setting.json'
         dp1 = json.load(open(dp_dir, 'r'))
-        dp1['init']['spinup'] = [self.time[0].strftime('%Y-%m-%d'), self.time[1].strftime('%Y-%m-%d')]
+        dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
         dp1['init']['mode'] = 'cold'
         dp1['bounds']['lat'] = self.box[:2]
         dp1['bounds']['lon'] = self.box[2:4]
@@ -55,8 +55,8 @@ class OpenLoop(SingleModel):
         from DA.Perturbation import perturbation
 
         dp = self.setting_dir / 'perturbation.json'
-        pp = perturbation(dp=dp).setDate(month_begin=self.time[0].strftime('%Y-%m'),
-                                         month_end=self.time[1].strftime('%Y-%m'))
+        pp = perturbation(dp=dp).setDate(month_begin=self.period[0].strftime('%Y-%m'),
+                                         month_end=self.period[1].strftime('%Y-%m'))
         print('')
         print('Start to generate ensembles with given perturbation...')
         # pp.perturbe_par()
@@ -145,8 +145,8 @@ class OpenLoop(SingleModel):
         # an.configure_mask2D().get_2D_map(this_day=datetime.strptime('2001-01-07', '%Y-%m-%d'), save=True)
 
         save_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, rank)))
-        an.get_basin_average(save=True, date_begin=self.time[0].strftime('%Y-%m-%d'),
-                             date_end=self.time[1].strftime('%Y-%m-%d'),
+        an.get_basin_average(save=True, date_begin=self.period[0].strftime('%Y-%m-%d'),
+                             date_end=self.period[1].strftime('%Y-%m-%d'),
                              save_dir=save_dir)
         print('Finished')
         pass
@@ -169,8 +169,8 @@ class OpenLoop(SingleModel):
             fan_dict[ens] = fan
             # hf.close()
 
-        date_begin = self.time[0].strftime('%Y-%m-%d')
-        date_end = self.time[1].strftime('%Y-%m-%d')
+        date_begin = self.period[0].strftime('%Y-%m-%d')
+        date_end = self.period[1].strftime('%Y-%m-%d')
         daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
         day_first = daylist[0].year + (daylist[0].month - 1) / 12 + daylist[0].day / 365.25
         fan_time = day_first + np.arange(len(daylist)) / 365.25
