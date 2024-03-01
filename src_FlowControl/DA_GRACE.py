@@ -254,7 +254,7 @@ class DA_GRACE(OpenLoop):
 
         '''configure model'''
         dp = self.setting_dir / 'setting.json'
-        settings = config_settings.loadjson(dp).process()
+        settings = config_settings.loadjson(dp).process(Parallel_ID=rank)
         par = config_parameters(settings)
         model_init = model_initialise(settings=settings, par=par).configure_InitialStates()
         ext = ext_adapter(par=par, settings=settings)
@@ -264,7 +264,11 @@ class DA_GRACE(OpenLoop):
         basin = configDA.basic.basin
         shp_path = configDA.basic.basin_shp
         bs = basin_shp_process(res=0.1, basin_name=basin).shp_to_mask(shp_path=shp_path)
-        land_mask = str(self._outdir / self.case / 'mask' / 'mask_global.h5')
+
+        dp_dir = self.setting_dir / 'pre_process.json'
+        dp2 = json.load(open(dp_dir, 'r'))
+        lm = dp2['out_dir']
+        land_mask = str(Path(lm) / self.case / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
         state_sample = Path(configDA.basic.NaNmaskStatesDir) / 'state.h5'
         bs.mask_nan(sample=state_sample)

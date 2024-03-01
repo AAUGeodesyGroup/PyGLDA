@@ -157,7 +157,7 @@ class EnsStates:
         update the old states: for only one state
         """
 
-        new_states = new_states.reshape((-1, len(self.DM.statesnn)))
+        new_states = new_states.reshape((-1, self.DM.vertical_dim))
         new_states = new_states.T
 
         m = 0
@@ -169,7 +169,9 @@ class EnsStates:
                 k = 2
 
             n = m + k
+
             old_states[key][0:k, self.mask_1D['basin_0']] = new_states[m:n]
+
             m = n
 
         return old_states

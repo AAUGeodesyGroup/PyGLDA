@@ -37,7 +37,7 @@ class DM_basin_average:
                 vertical_dim += increment
 
         self.statesnn = sorted(states_nn, key=lambda x: x.value)
-        self.__vertical_dim = vertical_dim
+        self.vertical_dim = vertical_dim
 
         '''load DM from pre-saved matrix'''
         if 'LoadfromDisk' in kwargs:
@@ -57,7 +57,7 @@ class DM_basin_average:
         '''to decide the amount of grid cells to be involved in the computation'''
         basin_valid_num = np.sum(mask_1D['basin_0'].astype(int))
 
-        vertical_dim = self.__vertical_dim
+        vertical_dim = self.vertical_dim
 
         Fhru = self.__Fhru[:, mask_1D['basin_0']]
 

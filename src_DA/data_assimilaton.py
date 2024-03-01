@@ -13,7 +13,6 @@ class DataAssimilation:
     def __init__(self, DA_setting: config_DA, model: model_run_daily, obs: GRACE_obs, sv: EnsStates):
 
         self._states_predict = None
-        self._states_update = None
 
         self._DM = None
         self._model = model
@@ -34,11 +33,11 @@ class DataAssimilation:
         self._DM = DM.operator
         return self
 
-    def predict(self, states, today='2002-01-01'):
+    def predict(self, states, today='2002-01-01', is_first_day=False):
         """
         prediction is for one ensemble
         """
-        self._states_predict = self._model.update(is_first_day=False, previous_states=states, day=today)
+        self._states_predict = self._model.update(is_first_day=is_first_day, previous_states=states, day=today)
         self._today = today
         return self
 
@@ -50,13 +49,13 @@ class DataAssimilation:
         R = obs_cov
 
         '''calculate the deviation of ens_states'''
-        A = ens_states - np.mean(ens_states, 1)
+        A = ens_states - np.mean(ens_states, 1)[:, None]
 
         '''propagate it into obs-equivalent variable'''
         HX = self._DM(states=ens_states)
 
         '''to calculate the deviation'''
-        HA = HX - np.mean(HX, 1)
+        HA = HX - np.mean(HX, 1)[:, None]
 
         '''calculate matrix P'''
         P = np.cov(HA) + R
@@ -70,9 +69,9 @@ class DataAssimilation:
         K = 1 / (N - 1) * A @ Bt.T
 
         '''update the states'''
-        self._states_update = ens_states + K @ (obs - HX)
+        states_update = ens_states + K @ (obs - HX)
 
-        return self
+        return states_update
 
     def run_mpi(self):
         """
@@ -98,18 +97,19 @@ class DataAssimilation:
                                           end=self.DA_setting.basic.todate)
 
         '''assign job to each ensemble'''
+        firstday = True
         for day in daylist:
 
             today = day.strftime('%Y-%m-%d')
 
             '''kalman filter: prediction step'''
-            self.predict(today=today, states=self._states_predict)
+            self.predict(today=today, states=self._states_predict, is_first_day=firstday)
+            firstday = False
 
             '''obtain obs'''
             self._obs.set_date(date=today)
             obs = self._obs.get_obs()
-            if rank == main_thread:
-                obs_cov = self._obs.get_cov()
+            obs_cov = self._obs.get_cov()
 
             if obs is None:
                 '''src_GRACE is not available at this time epoch'''
@@ -119,9 +119,9 @@ class DataAssimilation:
             '''synchronization to prepare for the data assimilation'''
             this_day = comm.gather(today, root=main_thread)
             if rank == main_thread:
-                for i in this_day:
+                for iday in this_day:
                     '''confirm the synchronization again'''
-                    assert this_day[i] == today
+                    assert iday == today
 
             '''collect obs from each ensemble'''
             ens_obs = comm.gather(root=main_thread, sendobj=obs)
@@ -139,22 +139,27 @@ class DataAssimilation:
 
                 '''load ensemble states'''
                 ens_states = self._sv.get_states_by_transfer(states_ens=ens_states)
-                ens_obs = np.array(ens_obs)
+                ens_obs = np.array(ens_obs).T
 
                 '''kalman filter: update step'''
-                self.update(obs=ens_obs, obs_cov=obs_cov, ens_states=ens_states)
-                states_update = list(self._states_update.T)
+                states_update = self.update(obs=ens_obs, obs_cov=obs_cov, ens_states=ens_states)
+                # print(np.shape(states_update.T), '=============================')
+                states_update = list(states_update.T)
 
                 '''add an arbitrary matrix to states to be able to use comm.scatter: 
                 by default, the process id of OL_process must be 0'''
                 states_update = [np.zeros(np.shape(states_update[0]))] + states_update
 
-            '''every thread should wait until the main thread finishes its job'''
-            states_predict = comm.scatter(sendobj=states_update, root=main_thread)
+            '''every thread should wait until the main thread finishes its job, and redistribute the updated states'''
+            states_ens_update = comm.scatter(sendobj=states_update, root=main_thread)
+
+            '''possible negative value exists in the updated states. replace the negative value with zero'''
+            states_ens_update[states_ens_update < 0] = 0.0001
+
             if rank != OL_thread:
                 '''do not update the OL thread'''
                 self._states_predict = self._sv.restore_states(old_states=self._states_predict,
-                                                               new_states=states_predict.flatten())
+                                                               new_states=states_ens_update.flatten())
                 '''save the new states, and overlap the old one'''
                 self._model.save(states=self._states_predict, day=today)
         pass

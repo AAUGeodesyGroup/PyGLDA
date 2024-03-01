@@ -86,8 +86,10 @@ class OpenLoop(SingleModel):
 
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
-        f = open('../log/OL/log_%s.txt' % rank, 'w')
-        sys.stdout = f
+
+        if rank != 0:
+            f = open('../log/OL/log_%s.txt' % rank, 'w')
+            sys.stdout = f
 
         print()
         print('Model is going to start running...')
@@ -174,10 +176,10 @@ class OpenLoop(SingleModel):
         if file_postfix is None:
             fp = ''
         else:
-            fp = '_'+file_postfix
+            fp = '_' + file_postfix
 
         for ens in range(ens_numbers):
-            hf = h5py.File(statedir / ('output_%s_ensemble_%s' % (self.case, ens)) / ('basin_ts%s.h5'%fp), 'r')
+            hf = h5py.File(statedir / ('output_%s_ensemble_%s' % (self.case, ens)) / ('basin_ts%s.h5' % fp), 'r')
             fan = hf['basin_0']
             fan_dict[ens] = fan
             # hf.close()
