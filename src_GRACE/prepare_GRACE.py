@@ -17,17 +17,17 @@ class GRACE_preparation:
         self.__shp_path = shp_path
         pass
 
-    def generate_mask(self):
+    def generate_mask(self, box_mask=None):
         """
         generate and save global mask for later use
         """
 
         '''for signal: 0.5 degree'''
-        bs1 = basin_shp_process(res=0.5, basin_name=self.basin_name).shp_to_mask(
+        bs1 = basin_shp_process(res=0.5, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
             shp_path=self.__shp_path, issave=True)
 
         '''for cov: 1 degree'''
-        bs2 = basin_shp_process(res=1, basin_name=self.basin_name).shp_to_mask(
+        bs2 = basin_shp_process(res=1, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
             shp_path=self.__shp_path, issave=True)
 
         pass
@@ -68,7 +68,7 @@ class GRACE_preparation:
 
         TWS = {}
         print()
-        print('Start to pre-process src_GRACE to obtain signal over places of interest...')
+        print('Start to pre-process GRACE to obtain signal over places of interest...')
         for i in range(1, basins_num + 1):
             TWS['sub_basin_%d' % i] = []
             pass
@@ -156,7 +156,7 @@ class GRACE_preparation:
         time_epoch = []
 
         print()
-        print('Start to pre-process src_GRACE to obtain COV over places of interest...')
+        print('Start to pre-process GRACE to obtain COV over places of interest...')
         for month in monthlist:
 
             '''search for the file'''
@@ -172,7 +172,6 @@ class GRACE_preparation:
             print(tn)
             time_epoch.append(fn)
             fn = directory / tn
-
 
             tws_one_month = np.load(str(fn))
 

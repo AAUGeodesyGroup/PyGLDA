@@ -1,9 +1,10 @@
 {
     "basic": {
-        "fromdate": "2005-01-01",
-        "todate": "2005-01-31",
+        "fromdate": "2002-03-31",
+        "todate": "2003-05-31",
         "basin": "MDB",
         "basin_shp": "../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp",
+        "NaNmaskStatesDir": "/media/user/My Book/Fan/W3RA_data/states_sample",
         "ensemble": 2,
         "layer": {
             "S0": true,

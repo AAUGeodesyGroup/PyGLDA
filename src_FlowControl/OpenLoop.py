@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import numpy as np
 import sys
 from src_FlowControl.SingleModel import SingleModel
+from src_hydro.EnumType import init_mode
 
 
 class OpenLoop(SingleModel):
@@ -12,7 +13,7 @@ class OpenLoop(SingleModel):
         self.ens = ens
         pass
 
-    def generate_settings(self):
+    def generate_settings(self, mode: init_mode):
         import json
         '''modify dp2'''
         dp_dir = self.setting_dir / 'pre_process.json'
@@ -24,8 +25,6 @@ class OpenLoop(SingleModel):
         '''modify dp1'''
         dp_dir = self.setting_dir / 'setting.json'
         dp1 = json.load(open(dp_dir, 'r'))
-        dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
-        dp1['init']['mode'] = 'cold'
         dp1['bounds']['lat'] = self.box[:2]
         dp1['bounds']['lon'] = self.box[2:4]
         dp1['bounds']['prefix'] = self.case
@@ -33,6 +32,14 @@ class OpenLoop(SingleModel):
         dp1['input']["pars"] = dp2['out_dir']
         dp1['input']["clim"] = dp2['out_dir']
         dp1['input']["mask_fn"] = dp2['out_dir']
+
+        dp1['init']['mode'] = mode.name
+        if mode == init_mode.cold:
+            dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
+        else:
+            dp1['run']['fromdate'] = self.period[0].strftime('%Y-%m-%d')
+            dp1['run']['todate'] = self.period[1].strftime('%Y-%m-%d')
+            dp1['init']['date'] = (self.period[0] - timedelta(days=1)).strftime('%Y-%m-%d')
 
         with open(dp_dir, 'w') as f:
             json.dump(dp1, f, indent=4)
@@ -94,7 +101,7 @@ class OpenLoop(SingleModel):
         print('\nFinished')
         pass
 
-    def extract_signal(self):
+    def extract_signal(self, postfix=None):
         from src_DA.shp2mask import basin_shp_process
         from src_DA.Analysis import BasinSignalAnalysis
         import os
@@ -147,11 +154,11 @@ class OpenLoop(SingleModel):
         save_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, rank)))
         an.get_basin_average(save=True, date_begin=self.period[0].strftime('%Y-%m-%d'),
                              date_end=self.period[1].strftime('%Y-%m-%d'),
-                             save_dir=save_dir)
+                             save_dir=save_dir, post_fix=postfix)
         print('Finished')
         pass
 
-    def visualize_signal(self, fig_path: str, postfix='0'):
+    def visualize_signal(self, fig_path: str, fig_postfix='0', file_postfix=None):
         import pygmt
         import h5py
         from src_hydro.GeoMathKit import GeoMathKit
@@ -163,8 +170,14 @@ class OpenLoop(SingleModel):
         ens_numbers = self.ens + 1
 
         fan_dict = {}
+
+        if file_postfix is None:
+            fp = ''
+        else:
+            fp = '_'+file_postfix
+
         for ens in range(ens_numbers):
-            hf = h5py.File(statedir / ('output_%s_ensemble_%s' % (self.case, ens)) / 'basin_ts.h5', 'r')
+            hf = h5py.File(statedir / ('output_%s_ensemble_%s' % (self.case, ens)) / ('basin_ts%s.h5'%fp), 'r')
             fan = hf['basin_0']
             fan_dict[ens] = fan
             # hf.close()
@@ -229,7 +242,7 @@ class OpenLoop(SingleModel):
             fig.legend(position='jTR', box='+gwhite+p0.5p')
             fig.shift_origin(yshift='-4c')
 
-        fig.savefig(str(Path(fig_path) / ('%s_%s.pdf' % (self.case, postfix))))
-        fig.savefig(str(Path(fig_path) / ('%s_%s.png' % (self.case, postfix))))
+        fig.savefig(str(Path(fig_path) / ('%s_%s.pdf' % (self.case, fig_postfix))))
+        fig.savefig(str(Path(fig_path) / ('%s_%s.png' % (self.case, fig_postfix))))
         # fig.show()
         pass

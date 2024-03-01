@@ -18,7 +18,44 @@ class basin_shp_process:
 
         self.collect_mask = None
         self.NaN_mask = None
+
+        self.box_mask = None
         pass
+
+    def configureBox(self, box: dir):
+        """
+        box = {
+        "lat": [
+            -9.9,
+            -43.8
+        ],
+        "lon": [
+            112.4,
+            154.3
+        ]}
+        """
+        if box is None:
+            return self
+
+        res = self._res
+        err = res / 10
+        lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
+        lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
+
+        lati = [np.argmin(np.fabs(lat - max(box['lat']))),
+                np.argmin(np.fabs(lat - min(box['lat'])))]
+        loni = [np.argmin(np.fabs(lon - min(box['lon']))),
+                np.argmin(np.fabs(lon - max(box['lon'])))]
+        id = [lati[0], lati[1] + 1, loni[0], loni[1] + 1]
+
+        lon, lat = np.meshgrid(lon, lat)
+        mask = np.zeros(np.shape(lon))
+
+        mask[id[0]:id[1], id[2]:id[3]] = 1
+
+        self.box_mask = mask
+
+        return self
 
     def shp_to_mask(self, shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp', issave=False):
         res = self._res
@@ -46,6 +83,9 @@ class basin_shp_process:
             mask3 = mask1 + mask2
             # mask3=mask2
             # print('Mask for %s' % bd1.ID.values[0])
+            if self.box_mask is not None:
+                mask3 = (mask3 * self.box_mask).astype(bool)
+
             mask_basin[bd1.ID.values[0]] = mask3
             mask_all += mask3
 

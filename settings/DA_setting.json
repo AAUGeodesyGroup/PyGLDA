@@ -4,6 +4,7 @@
         "todate": "2000-01-31",
         "basin": "MDB",
         "basin_shp": "../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp",
+        "NaNmaskStatesDir": "/media/user/My Book/Fan/W3RA_data/states_sample",
         "ensemble": 30,
         "layer": {
             "S0": true,
@@ -17,13 +18,13 @@
         }
     },
     "obs": {
-        "name": "GRACE",
+        "name": "src_GRACE",
         "dir": "/media/user/My Book/Fan/GRACE/obs",
         "GRACE": {
-            "EWH_grid_dir": "/media/user/My Book/Fan/GRACE/ewh",
-            "cov_dir": "/media/user/My Book/Fan/GRACE/DDK3_timeseries",
-            "preprocess_res": "/media/user/My Book/Fan/GRACE/output",
-            "OL_mean": "/media/user/My Book/Fan/GRACE/OLmean"
+            "EWH_grid_dir": "/media/user/My Book/Fan/src_GRACE/ewh",
+            "cov_dir": "/media/user/My Book/Fan/src_GRACE/DDK3_timeseries",
+            "preprocess_res": "/media/user/My Book/Fan/src_GRACE/output",
+            "OL_mean": "/media/user/My Book/Fan/src_GRACE/OLmean"
         }
     },
     "model": {

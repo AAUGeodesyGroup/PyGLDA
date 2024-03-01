@@ -52,7 +52,7 @@ class GRACE_perturbed_obs:
         COV = []
         new_time = []
         print('')
-        print('Start to perturb src_GRACE to obtain appropriate observations...')
+        print('Start to perturb GRACE to obtain appropriate observations...')
         for month in self.__monthlist:
 
             '''to confirm this month exists in the list'''
@@ -65,7 +65,8 @@ class GRACE_perturbed_obs:
                 continue
 
             '''to confirm if cov is consistent with signal. '''
-            assert month.strftime('%Y-%m') in time_epochs_2[index], 'src_GRACE signal is likely incompatible with its cov!'
+            assert month.strftime('%Y-%m') in time_epochs_2[
+                index], 'src_GRACE signal is likely incompatible with its cov!'
 
             '''obtain the cov of this month'''
             cov = C_h5fn['data'][index]
@@ -103,7 +104,12 @@ class GRACE_perturbed_obs:
 
         return self
 
-    def add_temporal_mean(self):
+    def add_temporal_mean(self, fn: str):
+
+        hh = h5py.File(Path(fn), 'r')
+        mean = hh['mean_ensemble'][:]
+
+        self.TWS['ens'] += mean
         return self
 
     def save(self):
@@ -169,15 +175,15 @@ def visualization():
 
         dd = obs['ens_%s' % 0][:, id]
 
-        dmax = np.max(dd)*1.3
-        dmin = np.min(dd)*1.3
+        dmax = np.max(dd) * 1.3
+        dmin = np.min(dd) * 1.3
         sp_1 = int(np.round((dmax - dmin) / 10))
         if sp_1 == 0:
             sp_1 = 0.5
         sp_2 = sp_1 * 2
 
         fig.basemap(region=[time[0] - 0.2, time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
-                    frame=["WSne+tbasin_%s"%(id+1), "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
+                    frame=["WSne+tbasin_%s" % (id + 1), "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
 
         for ens in np.arange(ens_all + 1):
             vv = obs['ens_%s' % ens][:, id]

@@ -84,7 +84,7 @@ def demo_visualization():
     demo.generate_settings(mode=mode)
 
     '''generate/save the figure'''
-    demo.visualize_signal(fig_path=figure_output, postfix=fig_postfix)
+    demo.visualize_signal(fig_path=figure_output, fig_postfix=fig_postfix)
     pass
 
 

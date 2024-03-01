@@ -113,11 +113,17 @@ class BasinSignalAnalysis:
             hf.close()
         pass
 
-    def get_basin_average(self, date_begin='2002-04-01', date_end='2002-04-02', save_dir='../temp', save=False):
+    def get_basin_average(self, date_begin='2002-04-01', date_end='2002-04-02',
+                          save_dir='../temp', save=False, post_fix=None):
 
         mask_2D, mask_1D, lat, lon, res = self.__bm.collect_mask
 
         daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
+
+        if post_fix is None:
+            pf = ''
+        else:
+            pf = '_'+post_fix
 
         '''initialize the dict'''
         map_average = {}
@@ -138,7 +144,7 @@ class BasinSignalAnalysis:
         hf = h5py.File(str(fn), 'r')
         for basin, bm in mask_1D.items():
             vv = np.sum(hf['FreeWater'][:] * self.__Fhru, axis=0)
-            nan_mask[basin] = (1-np.isnan(vv[bm])).astype(bool)
+            nan_mask[basin] = (1 - np.isnan(vv[bm])).astype(bool)
             pass
 
         '''start recording data'''
@@ -152,7 +158,7 @@ class BasinSignalAnalysis:
                 if key == 'Mleaf':
                     vv *= 4
                 for basin, bm in mask_1D.items():
-                    basin_average = np.sum(vv[bm][nan_mask[basin]] * lat_basin[basin][nan_mask[basin]] ) / \
+                    basin_average = np.sum(vv[bm][nan_mask[basin]] * lat_basin[basin][nan_mask[basin]]) / \
                                     np.sum(lat_basin[basin][nan_mask[basin]])
                     # basin_average = np.sum(vv[bm] * lat_basin[basin]) / np.sum(lat_basin[basin])
                     map_average[basin][key].append(basin_average)
@@ -172,13 +178,18 @@ class BasinSignalAnalysis:
         #             tws[basin] += map_average[basin][state][0]
 
         if save:
-            hf = h5py.File(str(Path(save_dir) / 'basin_ts.h5'), 'w')
+            hf = h5py.File(str(Path(save_dir) / ('basin_ts%s.h5' % pf)), 'w')
             for gr, bb in map_average.items():
                 dict_group = hf.create_group(gr)
                 for key, vv in bb.items():
                     dict_group.create_dataset(key, data=np.array(vv))
             hf.close()
 
+        pass
+
+
+class Postprocessing:
+    def __init__(self, configureDA):
         pass
 
 

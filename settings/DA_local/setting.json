@@ -11,18 +11,18 @@
         "prefix": "DA_test"
     },
     "init": {
-        "mode": "cold",
-        "date": "2002-12-31",
+        "mode": "resume",
+        "date": "2002-03-30",
         "spinup": [
             "2005-01-01",
-            "2005-01-31"
+            "2006-01-31"
         ],
-        "dir": "/media/user/My Book/Fan/W3RA_data/init",
+        "dir": "/media/user/My Book/Fan/W3RA_data/initial_states",
         "spec": ""
     },
     "run": {
-        "fromdate": "2003-01-01",
-        "todate": "2003-01-31",
+        "fromdate": "2002-03-31",
+        "todate": "2003-05-31",
         "res": 0.1,
         "exttype": "ERA5",
         "save_states_every_day": true,

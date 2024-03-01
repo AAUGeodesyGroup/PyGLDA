@@ -155,7 +155,7 @@ class SingleModel:
         print('Finished')
         pass
 
-    def visualize_signal(self, fig_path: str, postfix='0'):
+    def visualize_signal(self, fig_path: str, fig_postfix='0'):
         import pygmt
         import h5py
         from src_hydro.GeoMathKit import GeoMathKit
@@ -208,7 +208,7 @@ class SingleModel:
             fig.legend(position='jTR', box='+gwhite+p0.5p')
             fig.shift_origin(yshift='-4c')
 
-        fig.savefig(str(Path(fig_path) / ('%s_%s.pdf' % (self.case, postfix))))
-        fig.savefig(str(Path(fig_path) / ('%s_%s.png' % (self.case, postfix))))
+        fig.savefig(str(Path(fig_path) / ('%s_%s.pdf' % (self.case, fig_postfix))))
+        fig.savefig(str(Path(fig_path) / ('%s_%s.png' % (self.case, fig_postfix))))
         fig.show()
         pass

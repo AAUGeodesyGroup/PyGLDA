@@ -11,17 +11,17 @@
         "prefix": "OL_test"
     },
     "init": {
-        "mode": "cold",
-        "date": "2002-12-31",
+        "mode": "resume",
+        "date": "2002-10-30",
         "spinup": [
             "2000-01-01",
             "2000-01-31"
         ],
-        "dir": "/media/user/My Book/Fan/W3RA_data/init",
+        "dir": "/media/user/My Book/Fan/W3RA_data/initial_states",
         "spec": ""
     },
     "run": {
-        "fromdate": "2003-01-01",
+        "fromdate": "2002-10-31",
         "todate": "2003-01-31",
         "res": 0.1,
         "exttype": "ERA5",

@@ -1,10 +1,11 @@
-from datetime import datetime
+import os
+from datetime import datetime, timedelta
 from pathlib import Path
 from src_FlowControl.OpenLoop import OpenLoop
 from src_GRACE.prepare_GRACE import GRACE_preparation
 from src_DA.configure_DA import config_DA
 from src_GRACE.GRACE_perturbation import GRACE_perturbed_obs
-from src_hydro.EnumType import states_var
+from src_hydro.EnumType import states_var, init_mode
 from src_DA.shp2mask import basin_shp_process
 from src_DA.ObsDesignMatrix import DM_basin_average
 import h5py
@@ -19,7 +20,7 @@ class DA_GRACE(OpenLoop):
 
         pass
 
-    def generate_settings(self):
+    def generate_settings(self, mode: init_mode):
         """modify the json setting file to make each sub-setting consistent with each other"""
         import os
         import json
@@ -33,8 +34,6 @@ class DA_GRACE(OpenLoop):
         '''modify dp1'''
         dp_dir = self.setting_dir / 'setting.json'
         dp1 = json.load(open(dp_dir, 'r'))
-        dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
-        dp1['init']['mode'] = 'cold'
         dp1['bounds']['lat'] = self.box[:2]
         dp1['bounds']['lon'] = self.box[2:4]
         dp1['bounds']['prefix'] = self.case
@@ -42,6 +41,14 @@ class DA_GRACE(OpenLoop):
         dp1['input']["pars"] = dp2['out_dir']
         dp1['input']["clim"] = dp2['out_dir']
         dp1['input']["mask_fn"] = dp2['out_dir']
+
+        dp1['init']['mode'] = mode.name
+        if mode == init_mode.cold:
+            dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
+        else:
+            dp1['run']['fromdate'] = self.period[0].strftime('%Y-%m-%d')
+            dp1['run']['todate'] = self.period[1].strftime('%Y-%m-%d')
+            dp1['init']['date'] = (self.period[0] - timedelta(days=1)).strftime('%Y-%m-%d')
 
         with open(dp_dir, 'w') as f:
             json.dump(dp1, f, indent=4)
@@ -80,9 +87,11 @@ class DA_GRACE(OpenLoop):
 
         with open(dp_dir, 'w') as f:
             json.dump(dp4, f, indent=4)
+
         return self
 
     def GRACE_obs_preprocess(self):
+        import json
 
         dp_dir = self.setting_dir / 'DA_setting.json'
         configDA = config_DA.loadjson(dp_dir).process()
@@ -91,9 +100,13 @@ class DA_GRACE(OpenLoop):
         shp_path = configDA.basic.basin_shp
 
         '''pre-process of src_GRACE'''
+        dp_dir = self.setting_dir / 'setting.json'
+        dp1 = json.load(open(dp_dir, 'r'))
+        boxmask = {'lat': dp1['bounds']['lat'],
+                   'lon': dp1['bounds']['lon']}
         GR = GRACE_preparation(basin_name=basin,
                                shp_path=shp_path)
-        GR.generate_mask()
+        GR.generate_mask(box_mask=boxmask)
 
         begin_day = datetime.strptime(configDA.basic.fromdate, '%Y-%m-%d')
         end_day = datetime.strptime(configDA.basic.todate, '%Y-%m-%d')
@@ -165,7 +178,8 @@ class DA_GRACE(OpenLoop):
             configure_time(month_begin=begin_day.strftime('%Y-%m'), month_end=end_day.strftime('%Y-%m'))
 
         ob.perturb_TWS().remove_temporal_mean()
-        ob.add_temporal_mean()
+        fn = Path(configDA.obs.GRACE['OL_mean']) / ('%s_%s.hdf5' % (self.case, self.basin))
+        ob.add_temporal_mean(fn=str(fn))
         ob.save()
 
         pass
@@ -183,14 +197,96 @@ class DA_GRACE(OpenLoop):
 
         bs = basin_shp_process(res=0.1, basin_name=basin).shp_to_mask(shp_path=shp_path)
 
-        land_mask = str(self._outdir / self.case / 'mask' / 'mask_global.h5')
+        land_mask = str(Path(self._outdir) / self.case / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
-        bs.mask_nan(sample='/media/user/My Book/Fan/W3RA_data/states_sample/state.h5')
 
-        par_dir = str(self._outdir / self.case / 'par')
+        state_sample = Path(configDA.basic.NaNmaskStatesDir) / 'state.h5'
+        bs.mask_nan(sample=state_sample)
+
+        par_dir = str(Path(self._outdir) / self.case / 'par')
         dm_save_dir = '../temp'
         dm = DM_basin_average(shp=bs, layer=layer, par_dir=par_dir)
         dm.vertical_aggregation(isVec=True).basin_average()
         dm.saveDM(out_path=dm_save_dir)
+
+        pass
+
+    def get_states_sample_for_mask(self):
+        """
+        this is to copy a state file to given directory for masking out the NaN values.
+        """
+        import shutil
+
+        dp_dir = self.setting_dir / 'DA_setting.json'
+        configDA = config_DA.loadjson(dp_dir).process()
+
+        target_folder = Path(configDA.basic.NaNmaskStatesDir)
+
+        source_folder = Path(self._outdir2) / ('state_%s_ensemble_%s' % (self.case, 0))
+
+        ss = os.listdir(source_folder)
+
+        assert 'h5' in ss[-1]
+
+        taget_fn = ss[-1]
+
+        shutil.copy(source_folder / taget_fn, target_folder)
+
+        os.replace(target_folder / taget_fn, target_folder / 'state.h5')
+
+        pass
+
+    def run_DA(self, rank: int):
+        """The main entrance to the data assimilation experiment"""
+        from src_hydro.config_settings import config_settings
+        from src_hydro.config_parameters import config_parameters
+        from src_hydro.model_initialise import model_initialise
+        from src_hydro.ext_adapter import ext_adapter
+        from src_hydro.hotrun import model_run_daily
+        import json
+        from src_DA.observations import GRACE_obs
+        from src_DA.ExtracStates import EnsStates
+        from src_DA.data_assimilaton import DataAssimilation
+
+        '''configure DA'''
+        dp_dir = self.setting_dir / 'DA_setting.json'
+        configDA = config_DA.loadjson(dp_dir).process()
+
+        '''configure model'''
+        dp = self.setting_dir / 'setting.json'
+        settings = config_settings.loadjson(dp).process()
+        par = config_parameters(settings)
+        model_init = model_initialise(settings=settings, par=par).configure_InitialStates()
+        ext = ext_adapter(par=par, settings=settings)
+        model_instance = model_run_daily(settings=settings, par=par, model_init=model_init, ext=ext)
+
+        '''define the basin-shp file and derive the corresponding mask'''
+        basin = configDA.basic.basin
+        shp_path = configDA.basic.basin_shp
+        bs = basin_shp_process(res=0.1, basin_name=basin).shp_to_mask(shp_path=shp_path)
+        land_mask = str(self._outdir / self.case / 'mask' / 'mask_global.h5')
+        bs.mask_to_vec(model_mask_global=land_mask)
+        state_sample = Path(configDA.basic.NaNmaskStatesDir) / 'state.h5'
+        bs.mask_nan(sample=state_sample)
+
+        '''obtain the design matrix from pre-saved data'''
+        layer = {}
+        for key, vv in configDA.basic.layer.items():
+            layer[states_var[key]] = vv
+        dm_save_dir = '../temp'
+        dm = DM_basin_average(shp=bs, layer=layer, LoadfromDisk=True, dir=dm_save_dir)
+
+        '''obtain the GRACE observation'''
+        gr = GRACE_obs(basin=self.basin, dir_obs=configDA.obs.dir, ens_id=rank)
+
+        '''states extract operator'''
+        sv = EnsStates(DM=dm, Ens=configDA.basic.ensemble)
+
+        '''DA experiment'''
+        da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da.configure_design_matrix(DM=dm)
+
+        '''running with MPI parallelization'''
+        da.run_mpi()
 
         pass

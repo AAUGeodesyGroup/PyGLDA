@@ -1,6 +1,6 @@
 {
-    "date_begin": "2005-01",
-    "date_end": "2005-01",
+    "date_begin": "2002-03",
+    "date_end": "2003-05",
     "out_dir": "/media/user/My Book/Fan/W3RA_data/crop_input",
     "mask_dir": "/media/user/My Book/Fan/W3RA_data/global/pyW3RA/mask",
     "forcing_dir": "/media/user/My Book/Fan/ERA5/Raw_W3",

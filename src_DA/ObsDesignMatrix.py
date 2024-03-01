@@ -13,10 +13,6 @@ class DM_basin_average:
         self.layer = None
         self.shp = shp
 
-        '''load parameters: Fraction of HRU'''
-        hf = h5py.File(str(Path(par_dir) / 'par.h5'), 'r')
-        self.__Fhru = hf['data']['Fhru'][:]
-
         '''to decide the dimension of vertical layers to be involved in the computation'''
         if layer is None:
             layer = {
@@ -47,6 +43,11 @@ class DM_basin_average:
         if 'LoadfromDisk' in kwargs:
             if kwargs['LoadfromDisk'] is True:
                 self._A = h5py.File(Path(kwargs['dir']) / 'DM.hdf5', 'r')['data'][:]
+                return
+
+        '''load parameters: Fraction of HRU'''
+        hf = h5py.File(str(Path(par_dir) / 'par.h5'), 'r')
+        self.__Fhru = hf['data']['Fhru'][:]
 
         pass
 
@@ -173,6 +174,9 @@ class DM_basin_average:
         fn = h5py.File(Path(out_path) / 'DM.hdf5', 'w')
         fn.create_dataset('data', data=self._A)
         fn.close()
+
+        print('')
+        print('Successfully generate and save the design matrix...')
 
         pass
 
