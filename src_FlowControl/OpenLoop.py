@@ -164,6 +164,15 @@ class OpenLoop(SingleModel):
         import pygmt
         import h5py
         from src_hydro.GeoMathKit import GeoMathKit
+        from src_DA.Analysis import Postprocessing
+
+        '''test'''
+        pp = Postprocessing(ens=self.ens, case=self.case, basin=self.basin,
+                            date_begin=self.period[0].strftime('%Y-%m-%d'),
+                            date_end=self.period[1].strftime('%Y-%m-%d'))
+
+        states = pp.get_states(post_fix=file_postfix, dir=self._outdir2)
+
 
         '''basin average time-series'''
 
@@ -186,18 +195,20 @@ class OpenLoop(SingleModel):
 
         date_begin = self.period[0].strftime('%Y-%m-%d')
         date_end = self.period[1].strftime('%Y-%m-%d')
-        daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
-        day_first = daylist[0].year + (daylist[0].month - 1) / 12 + daylist[0].day / 365.25
-        fan_time = day_first + np.arange(len(daylist)) / 365.25
-
-        tws = {}
-        for ens in range(ens_numbers):
-            a = []
-            fan = fan_dict[ens]
-            for key in fan.keys():
-                a.append(fan[key][:])
-                pass
-            tws[ens] = np.sum(np.array(a), axis=0)
+        # daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
+        # day_first = daylist[0].year + (daylist[0].month - 1) / 12 + daylist[0].day / 365.25
+        # fan_time = day_first + np.arange(len(daylist)) / 365.25
+        #
+        # tws = {}
+        # for ens in range(ens_numbers):
+        #     a = []
+        #     fan = fan_dict[ens]
+        #     for key in fan.keys():
+        #         a.append(fan[key][:])
+        #         pass
+        #     tws[ens] = np.sum(np.array(a), axis=0)
+        tws = states['basin_0']['TWS']
+        fan_time = states['time']
 
         '''plot figure'''
         fig = pygmt.Figure()

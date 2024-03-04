@@ -123,7 +123,7 @@ class BasinSignalAnalysis:
         if post_fix is None:
             pf = ''
         else:
-            pf = '_'+post_fix
+            pf = '_' + post_fix
 
         '''initialize the dict'''
         map_average = {}
@@ -189,8 +189,90 @@ class BasinSignalAnalysis:
 
 
 class Postprocessing:
-    def __init__(self, configureDA):
+
+    def __init__(self, ens, case: str, basin: str, date_begin='2002-04-01', date_end='2002-04-02'):
+        self.ens = ens
+        self.case = case
+        self.basin = basin
+
+        """deal with the time tag"""
+        daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
+        day_first = daylist[0].year + (daylist[0].month - 1) / 12 + daylist[0].day / 365.25
+        self.time_tag = day_first + np.arange(len(daylist)) / 365.25
         pass
+
+    def get_states(self, post_fix: str, dir: str):
+        if post_fix != '':
+            post_fix = '_' + post_fix
+
+        temp_dict = {}
+        for ens in range(self.ens + 1):
+            fn = h5py.File(Path(dir) / ('output_%s_ensemble_%s' % (self.case, ens)) / ('basin_ts%s.h5' % post_fix), 'r')
+            ens_dict = {}
+            for basin, item in fn.items():
+                state_dict = {}
+                for state, item2 in item.items():
+                    state_dict[state] = item2[:]
+
+                state_dict['TWS'] = np.sum(np.array(list(state_dict.values())), axis=0)
+
+                ens_dict[basin] = state_dict
+
+            temp_dict[ens] = ens_dict
+
+        '''reformulate for easier analysis'''
+        basins = fn.keys()
+        state = list(item.keys()) + ['TWS']
+
+        ff = {}
+        for basin in basins:
+            dd = {}
+            for st in state:
+                ss = {}
+                for ens in range(self.ens + 1):
+                    ss[ens] = temp_dict[ens][basin][st]
+                dd[st] = ss
+            ff[basin] = dd
+
+        assert len(self.time_tag) == len(ss[ens]), 'Time tag is incorrect!'
+
+        ff['time'] = self.time_tag
+        return ff
+
+    def get_GRACE(self, obs_dir: str):
+        kk = {}
+
+        gr = h5py.File(Path(obs_dir) / ('%s_obs_GRACE.hdf5' % self.basin), 'r')
+
+        str_time = list(gr['time_epoch'][:].astype(str))
+        fraction_time = []
+        for tt in str_time:
+            da = datetime.strptime(tt, '%Y-%m-%d')
+            fraction_time.append(da.year + (da.month - 1) / 12 + da.day / 365.25)
+
+        kk['time'] = np.array(fraction_time)
+        kk['original'] = {}
+        kk['ens_mean'] = {}
+
+        a = gr['ens_1'][:]
+
+        ens_num = len(list(gr.keys())) - 3
+        basin_num = np.shape(gr['cov'][0])[0]
+
+        for ens_id in range(2, ens_num + 1):
+            a += gr['ens_%s' % ens_id]
+
+        ens_mean = a/ens_num
+        original = gr['ens_0'][:]
+
+        for basin in range(1, 1+basin_num):
+            kk['original']['basin_%s'%basin] = original[:, basin-1]
+            kk['ens_mean']['basin_%s' % basin] = ens_mean[:, basin - 1]
+
+        kk['original']['basin_0'] = np.mean(original, axis=1)
+        kk['ens_mean']['basin_0'] = np.mean(ens_mean, axis=1)
+
+        return kk
 
 
 def demo1():

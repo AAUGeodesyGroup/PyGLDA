@@ -123,7 +123,7 @@ class DA_GRACE(OpenLoop):
 
         pass
 
-    def gather_OLmean(self):
+    def gather_OLmean(self, post_fix='OL'):
 
         dp_dir = self.setting_dir / 'DA_setting.json'
         configDA = config_DA.loadjson(dp_dir).process()
@@ -132,7 +132,7 @@ class DA_GRACE(OpenLoop):
         for ens_id in range(0, self.ens + 1):
             statedir = Path(self._outdir2)
             ens_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, ens_id)))
-            mm = h5py.File(str(Path(ens_dir) / 'basin_ts.h5'), 'r')
+            mm = h5py.File(str(Path(ens_dir) / ('basin_ts_%s.h5'%post_fix)), 'r')
 
             subbasin_num = len(list(mm.keys())) - 1
 
@@ -247,6 +247,10 @@ class DA_GRACE(OpenLoop):
         from src_DA.observations import GRACE_obs
         from src_DA.ExtracStates import EnsStates
         from src_DA.data_assimilaton import DataAssimilation
+
+        if rank != 0:
+            f = open('../log/OL/log_%s.txt' % rank, 'w')
+            sys.stdout = f
 
         '''configure DA'''
         dp_dir = self.setting_dir / 'DA_setting.json'

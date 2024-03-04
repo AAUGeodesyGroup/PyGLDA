@@ -101,7 +101,7 @@ class GRACE_perturbed_obs:
         meanTWs = np.mean(self.TWS['unperturbation'], 0)
 
         self.TWS['ens'] -= meanTWs
-
+        self.TWS['unperturbation'] -= meanTWs
         return self
 
     def add_temporal_mean(self, fn: str):
@@ -110,6 +110,7 @@ class GRACE_perturbed_obs:
         mean = hh['mean_ensemble'][:]
 
         self.TWS['ens'] += mean
+        self.TWS['unperturbation'] += mean
         return self
 
     def save(self):
