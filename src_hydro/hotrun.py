@@ -96,7 +96,7 @@ class model_run_daily:
 
         pass
 
-    def update(self, is_first_day=False, previous_states=None, day='2002-02-04'):
+    def update(self, is_first_day=False, previous_states=None, day='2002-02-04', issave=True):
 
         day = datetime.strptime(day, '%Y-%m-%d')
         settings = self.__settings
@@ -122,7 +122,7 @@ class model_run_daily:
             self.save(states=states, day=day.strftime('%Y-%m-%d'))
 
         '''save the output everyday'''
-        if settings.run.save_output_every_day:
+        if settings.run.save_output_every_day and issave:
             out_nn = []
             for x, y in settings.output.var.items():
                 if y:

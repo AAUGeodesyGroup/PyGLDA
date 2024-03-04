@@ -104,31 +104,35 @@ class EnsStates:
         self.__states_dir = states_dir
         return self
 
+    def load_state_dict(self, date='2002-04-01'):
+
+        fn = Path(self.__states_dir) / ('state.%s.h5' % datetime.strptime(date, '%Y-%m-%d').strftime('%Y%m%d'))
+
+        fn_h5 = h5py.File(fn, 'r')
+
+        ss = {}
+
+        for key in fn_h5:
+            ss[states_var[key]] = fn_h5[key][:]
+
+        return ss
+
     def get_states_from_date(self, date='2002-04-01'):
 
-        states_assemble = []
+        fn = Path(self.__states_dir) / ('state.%s.h5' % datetime.strptime(date, '%Y-%m-%d').strftime('%Y%m%d'))
 
-        for i in range(1, self.Ens + 1):
+        fn_h5 = h5py.File(fn, 'r')
 
-            fn = Path(self.__states_dir + '_ensemble_%s' % i) / (
-                    'state.%s.h5' % datetime.strptime(date, '%Y-%m-%d').strftime('%Y%m%d'))
+        ss = np.zeros((0, self.__basin_valid_num))
+        for key in self.DM.statesnn:
+            if (key == states_var.Sg) or (key == states_var.Sr):
+                k = 1
+            else:
+                k = 2
+            vv = fn_h5[key.name][0:k, self.mask_1D['basin_0']]
+            ss = np.vstack((ss, vv))
 
-            fn_h5 = h5py.File(fn, 'r')
-
-            ss = np.zeros((0, self.__basin_valid_num))
-            for key in self.DM.statesnn:
-                if (key == states_var.Sg) or (key == states_var.Sr):
-                    k = 1
-                else:
-                    k = 2
-                vv = fn_h5[key.name][0:k, self.mask_1D['basin_0']]
-                ss = np.vstack((ss, vv))
-
-            states_assemble.append(ss.T.flatten())
-
-        states_assemble = np.array(states_assemble)
-
-        return states_assemble.T
+        return ss.T.flatten()
 
     def get_states_by_transfer(self, states_ens: list):
 
@@ -152,7 +156,20 @@ class EnsStates:
 
         return states_assemble.T
 
-    def restore_states(self, old_states: dict, new_states):
+    def get_states_by_transfer_single(self, states: dict):
+
+        ss = np.zeros((0, self.__basin_valid_num))
+        for key in self.DM.statesnn:
+            if (key == states_var.Sg) or (key == states_var.Sr):
+                k = 1
+            else:
+                k = 2
+            vv = states[key][0:k, self.mask_1D['basin_0']]
+            ss = np.vstack((ss, vv))
+
+        return ss.T.flatten()
+
+    def restore_states(self, old_states: dict, new_states, isdelta=False):
         """
         update the old states: for only one state
         """
@@ -170,11 +187,15 @@ class EnsStates:
 
             n = m + k
 
-            old_states[key][0:k, self.mask_1D['basin_0']] = new_states[m:n]
+            if not isdelta:
+                old_states[key][0:k, self.mask_1D['basin_0']] = new_states[m:n]
+            else:
+                old_states[key][0:k, self.mask_1D['basin_0']] += new_states[m:n]
 
             m = n
 
         return old_states
+
 
 def demo1():
     from src_DA.Analysis import basin_shp_process

@@ -33,6 +33,18 @@ class GRACE_obs:
 
         return self
 
+    def set_month(self, month='2002-01'):
+
+        for date in self.__time_list:
+
+            if datetime.strptime(date, '%Y-%m-%d').strftime('%Y-%m') == month:
+                self.__date_index = self.__time_list.index(date)
+                break
+            else:
+                self.__date_index = None
+
+        return self
+
     def get_obs(self):
 
         if self.__date_index is None:
@@ -50,7 +62,7 @@ class GRACE_obs:
 
 def demo1():
     gr = GRACE_obs()
-    hh= gr.get_time_list()
+    hh = gr.get_time_list()
     pass
 
 

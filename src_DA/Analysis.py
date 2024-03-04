@@ -199,6 +199,9 @@ class Postprocessing:
         daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
         day_first = daylist[0].year + (daylist[0].month - 1) / 12 + daylist[0].day / 365.25
         self.time_tag = day_first + np.arange(len(daylist)) / 365.25
+
+        self.__states = None
+        self.__GRACE = None
         pass
 
     def get_states(self, post_fix: str, dir: str):
@@ -237,6 +240,7 @@ class Postprocessing:
         assert len(self.time_tag) == len(ss[ens]), 'Time tag is incorrect!'
 
         ff['time'] = self.time_tag
+        self.__states = ff
         return ff
 
     def get_GRACE(self, obs_dir: str):
@@ -262,17 +266,94 @@ class Postprocessing:
         for ens_id in range(2, ens_num + 1):
             a += gr['ens_%s' % ens_id]
 
-        ens_mean = a/ens_num
+        ens_mean = a / ens_num
         original = gr['ens_0'][:]
 
-        for basin in range(1, 1+basin_num):
-            kk['original']['basin_%s'%basin] = original[:, basin-1]
+        for basin in range(1, 1 + basin_num):
+            kk['original']['basin_%s' % basin] = original[:, basin - 1]
             kk['ens_mean']['basin_%s' % basin] = ens_mean[:, basin - 1]
 
         kk['original']['basin_0'] = np.mean(original, axis=1)
         kk['ens_mean']['basin_0'] = np.mean(ens_mean, axis=1)
 
+        self.__GRACE = kk
+
         return kk
+
+    def save_states(self, save_dir='../temp', prefix='1'):
+        ff = self.__states
+
+        hf = h5py.File(Path(save_dir) / ('Res_%s.h5df' % prefix), 'w')
+
+        for ii, jj in ff.items():
+            if ii == 'time':
+                hf.create_dataset(name=ii, data=jj)
+                continue
+            dict_group1 = hf.create_group(ii)
+            for kk, ll in jj.items():
+                dict_group2 = dict_group1.create_group(kk)
+                for mm, nn in ll.items():
+                    dict_group2.create_dataset(name=str(mm), data=nn)
+                    pass
+
+        hf.close()
+
+        pass
+
+    def save_GRACE(self, save_dir='../temp', prefix='1'):
+
+        ff = self.__GRACE
+
+        hf = h5py.File(Path(save_dir) / ('GRACE_%s.h5df' % prefix), 'w')
+
+        for ii, jj in ff.items():
+            if ii == 'time':
+                hf.create_dataset(name=ii, data=jj)
+                continue
+            dict_group1 = hf.create_group(ii)
+            for kk, ll in jj.items():
+                dict_group1.create_dataset(name=kk, data=ll)
+                pass
+
+        hf.close()
+        pass
+
+    def load_states(self, load_dir='../temp', prefix='1'):
+        ff = {}
+
+        hf = h5py.File(Path(load_dir) / ('Res_%s.h5df' % prefix), 'r')
+
+        for ii, jj in hf.items():
+            if ii == 'time':
+                ff[ii] = jj[:]
+                continue
+            dict_group1 = {}
+            for kk, ll in jj.items():
+                dict_group2 = {}
+                for mm, nn in ll.items():
+                    dict_group2[int(mm)] = nn[:]
+                    pass
+                dict_group1[kk] = dict_group2
+            ff[ii] = dict_group1
+        return ff
+
+    def load_GRACE(self, load_dir='../temp', prefix='1'):
+
+        ff = {}
+
+        hf = h5py.File(Path(load_dir) / ('GRACE_%s.h5df' % prefix), 'r')
+
+        for ii, jj in hf.items():
+            if ii == 'time':
+                ff[ii] = jj[:]
+                continue
+            dict_group1 = {}
+            for kk, ll in jj.items():
+                dict_group1[kk] = ll[:]
+
+            ff[ii] = dict_group1
+
+        return ff
 
 
 def demo1():

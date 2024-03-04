@@ -132,7 +132,7 @@ class DA_GRACE(OpenLoop):
         for ens_id in range(0, self.ens + 1):
             statedir = Path(self._outdir2)
             ens_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, ens_id)))
-            mm = h5py.File(str(Path(ens_dir) / ('basin_ts_%s.h5'%post_fix)), 'r')
+            mm = h5py.File(str(Path(ens_dir) / ('basin_ts_%s.h5' % post_fix)), 'r')
 
             subbasin_num = len(list(mm.keys())) - 1
 
@@ -246,7 +246,7 @@ class DA_GRACE(OpenLoop):
         import json
         from src_DA.observations import GRACE_obs
         from src_DA.ExtracStates import EnsStates
-        from src_DA.data_assimilaton import DataAssimilation
+        from src_DA.data_assimilaton import DataAssimilation, DataAssimilation_monthly
 
         if rank != 0:
             f = open('../log/OL/log_%s.txt' % rank, 'w')
@@ -258,6 +258,7 @@ class DA_GRACE(OpenLoop):
 
         '''configure model'''
         dp = self.setting_dir / 'setting.json'
+        dp1 = json.load(open(dp, 'r'))
         settings = config_settings.loadjson(dp).process(Parallel_ID=rank)
         par = config_parameters(settings)
         model_init = model_initialise(settings=settings, par=par).configure_InitialStates()
@@ -289,9 +290,11 @@ class DA_GRACE(OpenLoop):
 
         '''states extract operator'''
         sv = EnsStates(DM=dm, Ens=configDA.basic.ensemble)
+        sv.configure_dir(states_dir= str(Path(dp1['output']['dir']) / ('state_%s_ensemble_%s' % (self.case, rank))))
 
         '''DA experiment'''
-        da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da.configure_design_matrix(DM=dm)
 
         '''running with MPI parallelization'''
