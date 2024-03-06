@@ -338,7 +338,7 @@ def demo_visualization_DA_2(signal='TWS'):
     from pathlib import Path
     import numpy as np
 
-    exp_prefix = 'exp1'
+    exp_prefix = 'exp_new'
 
     '''load OL result'''
     demo = DA_GRACE(case=case, setting_dir=setting_dir, ens=ens)
@@ -355,6 +355,7 @@ def demo_visualization_DA_2(signal='TWS'):
                         date_begin=begin_time,
                         date_end=end_time)
     states_OL = pp.get_states(post_fix=file_postfix, dir=demo._outdir2)
+    pp.save_states(prefix=file_postfix)
 
 
     '''load DA result'''

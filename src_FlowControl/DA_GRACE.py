@@ -246,7 +246,7 @@ class DA_GRACE(OpenLoop):
         import json
         from src_DA.observations import GRACE_obs
         from src_DA.ExtracStates import EnsStates
-        from src_DA.data_assimilaton import DataAssimilation, DataAssimilation_monthly
+        from src_DA.data_assimilaton import DataAssimilation, DataAssimilation_monthly, DataAssimilation_monthlymean_dailyupdate
 
         if rank != 0:
             f = open('../log/OL/log_%s.txt' % rank, 'w')
@@ -294,7 +294,8 @@ class DA_GRACE(OpenLoop):
 
         '''DA experiment'''
         # da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
-        da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da.configure_design_matrix(DM=dm)
 
         '''running with MPI parallelization'''

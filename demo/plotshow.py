@@ -83,7 +83,7 @@ def compariosn_to_GRACE():
     fan_time = day_first + np.arange(len(daylist)) / 365.25
 
     hf = h5py.File('../temp/basin_ts.h5', 'r')
-    tws_dict={}
+    tws_dict = {}
     for basin in hf.keys():
         tws = []
         fan = hf[basin]
@@ -112,10 +112,10 @@ def compariosn_to_GRACE():
         fig.basemap(region=[2002, 2023.5, -150, 200], projection='X12c/3c',
                     frame=["WSne+t%s" % basin, "xa2f1", 'ya100f20+lwater storage [mm]'])
 
-        w3ra = tws_dict['basin_%s'%id]
-        fig.plot(x=fan_time, y=w3ra-np.mean(w3ra), pen="0.5p,black", label='W3RA')
+        w3ra = tws_dict['basin_%s' % id]
+        fig.plot(x=fan_time, y=w3ra - np.mean(w3ra), pen="0.5p,black", label='W3RA')
 
-        fig.plot(x=grace_time, y=grace_tws * 1000/grace_scale_factor, pen="0.5p,blue", label='src_GRACE')
+        fig.plot(x=grace_time, y=grace_tws * 1000 / grace_scale_factor, pen="0.5p,blue", label='src_GRACE')
         fig.legend(position='jBR', box='+gwhite+p0.5p')
 
         fig.shift_origin(yshift='-4.5c')
@@ -130,10 +130,10 @@ def compariosn_to_GRACE():
         fig.basemap(region=[2002, 2023.5, -150, 200], projection='X12c/3c',
                     frame=["WSne+t%s" % basin, "xa2f1", 'ya100f20+lwater storage [mm]'])
 
-        w3ra = tws_dict['basin_%s'%id]
-        fig.plot(x=fan_time, y=w3ra-np.mean(w3ra), pen="0.5p,black", label='W3RA')
+        w3ra = tws_dict['basin_%s' % id]
+        fig.plot(x=fan_time, y=w3ra - np.mean(w3ra), pen="0.5p,black", label='W3RA')
 
-        fig.plot(x=grace_time, y=grace_tws * 1000/grace_scale_factor, pen="0.5p,blue", label='src_GRACE')
+        fig.plot(x=grace_time, y=grace_tws * 1000 / grace_scale_factor, pen="0.5p,blue", label='src_GRACE')
         fig.legend(position='jBR', box='+gwhite+p0.5p')
 
         fig.shift_origin(yshift='-4.5c')
@@ -145,6 +145,99 @@ def compariosn_to_GRACE():
     pass
 
 
+def monthly_update_daily_update():
+    from src_DA.Analysis import Postprocessing
+    import pygmt
+    import h5py
+    from src_hydro.GeoMathKit import GeoMathKit
+    import json
+    from pathlib import Path
+    import numpy as np
+    import scipy.signal as signal
+
+    exp_prefix = 'exp_new'
+
+    '''load OL result'''
+    ens = 30
+    case = 'Sg'
+    basin = 'MDB'
+
+    pp = Postprocessing(ens=ens, case=case, basin=basin)
+    states_traditional = pp.load_states(load_dir='/home/user/Desktop/res', prefix='exp_traditional')
+    states_new = pp.load_states(load_dir='/home/user/Desktop/res', prefix='exp_new')
+    GRACE = pp.load_GRACE(load_dir='/home/user/Desktop/res', prefix='exp_new')
+    states_OL = pp.load_states(load_dir='/home/user/Desktop/res', prefix='OL')
+
+    OL_time = states_OL['time']
+    DA_time = states_new['time']
+    GR_time = GRACE['time']
+
+    basin_num = len(list(states_OL.keys())) - 1
+
+    '''plot figure'''
+    fig = pygmt.Figure()
+
+    i = 0
+    offset = 3
+    height = 6
+    signal = 'TWS'
+    basin_id = 'basin_0'
+
+    GRACE = GRACE['original'][basin_id]
+    OL = states_OL[basin_id][signal][0]
+    DA_tradional = np.mean(np.array(list(states_traditional[basin_id][signal].values()))[1:, ], axis=0)
+    DA_new = np.mean(np.array(list(states_new[basin_id][signal].values()))[1:, ], axis=0)
+
+    values = [GRACE, OL, DA_tradional, DA_new]
+    vvmin = []
+    vvmax = []
+    for vv in values:
+        vvmin.append(np.min(vv[5:]))
+        vvmax.append(np.max(vv[5:]))
+
+    vmin, vmax = min(vvmin), min(vvmax)
+    dmin = vmin - (vmax - vmin) * 0.1
+    dmax = vmax + (vmax - vmin) * 0.1
+    sp_1 = int(np.round((vmax - vmin) / 10))
+    if sp_1 == 0:
+        sp_1 = 0.5
+    sp_2 = sp_1 * 2
+
+    fig.basemap(region=[OL_time[0] - 0.2, OL_time[-1] + 0.2, dmin, dmax], projection='X18c/5c',
+                frame=["WSne+t%s" % (basin + '_' + signal + '_' + basin_id), "xa2f1",
+                       'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
+
+    fig.plot(x=OL_time, y=OL, pen="0.5p,grey,-", label='%s' % ('OL'), transparency=30)
+    fig.plot(x=GR_time, y=GRACE, style="c.1c", fill="black", label='%s' % ('GRACE'), transparency=30)
+    fig.plot(x=DA_time, y=DA_tradional, pen="0.5p,green", label='%s' % ('DA_old'), transparency=30)
+    fig.plot(x=DA_time, y=DA_new, pen="0.5p,red", label='%s' % ('DA_new'), transparency=30)
+
+    # fig.legend(position='jTR', box='+gwhite+p0.5p')
+    fig.legend(position='jBL')
+
+    fig.shift_origin(yshift='-%sc' % height)
+
+    dmin= -8
+    dmax= 8
+    sp_2 = 2
+    sp_1 = 1
+
+    fig.basemap(region=[OL_time[0] - 0.2, OL_time[-1] + 0.2, dmin, dmax], projection='X18c/5c',
+                frame=["WSne", "xa2f1",
+                       'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
+
+    fig.plot(x=DA_time, y=DA_new-DA_tradional, pen="1p,black", label='%s' % ('DA_new minus DA_old'))
+    fig.legend(position='jBL')
+
+    fig.savefig('/home/user/Desktop/res/test.png')
+
+    fig.show()
+
+
+    pass
+
+
 if __name__ == '__main__':
     # model_component_comparison_to_Leire()
-    compariosn_to_GRACE()
+    # compariosn_to_GRACE()
+    monthly_update_daily_update()
