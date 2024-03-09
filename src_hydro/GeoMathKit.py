@@ -343,6 +343,13 @@ class GeoMathKit:
         open(f_name, "wb+").write(g_file.read())
         g_file.close()
 
+    @staticmethod
+    def year_fraction(date):
+        start = datetime.date(date.year, 1, 1).toordinal()
+        year_length = datetime.date(date.year + 1, 1, 1).toordinal() - start
+        return date.year + float(date.toordinal() - start) / year_length
+
+
 if __name__ == '__main__':
     CS = np.array([23, 56, 78, 90, 32, 34])
     GeoMathKit.CS_1dTo2d(CS)

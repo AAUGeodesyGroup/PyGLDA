@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 import h5py
 from src_DA.shp2mask import basin_shp_process
-from datetime import datetime
+from datetime import datetime, timedelta
 from src_hydro.GeoMathKit import GeoMathKit
 
 
@@ -188,7 +188,7 @@ class BasinSignalAnalysis:
         pass
 
 
-class Postprocessing:
+class Postprocessing_basin:
 
     def __init__(self, ens, case: str, basin: str, date_begin='2002-04-01', date_end='2002-04-02'):
         self.ens = ens
@@ -354,6 +354,92 @@ class Postprocessing:
             ff[ii] = dict_group1
 
         return ff
+
+
+class Postprocessing_grid_first:
+
+    def __init__(self, state_dir='', par_dir=''):
+        self.__state_dir = Path(state_dir)
+
+        '''load parameters to calculate the TWS: fraction of each HRU'''
+        hf = h5py.File(str(Path(par_dir) / 'par.h5'), 'r')
+        self.__Fhru = hf['data']['Fhru'][:]
+        hf.close()
+        pass
+
+    def monthlymean(self, state='TWS', date_begin='2002-04-01', date_end='2002-04-02'):
+        days = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
+
+        if state is 'TWS':
+            statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
+        else:
+            assert state in ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
+            statesnn = [state]
+
+        tws_monthly_mean = {}
+        TWS = []
+
+        for this_day in days:
+            fn = self.__state_dir / ('state.%s.h5' % this_day.strftime('%Y%m%d'))
+            hf = h5py.File(str(fn), 'r')
+            tws = None
+            for key in statesnn:
+                vv = np.sum(hf[key][:] * self.__Fhru, axis=0)
+                if key == 'Mleaf':
+                    vv *= 4
+                if tws is None:
+                    tws = vv
+                else:
+                    tws += vv
+            hf.close()
+
+            TWS.append(tws)
+
+            year, month = this_day.year, this_day.month
+            if month == 12:
+                last_day = datetime(year, month, 31)
+            else:
+                last_day = datetime(year, month + 1, 1) + timedelta(days=-1)
+
+            if this_day == last_day:
+                '''save monthly mean'''
+                print(last_day)
+                tws_monthly_mean[this_day.strftime('%Y-%m')] = np.mean(np.array(TWS), axis=0)
+                TWS = []
+                pass
+
+        return tws_monthly_mean
+
+
+class Postprocessing_grid_second:
+
+    def __init__(self, ens, case, basin):
+        self.ens = ens
+        self.case = case
+        self.basin = basin
+        pass
+
+    def ensemble_mean(self, state='TWS', postfix='', fdir=''):
+
+        temp_dict = {}
+        temp_dict_2 = {}
+        for ens in range(self.ens + 1):
+            fn = h5py.File(Path(fdir) / ('output_%s_ensemble_%s' % (self.case, ens)) / (
+                    'monthly_mean_%s_%s.h5' % (state, postfix)), 'r')
+            for time, vv in fn.items():
+                if ens == 0:
+                    temp_dict[time] = vv[:]
+                else:
+
+                    if ens == 1:
+                        temp_dict_2[time] = vv[:]
+                    else:
+                        temp_dict_2[time] += vv[:]
+
+                if ens == self.ens:
+                    temp_dict_2[time] /= self.ens
+
+        return temp_dict, temp_dict_2
 
 
 def demo1():

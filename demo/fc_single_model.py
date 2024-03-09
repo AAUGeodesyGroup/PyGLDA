@@ -1,16 +1,28 @@
+import sys
+
+sys.path.append('../')
+
 from src_FlowControl.SingleModel import SingleModel
 from src_hydro.EnumType import init_mode
 from datetime import datetime,timedelta
 
-case = 'single_run_test'
+# case = 'single_run_test'
+# setting_dir = '../settings/single_run'
+# box = [-9.9, -43.8, 112.4, 154.3]
+# basin = 'MDB'
+
+case = 'case_study_SR'
 setting_dir = '../settings/single_run'
-box = [-9.9, -43.8, 112.4, 154.3]
-basin = 'MDB'
+box = [50.5, 42, 8.5, 29.5]
+basin = 'DRB'
 
 mode = init_mode.cold
 
 cold_begin_time = '2000-01-01'
 cold_end_time = '2010-01-31'
+
+# cold_begin_time = '2010-01-31'
+# cold_end_time = '2023-05-31'
 
 warm_begin_time = '2000-01-01'
 warm_end_time = '2000-01-31'
@@ -48,16 +60,16 @@ def demo_fc_single_model():
     '''crop the data (forcing field, climatologies, parameters and land mask) at regions of interest'''
     demo.preprocess()
 
-    '''run the model'''
-    demo.model_run()
-
-    '''create ini states?'''
-    if mode == init_mode.cold:
-        modifydate = (datetime.strptime(warm_begin_time, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y%m%d')
-        demo.create_ini_states(mode=mode, modifydate=modifydate)
-
-    '''Analysis the model output/states'''
-    demo.extract_signal()
+    # '''run the model'''
+    # demo.model_run()
+    #
+    # '''create ini states?'''
+    # if mode == init_mode.cold:
+    #     modifydate = (datetime.strptime(warm_begin_time, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y%m%d')
+    #     demo.create_ini_states(mode=mode, modifydate=modifydate)
+    #
+    # '''Analysis the model output/states'''
+    # demo.extract_signal()
 
     # demo.visualize_signal()
     pass
@@ -84,7 +96,8 @@ def demo_visualization():
     demo.generate_settings(mode=mode)
 
     '''generate/save the figure'''
-    demo.visualize_signal(fig_path=figure_output, fig_postfix=fig_postfix)
+    # demo.visualize_signal(fig_path=figure_output, fig_postfix=fig_postfix)
+    demo.visualize_comparison_GRACE(fig_path=figure_output, fig_postfix=fig_postfix)
     pass
 
 

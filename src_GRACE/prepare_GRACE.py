@@ -33,7 +33,7 @@ class GRACE_preparation:
         pass
 
     def basin_TWS(self, month_begin='2002-04', month_end='2002-04',
-                  dir_in='/media/user/My Book/Fan/src_GRACE/ewh', dir_out='/media/user/My Book/Fan/src_GRACE/output'):
+                  dir_in='/media/user/My Book/Fan/GRACE/ewh', dir_out='/media/user/My Book/Fan/GRACE/output'):
         """
         basin averaged TWS, monthly time-series, [mm]
         Be careful to deal with mask and TWS.
@@ -118,8 +118,8 @@ class GRACE_preparation:
         pass
 
     def basin_COV(self, month_begin='2002-04', month_end='2002-04',
-                  dir_in='/media/user/My Book/Fan/src_GRACE/DDK3_timeseries',
-                  dir_out='/media/user/My Book/Fan/src_GRACE/output'):
+                  dir_in='/media/user/My Book/Fan/GRACE/DDK3_timeseries',
+                  dir_out='/media/user/My Book/Fan/GRACE/output'):
         """
         COV of subbasins, monthly time-series.
         Be careful to deal with mask and TWS.
@@ -204,16 +204,85 @@ class GRACE_preparation:
         pass
 
 
+    def grid_TWS(self, month_begin='2002-04', month_end='2002-04',
+                  dir_in='/media/user/My Book/Fan/GRACE/ewh', dir_out='/media/user/My Book/Fan/GRACE/output'):
+        """
+        gridded TWS, monthly time-series, [mm]
+        Be careful to deal with mask and TWS.
+        mask: lon: -180-->180, lat: 90--->-90
+        tws: lon: -180-->180, lat: -90--->90
+        """
+
+        '''load mask'''
+        res = 0.5
+        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+
+        basins_num = len(list(mf.keys())) - 1
+
+        mask = mf['basin'][:]
+
+        '''calculate the basin averaged TWS, monthly'''
+        directory = Path(dir_in)
+        fns = os.listdir(directory)
+        monthlist = GeoMathKit.monthListByMonth(begin=month_begin, end=month_end)
+
+        TWS = []
+        print()
+        print('Start to pre-process GRACE to obtain signal over places of interest...')
+
+        time_epoch = []
+        for month in monthlist:
+
+            '''search for the file'''
+            fn = month.strftime('%Y-%m')
+            tn = None
+            for filename in fns:
+                if fn in filename:
+                    tn = filename
+
+            if tn is None:
+                continue
+
+            print(tn)
+            fn = directory / tn
+            time_epoch.append(tn.split('.')[0])
+
+            tws_one_month = h5py.File(fn, 'r')['data'][:]
+
+            '''take care: GRACE is -90 90; model TWS and mask is 90 -90'''
+            '''flip upside down to be compatible with the mask'''
+            tws_one_month = np.flipud(tws_one_month)
+            a = tws_one_month[mask.astype(bool)]
+
+            TWS.append(a)
+            pass
+
+        '''save it into h5'''
+        out_dir = Path(dir_out)
+        hm = h5py.File(out_dir / ('%s_gridded_signal.hdf5' % self.basin_name), 'w')
+
+        hm.create_dataset(name='tws', data=np.array(TWS))
+
+        dt = h5py.special_dtype(vlen=str)
+        hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
+
+        hm.close()
+        print('Finished')
+        pass
+
 def demo1():
-    GR = GRACE_preparation(basin_name='Brahmaputra',
-                           shp_path='../data/basin/shp/Brahmaputra_3_shapefiles/Brahmaputra_3_subbasins.shp')
+    # GR = GRACE_preparation(basin_name='Brahmaputra',
+    #                        shp_path='../data/basin/shp/Brahmaputra_3_shapefiles/Brahmaputra_3_subbasins.shp')
     # GR = GRACE_preparation(basin_name='MDB',
     #                        shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
     # GR.basin_TWS(month_begin='2002-04', month_end='2023-06')
-    GR.basin_TWS(month_begin='2002-04', month_end='2023-06', dir_in='/media/user/Backup Plus/GRACE/ewh',
-                 dir_out='/home/user/test/output')
-    # GR.generate_mask()
+    GR = GRACE_preparation(basin_name='DRB',
+                           shp_path='../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp')
+
+    GR.generate_mask()
+    # GR.basin_TWS(month_begin='2002-04', month_end='2023-06')
     # GR.basin_COV(month_begin='2002-04', month_end='2023-06')
+    GR.grid_TWS(month_begin='2002-04', month_end='2023-06')
     pass
 
 

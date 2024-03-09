@@ -162,7 +162,7 @@ class SingleModel:
 
         '''basin average time-series'''
 
-        '''load my result: MDB'''
+        '''load my result'''
         statedir = Path(self._outdir2)
         hf = h5py.File(statedir / ('output_%s' % self.case) / 'basin_ts.h5', 'r')
         fan = hf['basin_0']
@@ -211,4 +211,69 @@ class SingleModel:
         fig.savefig(str(Path(fig_path) / ('%s_%s.pdf' % (self.case, fig_postfix))))
         fig.savefig(str(Path(fig_path) / ('%s_%s.png' % (self.case, fig_postfix))))
         fig.show()
+        pass
+
+
+    def visualize_comparison_GRACE(self, fig_path: str, fig_postfix='0'):
+        import pygmt
+        import h5py
+        from src_hydro.GeoMathKit import GeoMathKit
+
+        '''basin average time-series'''
+
+        '''load my result'''
+        date_begin = self.period[0].strftime('%Y-%m-%d')
+        date_end = self.period[1].strftime('%Y-%m-%d')
+        daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
+        day_first = daylist[0].year + (daylist[0].month - 1) / 12 + daylist[0].day / 365.25
+        fan_time = day_first + np.arange(len(daylist)) / 365.25
+
+        statedir = Path(self._outdir2)
+        hf = h5py.File(statedir / ('output_%s' % self.case) / 'basin_ts.h5', 'r')
+
+        tws_model = {}
+        for x in range(1, len(list(hf.keys()))):
+            fan = hf['basin_%s'%x]
+            a = []
+            for key in fan.keys():
+                a.append(fan[key][:])
+                pass
+            tws = np.sum(np.array(a), axis=0)
+            tws_model['sub_basin_%s'%x] = tws
+            pass
+
+        '''load GRACE'''
+        gf = h5py.File('/media/user/My Book/Fan/GRACE/output/%s_signal.hdf5'%self.basin, 'r')
+        str_time = list(gf['time_epoch'][:].astype(str))
+        fraction_time = []
+        for tt in str_time:
+            da = datetime.strptime(tt, '%Y-%m-%d')
+            fraction_time.append(da.year + (da.month - 1) / 12 + da.day / 365.25)
+
+        '''plot figure'''
+        fig = pygmt.Figure()
+        for basin in tws_model.keys():
+
+            vv = tws_model[basin]
+
+            vmin, vmax = np.min(vv[20:]), np.max(vv[20:])
+            dmin = vmin - (vmax - vmin) * 0.1
+            dmax = vmax + (vmax - vmin) * 0.1
+            sp_1 = int(np.round((vmax - vmin) / 10))
+            if sp_1 == 0:
+                sp_1 = 0.5
+            sp_2 = sp_1 * 2
+
+            fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
+                        frame=["WSne+t%s"%basin, "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
+
+            fig.plot(x=fan_time, y=vv, pen="0.8p,blue", label='model')
+            fig.plot(x=fraction_time, y=gf[basin][:] - np.mean(gf[basin][:])+np.mean(vv), pen="0.8p,red", label='GRACE')
+            fig.legend(position='jTR', box='+gwhite+p0.5p')
+            fig.shift_origin(yshift='-4.8c')
+
+        fig.savefig(str(Path(fig_path) / ('compare_GRACE_%s_%s.pdf' % (self.case, fig_postfix))))
+        fig.savefig(str(Path(fig_path) / ('compare_GRACE_%s_%s.png' % (self.case, fig_postfix))))
+        fig.show()
+
         pass

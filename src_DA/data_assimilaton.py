@@ -294,7 +294,7 @@ class DataAssimilation_monthly(DataAssimilation):
 
             '''every thread should wait until the main thread finishes its job, and redistribute the updated states'''
             states_ens_update_delta = comm.scatter(sendobj=delta_state, root=main_thread)
-            delta_state = None # free the memory
+            delta_state = None  # free the memory
             '''update the states for each ensemble: equal increment for each day'''
             for his_day in historic_states_daylist:
                 states_old = self._sv.load_state_dict(date=his_day)
@@ -315,6 +315,10 @@ class DataAssimilation_monthly(DataAssimilation):
                 '''to assign the last day to the current prediction vector to enable another round of kalman filter'''
                 self._states_predict = new_state
 
+            '''free memory'''
+            states_old = None
+            vv = None
+            states_ens_update_delta = None
         pass
 
 
@@ -515,5 +519,11 @@ class DataAssimilation_monthlymean_dailyupdate(DataAssimilation):
             if rank != OL_thread:
                 '''to assign the last day to the current prediction vector to enable another round of kalman filter'''
                 self._states_predict = new_state
+
+            '''free the memory'''
+            vv= None
+            states_ens_update = None
+            states_ens_update_delta = None
+            states_old = None
 
         pass

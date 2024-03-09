@@ -2,30 +2,14 @@ import sys
 
 sys.path.append('../')
 
-print('aaaa')
-
-import numpy as np
-from mpi4py import MPI
-import time
-
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
+mode = 34
 
 
-for ff in range(10):
-    # if ff == 50:
-    #     # comm.barrier()
+def demo1(mode):
+    print(mode)
 
-    c = comm.gather(ff, root=0)
+    pass
 
-    if rank == 0:
-        d = np.mean(np.array(c))
-    else:
-        d = None
-
-    print(c)
-
-    data = comm.bcast(d, root=0)
-
-    print(rank, data)
+if __name__ == '__main__':
+    mode=2
+    demo1(mode=5)

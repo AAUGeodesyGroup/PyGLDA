@@ -283,7 +283,7 @@ def demo_visualization_DA_2(signal='TWS'):
     """
     A demo for visualization of the time-series of model states
     """
-    from src_DA.Analysis import Postprocessing
+    from src_DA.Analysis import Postprocessing_basin
     import pygmt
     import h5py
     from src_hydro.GeoMathKit import GeoMathKit
@@ -301,18 +301,18 @@ def demo_visualization_DA_2(signal='TWS'):
     demo.generate_settings(mode=mode)
 
     file_postfix = 'OL'
-    pp = Postprocessing(ens=ens, case=case, basin=basin,
-                        date_begin=begin_time,
-                        date_end=end_time)
+    pp = Postprocessing_basin(ens=ens, case=case, basin=basin,
+                              date_begin=begin_time,
+                              date_end=end_time)
     states_OL = pp.get_states(post_fix=file_postfix, dir=demo._outdir2)
 
     '''load DA result'''
     begin_time = resume_begin_time
     end_time = resume_end_time
     file_postfix = 'DA'
-    pp = Postprocessing(ens=ens, case=case, basin=basin,
-                        date_begin=begin_time,
-                        date_end=end_time)
+    pp = Postprocessing_basin(ens=ens, case=case, basin=basin,
+                              date_begin=begin_time,
+                              date_end=end_time)
 
     states_DA = pp.get_states(post_fix=file_postfix, dir=demo._outdir2)
 
@@ -385,7 +385,7 @@ def demo_visualization_DA_2(signal='TWS'):
     """
     A demo for visualization of the time-series of model states
     """
-    from src_DA.Analysis import Postprocessing
+    from src_DA.Analysis import Postprocessing_basin
     import pygmt
     import h5py
     from src_hydro.GeoMathKit import GeoMathKit
@@ -406,9 +406,9 @@ def demo_visualization_DA_2(signal='TWS'):
     demo.generate_settings(mode=mode)
 
     file_postfix = 'OL'
-    pp = Postprocessing(ens=ens, case=case, basin=basin,
-                        date_begin=begin_time,
-                        date_end=end_time)
+    pp = Postprocessing_basin(ens=ens, case=case, basin=basin,
+                              date_begin=begin_time,
+                              date_end=end_time)
     states_OL = pp.get_states(post_fix=file_postfix, dir=demo._outdir2)
 
 
@@ -416,9 +416,9 @@ def demo_visualization_DA_2(signal='TWS'):
     begin_time = resume_begin_time
     end_time = resume_end_time
     file_postfix = 'DA'
-    pp = Postprocessing(ens=ens, case=case, basin=basin,
-                        date_begin=begin_time,
-                        date_end=end_time)
+    pp = Postprocessing_basin(ens=ens, case=case, basin=basin,
+                              date_begin=begin_time,
+                              date_end=end_time)
 
     states_DA = pp.get_states(post_fix=file_postfix, dir=demo._outdir2)
 

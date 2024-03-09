@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
+
+import h5py
 import numpy as np
 import sys
 from src_FlowControl.SingleModel import SingleModel
@@ -105,7 +107,7 @@ class OpenLoop(SingleModel):
 
     def extract_signal(self, postfix=None):
         from src_DA.shp2mask import basin_shp_process
-        from src_DA.Analysis import BasinSignalAnalysis
+        from src_DA.Analysis import BasinSignalAnalysis, Postprocessing_grid_first
         import os
         import json
         from mpi4py import MPI
@@ -148,66 +150,74 @@ class OpenLoop(SingleModel):
         statedir2 = str(statedir / ('state_%s_ensemble_%s' % (self.case, rank)))
 
         print(statedir2)
+        save_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, rank)))
         an = BasinSignalAnalysis(basin_mask=bs, state_dir=statedir2,
                                  par_dir=str(outdir / self.case / 'par'))
 
         # an.configure_mask2D().get_2D_map(this_day=datetime.strptime('2001-01-07', '%Y-%m-%d'), save=True)
 
-        save_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, rank)))
         an.get_basin_average(save=True, date_begin=self.period[0].strftime('%Y-%m-%d'),
                              date_end=self.period[1].strftime('%Y-%m-%d'),
                              save_dir=save_dir, post_fix=postfix)
+
+        '''2D monthly mean for further analysis'''
+        pg = Postprocessing_grid_first(state_dir=statedir2,
+                                       par_dir=str(outdir / self.case / 'par'))
+
+        state = 'TWS'
+        mm = pg.monthlymean(state=state, date_begin=self.period[0].strftime('%Y-%m-%d'),
+                            date_end=self.period[1].strftime('%Y-%m-%d'))
+
+        '''save it'''
+        hf = h5py.File(Path(save_dir) / ('monthly_mean_%s_%s.h5' % (state, postfix)), 'w')
+        for key, vv in mm.items():
+            hf.create_dataset(name=key, data=vv[:])
         print('Finished')
+        pass
+
+    def post_processing(self, file_postfix=None):
+        import h5py
+        from src_hydro.GeoMathKit import GeoMathKit
+        from src_DA.Analysis import Postprocessing_basin, Postprocessing_grid_second
+
+        '''collect monthly mean grid results'''
+        pg = Postprocessing_grid_second(ens=self.ens, case=self.case, basin=self.basin)
+        state = 'TWS'
+        res1, res2 = pg.ensemble_mean(state=state, postfix=file_postfix, fdir=self._outdir2)
+        '''save results'''
+        save_dir = '../temp'
+        hf = h5py.File(Path(save_dir) / ('monthly_mean_%s_%s_uOL.h5' % (state, self.basin)), 'w')
+        for key, vv in res1.items():
+            hf.create_dataset(name=key, data=vv[:])
+
+        hf = h5py.File(Path(save_dir) / ('monthly_mean_%s_%s_%s.h5' % (state, self.basin, file_postfix)), 'w')
+        for key, vv in res2.items():
+            hf.create_dataset(name=key, data=vv[:])
+
+        '''collect basin average results'''
+        pp = Postprocessing_basin(ens=self.ens, case=self.case, basin=self.basin,
+                                  date_begin=self.period[0].strftime('%Y-%m-%d'),
+                                  date_end=self.period[1].strftime('%Y-%m-%d'))
+
+        states = pp.get_states(post_fix=file_postfix, dir=self._outdir2)
+        pp.save_states(prefix=(file_postfix + '_' + self.basin), save_dir=save_dir)
+
         pass
 
     def visualize_signal(self, fig_path: str, fig_postfix='0', file_postfix=None):
         import pygmt
         import h5py
         from src_hydro.GeoMathKit import GeoMathKit
-        from src_DA.Analysis import Postprocessing
+        from src_DA.Analysis import Postprocessing_basin
 
-        '''test'''
-        pp = Postprocessing(ens=self.ens, case=self.case, basin=self.basin,
-                            date_begin=self.period[0].strftime('%Y-%m-%d'),
-                            date_end=self.period[1].strftime('%Y-%m-%d'))
+        '''collect basin average results'''
+        pp = Postprocessing_basin(ens=self.ens, case=self.case, basin=self.basin,
+                                  date_begin=self.period[0].strftime('%Y-%m-%d'),
+                                  date_end=self.period[1].strftime('%Y-%m-%d'))
 
-        states = pp.get_states(post_fix=file_postfix, dir=self._outdir2)
+        # states = pp.get_states(post_fix=file_postfix, dir=self._outdir2)
+        states = pp.load_states(prefix=(file_postfix + '_' + self.basin))
 
-
-        '''basin average time-series'''
-
-        '''load my result: MDB'''
-        statedir = Path(self._outdir2)
-        ens_numbers = self.ens + 1
-
-        fan_dict = {}
-
-        if file_postfix is None:
-            fp = ''
-        else:
-            fp = '_' + file_postfix
-
-        for ens in range(ens_numbers):
-            hf = h5py.File(statedir / ('output_%s_ensemble_%s' % (self.case, ens)) / ('basin_ts%s.h5' % fp), 'r')
-            fan = hf['basin_0']
-            fan_dict[ens] = fan
-            # hf.close()
-
-        date_begin = self.period[0].strftime('%Y-%m-%d')
-        date_end = self.period[1].strftime('%Y-%m-%d')
-        # daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
-        # day_first = daylist[0].year + (daylist[0].month - 1) / 12 + daylist[0].day / 365.25
-        # fan_time = day_first + np.arange(len(daylist)) / 365.25
-        #
-        # tws = {}
-        # for ens in range(ens_numbers):
-        #     a = []
-        #     fan = fan_dict[ens]
-        #     for key in fan.keys():
-        #         a.append(fan[key][:])
-        #         pass
-        #     tws[ens] = np.sum(np.array(a), axis=0)
-        tws = states['basin_0']['TWS']
         fan_time = states['time']
 
         '''plot figure'''
@@ -217,13 +227,7 @@ class OpenLoop(SingleModel):
         for state in statesnn:
             i += 1
 
-            if state == 'TWS':
-                '''ens=0'''
-                vv = tws[0]
-            else:
-                '''ens=0'''
-                fan = fan_dict[0]
-                vv = fan[state][:]
+            vv = states['basin_0'][state][0]
 
             vmin, vmax = np.min(vv[20:]), np.max(vv[20:])
             dmin = vmin - (vmax - vmin) * 0.1
@@ -240,12 +244,8 @@ class OpenLoop(SingleModel):
             fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
                         frame=["WSne", "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
 
-            for ens in reversed(range(ens_numbers)):
-                if state == 'TWS':
-                    vv = tws[ens]
-                else:
-                    fan = fan_dict[ens]
-                    vv = fan[state][:]
+            for ens in reversed(range(self.ens + 1)):
+                vv = states['basin_0'][state][ens]
 
                 if ens == 0:
                     fig.plot(x=fan_time, y=vv, pen="1p,blue", label='%s' % (state), transparency=30)
@@ -255,7 +255,7 @@ class OpenLoop(SingleModel):
             fig.legend(position='jTR', box='+gwhite+p0.5p')
             fig.shift_origin(yshift='-4c')
 
-        fig.savefig(str(Path(fig_path) / ('%s_%s.pdf' % (self.case, fig_postfix))))
-        fig.savefig(str(Path(fig_path) / ('%s_%s.png' % (self.case, fig_postfix))))
+        fig.savefig(str(Path(fig_path) / ('Component_%s_%s.pdf' % (self.case, fig_postfix))))
+        fig.savefig(str(Path(fig_path) / ('Component_%s_%s.png' % (self.case, fig_postfix))))
         # fig.show()
         pass

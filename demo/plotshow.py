@@ -146,7 +146,7 @@ def compariosn_to_GRACE():
 
 
 def monthly_update_daily_update():
-    from src_DA.Analysis import Postprocessing
+    from src_DA.Analysis import Postprocessing_basin
     import pygmt
     import h5py
     from src_hydro.GeoMathKit import GeoMathKit
@@ -160,13 +160,13 @@ def monthly_update_daily_update():
     '''load OL result'''
     ens = 30
     case = 'Sg'
-    basin = 'MDB'
+    basin = 'DRB'
 
-    pp = Postprocessing(ens=ens, case=case, basin=basin)
-    states_traditional = pp.load_states(load_dir='/home/user/Desktop/res', prefix='exp_traditional')
-    states_new = pp.load_states(load_dir='/home/user/Desktop/res', prefix='exp_new')
-    GRACE = pp.load_GRACE(load_dir='/home/user/Desktop/res', prefix='exp_new')
-    states_OL = pp.load_states(load_dir='/home/user/Desktop/res', prefix='OL')
+    pp = Postprocessing_basin(ens=ens, case=case, basin=basin)
+    states_traditional = pp.load_states(load_dir='/home/user/Desktop/res', prefix='exp_traditional_%s' % basin)
+    states_new = pp.load_states(load_dir='/home/user/Desktop/res', prefix='exp_new_%s' % basin)
+    GRACE = pp.load_GRACE(load_dir='/home/user/Desktop/res', prefix='exp_new_%s' % basin)
+    states_OL = pp.load_states(load_dir='/home/user/Desktop/res', prefix='OL_%s' % basin)
 
     OL_time = states_OL['time']
     DA_time = states_new['time']
@@ -217,8 +217,8 @@ def monthly_update_daily_update():
 
     fig.shift_origin(yshift='-%sc' % height)
 
-    dmin= -8
-    dmax= 8
+    dmin = -8
+    dmax = 8
     sp_2 = 2
     sp_1 = 1
 
@@ -226,13 +226,231 @@ def monthly_update_daily_update():
                 frame=["WSne", "xa2f1",
                        'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
 
-    fig.plot(x=DA_time, y=DA_new-DA_tradional, pen="1p,black", label='%s' % ('DA_new minus DA_old'))
+    fig.plot(x=DA_time, y=DA_new - DA_tradional, pen="1p,black", label='%s' % ('DA_new minus DA_old'))
     fig.legend(position='jBL')
 
     fig.savefig('/home/user/Desktop/res/test.png')
 
     fig.show()
 
+    pass
+
+
+def map2D_comparison():
+    from src_auxiliary.ts import ts
+    from src_auxiliary.upscaling import upscaling
+    from datetime import datetime
+    from src_hydro.GeoMathKit import GeoMathKit
+    import geopandas as gpd
+
+    signal = 'trend'
+
+    '''load DA'''
+    hf = h5py.File('/home/user/Desktop/res/monthly_mean_TWS_DRB_DA.h5', 'r')
+
+    time = []
+    vv = []
+
+    for x, v in hf.items():
+        m = x.split('-')
+        n = datetime(year=int(m[0]), month=int(m[1]), day=15)
+        time.append(GeoMathKit.year_fraction(n))
+        vv.append(v[:])
+        pass
+
+    tsd = ts().set_period(time=np.array(time)).setDecomposition()
+    res_DA = tsd.getSignal(obs=vv)
+
+    '''load OL'''
+    hf = h5py.File('/home/user/Desktop/res/monthly_mean_TWS_DRB_uOL.h5', 'r')
+
+    time = []
+    vv = []
+
+    for x, v in hf.items():
+        m = x.split('-')
+        n = datetime(year=int(m[0]), month=int(m[1]), day=15)
+        time.append(GeoMathKit.year_fraction(n))
+        vv.append(v[:])
+        pass
+
+    tsd = ts().set_period(time=np.array(time)).setDecomposition()
+    res_OL = tsd.getSignal(obs=vv)
+
+    '''load GRACE'''
+    hf = h5py.File('/home/user/Desktop/res/DRB_gridded_signal.hdf5', 'r')
+    gr_time= hf['time_epoch'][:].astype(str)
+    gr_data = hf['tws'][:]
+    time=[]
+
+    for i in range(len(gr_time)):
+        m = gr_time[i].split('-')
+        n = datetime(year=int(m[0]), month=int(m[1]), day=int(m[2]))
+        time.append(GeoMathKit.year_fraction(n))
+
+    tsd = ts().set_period(time=np.array(time)).setDecomposition()
+    res_GRACE = tsd.getSignal(obs=gr_data)
+    xx = res_GRACE[signal]
+    if signal != 'trend':
+        xx = xx[0]
+
+    '''1d --> 2d map'''
+    us = upscaling(basin='DRB')
+    us.configure_model_state()
+    us.configure_GRACE()
+    # us.downscale_model(model_state=1, GRACEres=0.5, modelres=0.1)
+    res_GRACE = us.get2D_GRACE(GRACE_obs=xx)
+
+    xx = res_DA[signal]
+    if signal != 'trend':
+        xx = xx[0]
+    res_DA = us.get2D_model_state(model_state=xx)
+    '''mask'''
+    res_DA[us.bshp_mask == False] = np.nan
+
+    xx = res_OL[signal]
+    if signal != 'trend':
+        xx = xx[0]
+    res_OL = us.get2D_model_state(model_state=xx)
+    '''mask'''
+    res_OL[us.bshp_mask == False] = np.nan
+
+    '''plot figure'''
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
+    # pygmt.makecpt(cmap='jet', series=[0, 70, 5], background='o')
+    pygmt.makecpt(cmap='polar+h0', series=[-5, 2, 0.5], background='o')
+
+    res = 0.5
+    err = res / 10
+    lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
+    lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
+    region = [min(lon), max(lon), min(lat), max(lat)]
+    lon, lat = np.meshgrid(lon, lat)
+
+    DA = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=res_DA.flatten(),
+                       spacing=(res, res), region=region)
+
+    OL = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=res_OL.flatten(),
+                       spacing=(res, res), region=region)
+
+    GRACE = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=res_GRACE.flatten(),
+                       spacing=(res, res), region=region)
+
+    region = [7, 32, 40, 52]
+    fig.grdimage(
+        grid=OL,
+        cmap=True,
+        frame=['xa5f5g5', 'ya5f5g5'] + ['+tOL'],
+        dpi=100,
+        projection='Q12c',
+        region=region,
+        interpolation='n'
+    )
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
+
+    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    fig.plot(data=gdf.boundary, pen="1p,black")
+
+    # if signal != 'trend':
+    #     fig.colorbar(frame='af+l%s amplitude [mm]' % signal, position="JBC+w13c/0.45c+h+o7c/1.2c")
+    # else:
+    #     fig.colorbar(frame='af+l%s [mm/yr]' % signal)
+
+    fig.shift_origin(xshift='14c')
+    fig.grdimage(
+        grid=DA,
+        cmap=True,
+        frame=['xa5f5g5', 'ya5f5g5'] + ['+tDA'],
+        dpi=100,
+        projection='Q12c',
+        region=region,
+        interpolation='n'
+    )
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
+
+    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    fig.plot(data=gdf.boundary, pen="1p,black")
+    # fig.colorbar()
+
+    fig.shift_origin(xshift='14c')
+    fig.grdimage(
+        grid=GRACE,
+        cmap=True,
+        frame=['xa5f5g5', 'ya5f5g5'] + ['+tGRACE'],
+        dpi=100,
+        projection='Q12c',
+        region=region,
+        interpolation='n'
+    )
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
+
+    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    fig.plot(data=gdf.boundary, pen="1p,black")
+
+    '''===================================================='''
+    '''filtered'''
+    fig.shift_origin(xshift='-28c', yshift='-8c')
+
+    fig.grdimage(
+        grid=OL,
+        cmap=True,
+        frame=['xa5f5g5', 'ya5f5g5'] + ['+tOL smoothed'],
+        dpi=100,
+        projection='Q12c',
+        region=region,
+        # interpolation='n'
+    )
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
+
+    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    fig.plot(data=gdf.boundary, pen="1p,black")
+
+    if signal != 'trend':
+        fig.colorbar(frame='a10f10+l%s amplitude [mm]' % signal, position="JBC+w13c/0.45c+h+o14c/1.2c")
+    else:
+        fig.colorbar(frame='af+l%s [mm/yr]' % signal, position="JBC+w13c/0.45c+h+o14c/1.2c")
+        pass
+
+    fig.shift_origin(xshift='14c')
+    fig.grdimage(
+        grid=DA,
+        cmap=True,
+        frame=['xa5f5g5', 'ya5f5g5'] + ['+tDA, smoothed'],
+        dpi=100,
+        projection='Q12c',
+        region=region,
+        # interpolation='n'
+    )
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
+
+    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    fig.plot(data=gdf.boundary, pen="1p,black")
+    # fig.colorbar()
+
+    fig.shift_origin(xshift='14c')
+    fig.grdimage(
+        grid=GRACE,
+        cmap=True,
+        frame=['xa5f5g5', 'ya5f5g5'] + ['+tGRACE, smoothed'],
+        dpi=100,
+        projection='Q12c',
+        region=region,
+        # interpolation='n'
+    )
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
+
+    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    fig.plot(data=gdf.boundary, pen="1p,black")
+
+    fig.show()
 
     pass
 
@@ -240,4 +458,5 @@ def monthly_update_daily_update():
 if __name__ == '__main__':
     # model_component_comparison_to_Leire()
     # compariosn_to_GRACE()
-    monthly_update_daily_update()
+    # monthly_update_daily_update()
+    map2D_comparison()
