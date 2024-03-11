@@ -86,8 +86,8 @@ class ERA5_for_W3:
                 '''record the last day of the month and start downloading'''
                 par = self.__par
                 par['details']['date'] = '%04d%02d%02d' % (begin.year, begin.month, begin.day) + "/" \
-                              + '%04d%02d%02d' % (day.year, day.month, day.day)
-                par['target'] = str(self.__path/ ("W3_ERA5_daily_%04d%02d.grib" % (day.year, day.month)) )
+                                         + '%04d%02d%02d' % (day.year, day.month, day.day)
+                par['target'] = str(self.__path / ("W3_ERA5_daily_%04d%02d.grib" % (day.year, day.month)))
 
                 self.__server.retrieve(par['class'], par['details'], par['target'])
                 pass
@@ -105,7 +105,7 @@ class ERA5_for_W3:
                              'surface_thermal_radiation_downwards', 'total_precipitation'],
                 'date': "2018-01-01",
                 'time': '00:00',
-                'format': 'grib', #'netcdf'
+                'format': 'grib',  # 'netcdf'
                 # 'format': 'netcdf'
                 # 'grid': '0.05/0.05'
             },
@@ -118,7 +118,7 @@ class ERA5_for_W3:
 class ERA5_for_W3RA:
 
     def __init__(self):
-        self.__path =None
+        self.__path = None
         pass
 
     def setPath(self, output_path='/media/user/Backup Plus/ERA5/W3'):
@@ -126,7 +126,6 @@ class ERA5_for_W3RA:
         assert Path(output_path).is_dir()
         self.__path = Path(output_path)
         return self
-
 
     def run(self):
         # CDS API script to use CDS service to retrieve daily ERA5* variables and iterate over
@@ -143,7 +142,7 @@ class ERA5_for_W3RA:
         c = cdsapi.Client(timeout=300)
 
         # Uncomment years as required
-
+        # years = ['2002']
         years = [
             # '1979'
             #           ,'1980', '1981',
@@ -151,21 +150,21 @@ class ERA5_for_W3RA:
             #            '1985', '1986', '1987',
             #            '1988', '1989', '1990',
             #            '1991', '1992', '1993',
-                       '1994', '1995', '1996',
-                       '1997', '1998', '1999',
-                       '2000', '2001', '2002',
-                       '2003', '2004', '2005',
-                       '2006', '2007', '2008',
-                       '2009', '2010', '2011',
-                       '2012', '2013', '2014',
-                       '2015', '2016', '2017',
-                       '2018', '2019', '2020',
-                       '2021', '2022', '2023'
+            # '1994', '1995', '1996',
+            # '1997', '1998', '1999',
+            # '2000', '2001',
+            # '2002',
+            '2003', '2004', '2005',
+            '2006', '2007', '2008',
+            '2009', '2010', '2011',
+            '2012', '2013', '2014',
+            '2015', '2016', '2017',
+            '2018', '2019', '2020',
+            '2021', '2022', '2023'
         ]
 
         # Retrieve all months for a given year.
-        # months = [
-                  # '10', '11', '12']
+        # months = ['12']
         months = ['01', '02', '03',
                   '04', '05', '06',
                   '07', '08', '09',
@@ -215,7 +214,7 @@ class ERA5_for_W3RA:
 
                 # set name of output file for each month (statistic, variable, year, month
 
-                file_name = self.__path/( stat + "_"+var + "_" + yr + "_" + mn + ".nc")
+                file_name = self.__path / (stat + "_" + var + "_" + yr + "_" + mn + ".nc")
 
                 location = result[0]['location']
                 res = requests.get(location, stream=True)
@@ -230,6 +229,7 @@ def demo1():
     ERA5_download = ERA5_for_W3().setPath().setDate(begin='1995-01', end='1999-12')
     ERA5_download.getDataByMonth()
     pass
+
 
 def demo2():
     ERA5_download = ERA5_for_W3RA().setPath('/media/user/My Book/Fan/ERA5/DailyMeanTemp')

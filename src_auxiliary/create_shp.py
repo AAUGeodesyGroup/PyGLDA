@@ -1,9 +1,10 @@
 import numpy as np
+import geopandas as gpd
+from shapely import box
 
 
 def shp_change_Danube():
     import pygmt
-    import geopandas as gpd
     import pandas as pd
     from shapely.ops import unary_union
 
@@ -58,10 +59,6 @@ def shp_change_Danube():
     # fig.show()
 
     pass
-
-
-import geopandas as gpd
-from shapely import box
 
 
 class global_box_shp:
@@ -119,22 +116,85 @@ class global_box_shp:
         lat_ld = lat_lu - sub_basin[0]
         lon_ld = lon_lu.copy()
 
-        lat_rd = lat_lu - sub_basin[0]
-        lon_rd = lon_lu + sub_basin[1]
+        # lat_rd = lat_lu - sub_basin[0]
+        # lon_rd = lon_lu + sub_basin[1]
 
-        lon_lu, lat_lu = np.meshgrid(lon_lu, lat_lu)
+        # lon_lu, lat_lu = np.meshgrid(lon_lu, lat_lu)
         lon_ru, lat_ru = np.meshgrid(lon_ru, lat_ru)
         lon_ld, lat_ld = np.meshgrid(lon_ld, lat_ld)
-        lon_rd, lat_rd = np.meshgrid(lon_rd, lat_rd)
+        # lon_rd, lat_rd = np.meshgrid(lon_rd, lat_rd)
 
         poly = box(xmin=lon_ld, ymin=lat_ld, xmax=lon_ru, ymax=lat_ru)
         ID = [i for i in range(1, num_sub_basins + 1)]
         d = {'ID': ID, 'geometry': list(poly.flatten())}
         gdf = gpd.GeoDataFrame(d, crs='epsg:4326')
-        gdf.to_file('../res/Tile%s_subbasins.shp' % tile_ID)
+        gdf.to_file('../res/global_shp_old/Tile%s_subbasins.shp' % tile_ID)
 
         pass
 
+    def delete_invalid_shp(self):
+        """
+        delete invalid sub_basins and basins
+        """
+
+        '''load data'''
+        invalid_subbasin = np.load('../res/invalid_subbasin.npy')
+
+        sub_basin = self.sub_basin
+
+        N = 180 // sub_basin[0]
+        M = 360 // sub_basin[1]
+
+        num_sub_basins = N * M
+        id_basins = np.arange(num_sub_basins).reshape((N, M))
+
+        N2 = 180 // self.basin[0]
+        M2 = 360 // self.basin[1]
+        num_basins = N2 * M2
+
+        sub_id_basins = np.vsplit(id_basins, N2)
+        sub_id = {}
+        i = 0
+        for each in sub_id_basins:
+            a = np.hsplit(each, M2)
+            for m in range(M2):
+                sub_id[i + 1] = a[m]
+                i += 1
+
+        glaciers = self.removeGlaciers()
+
+        for i in range(1, num_basins + 1):
+            if i in glaciers:
+                continue
+
+            gf = gpd.read_file('../res/global_shp_old/Tile%s_subbasins.shp' % i)
+
+            x = sub_id[i].flatten()
+
+            a = []
+            for m in x:
+                if m in invalid_subbasin:
+                    a.append(False)
+                else:
+                    a.append(True)
+
+            if len(gf[a]) == 0:
+                continue
+
+            n = gf[a]
+            n.loc[:, 'ID'] = np.arange(np.sum(a)) + 1
+
+            n.to_file('../res/global_shp_new/Tile%s_subbasins.shp' % i)
+            pass
+
+        pass
+
+
+    def removeGlaciers(self):
+
+        tile_glacier =[6,7,21,22] + list(range(121,151))
+
+        return tile_glacier
 
 def demo1():
     gbs = global_box_shp().configure_size()
@@ -149,19 +209,110 @@ def demo2():
     pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
     pygmt.makecpt(cmap='polar', series=[1, 11, 1], background='o')
 
-    region = [90, 140, 10, 40]
+    region = [90, 160, 10, 40]
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q8c")
 
-    gdf = gpd.read_file(filename='../data/basin/shp/globe/Tile58_subbasins.shp')
+    gdf = gpd.read_file(filename='../res/global_shp_new/Tile57_subbasins.shp')
 
     fig.plot(data=gdf.boundary, pen="1p,black")
 
-    fig.plot(data=gdf[gdf.ID == 8].boundary, cmap=True, color='blue', pen="1p,black")
+    # fig.plot(data=gdf[gdf.ID == 8].boundary, cmap=True, fill='blue', pen="1p,black")
 
-    fig.plot(data=gdf[gdf.ID == 23].boundary, cmap=True, color='green', pen="1p,black")
+    # fig.plot(data=gdf[gdf.ID == 23].boundary, cmap=True, fill='green', pen="1p,black")
 
     fig.show()
+
+    pass
+
+
+def demo3():
+    import pygmt
+    res = 0.1
+    err = res / 10
+    lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
+    lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
+    region = [min(lon), max(lon), min(lat), max(lat)]
+    lon, lat = np.meshgrid(lon, lat)
+
+    x = np.load('/media/user/My Book/Fan/W3RA_data/basin_selection/forcing_mask.npy')[:, :].astype(float)
+    x[x == 0] = np.nan
+    grace = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=x.flatten(),
+                          spacing=(res, res), region=region)
+
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='polar', series=[1, 11, 1], background='o')
+
+    region = [-150, 150, -60, 89.5]
+
+    fig.grdimage(
+        grid=grace,
+        cmap=True,
+        frame=['xa5f5g5', 'ya5f5g5'] + ['+tMask: Danube'],
+        dpi=100,
+        projection='Q12c',
+        region=region,
+        interpolation='n'
+    )
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
+
+    fig.show()
+
+    pass
+
+
+def demo4():
+    gbs = global_box_shp().configure_size()
+    gbs.delete_invalid_shp()
+    pass
+
+
+def demo5():
+    import pygmt
+    import pandas as pd
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='7p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='polar', series=[1, 11, 1], background='o')
+
+    region = [-180, 180, -90, 90]
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q9c", frame=['xa30f15', 'ya30f15'])
+
+    '''new'''
+    gdf_list = []
+    invalid_basins = []
+    for tile in range(1, 150+1):
+        try:
+            gdf = gpd.read_file(filename='../res/global_shp_new/Tile%s_subbasins.shp'%tile)
+            gdf_list.append(gdf)
+
+        except Exception:
+            invalid_basins.append(tile)
+            continue
+
+    full_gdf = pd.concat(gdf_list)
+    fig.plot(data=full_gdf.boundary, pen="0.2p,black",fill = 'lightgreen', transparency= 30)
+
+
+    '''old'''
+    gdf_list = []
+
+    for tile in range(1, 150+1):
+        if tile in invalid_basins:
+            continue
+        gdf = gpd.read_file(filename='../res/global_shp_old/Tile%s_subbasins.shp'%tile)
+        # gdf_list.append(gdf)
+
+        fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.5p,red", fill = 'lightblue', transparency= 60)
+        fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.5p,red")
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q9c")
+    fig.show()
+
 
     pass
 
@@ -169,4 +320,7 @@ def demo2():
 if __name__ == '__main__':
     # shp_change_Danube()
     # demo1()
-    demo2()
+    # demo2()
+    # demo3()
+    # demo4()
+    demo5()
