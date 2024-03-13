@@ -1,6 +1,6 @@
 {
     "basic": {
-        "fromdate": "2002-03-31",
+        "fromdate": "2000-01-01",
         "todate": "2003-05-31",
         "basin": "MDB",
         "basin_shp": "../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp",

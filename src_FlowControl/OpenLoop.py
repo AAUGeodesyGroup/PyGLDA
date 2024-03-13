@@ -175,17 +175,18 @@ class OpenLoop(SingleModel):
         print('Finished')
         pass
 
-    def post_processing(self, file_postfix=None):
+    def post_processing(self, file_postfix=None, save_dir = '../temp', isGRACE= False):
         import h5py
         from src_hydro.GeoMathKit import GeoMathKit
         from src_DA.Analysis import Postprocessing_basin, Postprocessing_grid_second
+        import json
 
         '''collect monthly mean grid results'''
         pg = Postprocessing_grid_second(ens=self.ens, case=self.case, basin=self.basin)
         state = 'TWS'
         res1, res2 = pg.ensemble_mean(state=state, postfix=file_postfix, fdir=self._outdir2)
         '''save results'''
-        save_dir = '../temp'
+        # save_dir = '../temp'
         hf = h5py.File(Path(save_dir) / ('monthly_mean_%s_%s_uOL.h5' % (state, self.basin)), 'w')
         for key, vv in res1.items():
             hf.create_dataset(name=key, data=vv[:])
@@ -202,9 +203,16 @@ class OpenLoop(SingleModel):
         states = pp.get_states(post_fix=file_postfix, dir=self._outdir2)
         pp.save_states(prefix=(file_postfix + '_' + self.basin), save_dir=save_dir)
 
+        '''collect GRACE basin average results'''
+        if isGRACE:
+            dp_dir = Path(self.setting_dir) / 'DA_setting.json'
+            dp4 = json.load(open(dp_dir, 'r'))
+            pp.get_GRACE(obs_dir=dp4['obs']['dir'])
+            pp.save_GRACE(prefix=(file_postfix + '_' + self.basin), save_dir=save_dir)
+
         pass
 
-    def visualize_signal(self, fig_path: str, fig_postfix='0', file_postfix=None):
+    def visualize_signal(self, fig_path: str, fig_postfix='0', file_postfix=None, data_dir=None):
         import pygmt
         import h5py
         from src_hydro.GeoMathKit import GeoMathKit
@@ -216,7 +224,10 @@ class OpenLoop(SingleModel):
                                   date_end=self.period[1].strftime('%Y-%m-%d'))
 
         # states = pp.get_states(post_fix=file_postfix, dir=self._outdir2)
-        states = pp.load_states(prefix=(file_postfix + '_' + self.basin))
+        if data_dir is None:
+            states = pp.load_states(prefix=(file_postfix + '_' + self.basin))
+        else:
+            states = pp.load_states(prefix=(file_postfix + '_' + self.basin), load_dir=data_dir)
 
         fan_time = states['time']
 

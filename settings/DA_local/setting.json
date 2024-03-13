@@ -1,27 +1,27 @@
 {
     "bounds": {
         "lat": [
-            -9.9,
-            -43.8
+            -35.8,
+            -48.2
         ],
         "lon": [
-            112.4,
-            154.3
+            164.8,
+            180.0
         ],
-        "prefix": "DA_test"
+        "prefix": "GDA_120"
     },
     "init": {
-        "mode": "resume",
-        "date": "2002-03-30",
+        "mode": "cold",
+        "date": "1999-12-31",
         "spinup": [
-            "2005-01-01",
-            "2006-01-31"
+            "2000-01-01",
+            "2023-05-31"
         ],
         "dir": "/media/user/My Book/Fan/W3RA_data/initial_states",
         "spec": ""
     },
     "run": {
-        "fromdate": "2002-03-31",
+        "fromdate": "2000-01-01",
         "todate": "2003-05-31",
         "res": 0.1,
         "exttype": "ERA5",
@@ -32,9 +32,7 @@
         "meteo": "/media/user/My Book/Fan/W3RA_data/crop_input",
         "clim": "/media/user/My Book/Fan/W3RA_data/crop_input",
         "pars": "/media/user/My Book/Fan/W3RA_data/crop_input",
-        "mask_fn": "/media/user/My Book/Fan/W3RA_data/crop_input",
-        "par": "/media/user/My Book/Fan/W3RA_data/crop_input",
-        "mask": "/media/user/My Book/Fan/W3RA_data/crop_input"
+        "mask_fn": "/media/user/My Book/Fan/W3RA_data/crop_input"
     },
     "output": {
         "dir": "/media/user/My Book/Fan/W3RA_data/output",

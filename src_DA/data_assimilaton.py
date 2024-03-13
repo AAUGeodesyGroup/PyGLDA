@@ -322,6 +322,44 @@ class DataAssimilation_monthly(DataAssimilation):
         pass
 
 
+class DataAssimilation_monthly_diag(DataAssimilation_monthly):
+    def __init__(self, DA_setting: config_DA, model: model_run_daily, obs: GRACE_obs, sv: EnsStates):
+        super().__init__(DA_setting, model, obs, sv)
+        pass
+
+    def update(self, obs, obs_cov, ens_states):
+        """
+        update is for all ensembles
+        reference: WIKI
+        """
+        R = obs_cov
+
+        '''calculate the deviation of ens_states'''
+        A = ens_states - np.mean(ens_states, 1)[:, None]
+
+        '''propagate it into obs-equivalent variable'''
+        HX = self._DM(states=ens_states)
+
+        '''to calculate the deviation'''
+        HA = HX - np.mean(HX, 1)[:, None]
+
+        '''calculate matrix P'''
+        P = np.cov(HA) + np.diag(np.diag(R))
+
+        '''calculate the gain factor K'''
+        N = self.DA_setting.basic.ensemble
+        '''method-1: straight-forward'''
+        # K = 1 / (N - 1) * A @ HA.T @ np.linalg.inv(P)
+        '''method-2: via linear solver'''
+        Bt = np.linalg.lstsq(P.T, HA, rcond=None)[0]
+        K = 1 / (N - 1) * A @ Bt.T
+
+        '''update the states'''
+        states_update = ens_states + K @ (obs - HX)
+
+        return states_update
+
+
 class DataAssimilation_monthlymean_dailyupdate(DataAssimilation):
 
     def __init__(self, DA_setting: config_DA, model: model_run_daily, obs: GRACE_obs, sv: EnsStates):

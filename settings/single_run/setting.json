@@ -1,28 +1,28 @@
 {
     "bounds": {
         "lat": [
-            -9.9,
-            -43.8
+            36.2,
+            17.8
         ],
         "lon": [
-            112.4,
-            154.3
+            11.8,
+            36.2
         ],
-        "prefix": "single_run_test"
+        "prefix": "GDA_54"
     },
     "init": {
         "mode": "cold",
-        "date": "2005-01-30",
+        "date": "1999-12-31",
         "spinup": [
             "2000-01-01",
-            "2010-01-31"
+            "2023-05-31"
         ],
         "dir": "/media/user/My Book/Fan/W3RA_data/initial_states",
         "spec": ""
     },
     "run": {
-        "fromdate": "2005-01-31",
-        "todate": "2005-02-20",
+        "fromdate": "2000-01-01",
+        "todate": "2003-05-31",
         "res": 0.1,
         "exttype": "ERA5",
         "save_states_every_day": true,

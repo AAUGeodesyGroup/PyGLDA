@@ -1,7 +1,8 @@
 {
+    "ensemble": 30,
     "dir": {
-        "in": "/work/W3RA_Fan/res/OL_test",
-        "out": "/work/W3RA_Fan/res/OL_test"
+        "in": "/work/data_for_w3/w3ra/crop_input/GDA_81",
+        "out": "/work/data_for_w3/w3ra/crop_input/GDA_81"
     },
     "forcing": {
         "2t": {
@@ -31,11 +32,11 @@
     },
     "par": {
         "ER_frac_ref": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
-                0.4
+                0.3
             ]
         },
         "FdrainFC": {
@@ -79,11 +80,11 @@
             ]
         },
         "FsoilEmax": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
-                0.4
+                0.3
             ]
         },
         "FwaterE": {
@@ -103,11 +104,11 @@
             ]
         },
         "InitLoss": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
-                0.4
+                0.3
             ]
         },
         "K_gw": {
@@ -183,19 +184,19 @@
             ]
         },
         "PrefR": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
-                0.4
+                0.3
             ]
         },
         "S0FC": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
-                0.4
+                0.3
             ]
         },
         "SLA": {
@@ -207,19 +208,19 @@
             ]
         },
         "S_sls": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
-                0.4
+                0.3
             ]
         },
         "SdFC": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
-                0.4
+                0.3
             ]
         },
         "Sgref": {
@@ -247,11 +248,11 @@
             ]
         },
         "SsFC": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
-                0.4
+                0.3
             ]
         },
         "Tgrow": {
@@ -311,11 +312,11 @@
             ]
         },
         "beta": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
-                0.4
+                0.3
             ]
         },
         "cGsmax": {

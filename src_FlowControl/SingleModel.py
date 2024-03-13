@@ -114,8 +114,8 @@ class SingleModel:
 
         oldname = 'state.%s.h5' % datetime.strptime(the_last_day, '%Y-%m-%d').strftime('%Y%m%d')
         x = oldname.split('.')
-        newname = x[0]+'.'+modifydate+'.'+x[2]
-        os.rename(target_folder/oldname, target_folder/newname)
+        newname = x[0] + '.' + modifydate + '.' + x[2]
+        os.rename(target_folder / oldname, target_folder / newname)
         pass
 
     def extract_signal(self):
@@ -210,14 +210,14 @@ class SingleModel:
 
         fig.savefig(str(Path(fig_path) / ('%s_%s.pdf' % (self.case, fig_postfix))))
         fig.savefig(str(Path(fig_path) / ('%s_%s.png' % (self.case, fig_postfix))))
-        fig.show()
+        # fig.show()
         pass
-
 
     def visualize_comparison_GRACE(self, fig_path: str, fig_postfix='0'):
         import pygmt
         import h5py
         from src_hydro.GeoMathKit import GeoMathKit
+        import json
 
         '''basin average time-series'''
 
@@ -233,17 +233,20 @@ class SingleModel:
 
         tws_model = {}
         for x in range(1, len(list(hf.keys()))):
-            fan = hf['basin_%s'%x]
+            fan = hf['basin_%s' % x]
             a = []
             for key in fan.keys():
                 a.append(fan[key][:])
                 pass
             tws = np.sum(np.array(a), axis=0)
-            tws_model['sub_basin_%s'%x] = tws
+            tws_model['sub_basin_%s' % x] = tws
             pass
 
         '''load GRACE'''
-        gf = h5py.File('/media/user/My Book/Fan/GRACE/output/%s_signal.hdf5'%self.basin, 'r')
+        dp_dir = self.setting_dir / 'DA_setting.json'
+        dp2 = json.load(open(dp_dir, 'r'))
+        fn = dp2['obs']['GRACE']['preprocess_res']
+        gf = h5py.File(Path(fn) / ('%s_signal.hdf5' % self.basin), 'r')
         str_time = list(gf['time_epoch'][:].astype(str))
         fraction_time = []
         for tt in str_time:
@@ -252,8 +255,10 @@ class SingleModel:
 
         '''plot figure'''
         fig = pygmt.Figure()
+        i = 0
         for basin in tws_model.keys():
-
+            i += 1
+            print(basin)
             vv = tws_model[basin]
 
             vmin, vmax = np.min(vv[20:]), np.max(vv[20:])
@@ -265,15 +270,20 @@ class SingleModel:
             sp_2 = sp_1 * 2
 
             fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
-                        frame=["WSne+t%s"%basin, "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
+                        frame=["WSne+t%s" % basin, "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
 
             fig.plot(x=fan_time, y=vv, pen="0.8p,blue", label='model')
-            fig.plot(x=fraction_time, y=gf[basin][:] - np.mean(gf[basin][:])+np.mean(vv), pen="0.8p,red", label='GRACE')
+            fig.plot(x=fraction_time, y=gf[basin][:] - np.mean(gf[basin][:]) + np.mean(vv), pen="0.8p,red",
+                     label='GRACE')
             fig.legend(position='jTR', box='+gwhite+p0.5p')
+
+            if i % 12 == 0:
+                fig.shift_origin(yshift='52.8c', xshift='14c')
+                continue
             fig.shift_origin(yshift='-4.8c')
 
         fig.savefig(str(Path(fig_path) / ('compare_GRACE_%s_%s.pdf' % (self.case, fig_postfix))))
         fig.savefig(str(Path(fig_path) / ('compare_GRACE_%s_%s.png' % (self.case, fig_postfix))))
-        fig.show()
+        # fig.show()
 
         pass

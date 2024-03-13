@@ -81,7 +81,7 @@ class DA_GRACE(OpenLoop):
             for file_name in files:
                 if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
                     target.append(os.path.join(root, file_name))
-        assert len(target) == 1
+        assert len(target) == 1, target
 
         dp4['basic']['basin_shp'] = str(target[0])
 
@@ -246,7 +246,7 @@ class DA_GRACE(OpenLoop):
         import json
         from src_DA.observations import GRACE_obs
         from src_DA.ExtracStates import EnsStates
-        from src_DA.data_assimilaton import DataAssimilation, DataAssimilation_monthly, DataAssimilation_monthlymean_dailyupdate
+        from src_DA.data_assimilaton import DataAssimilation, DataAssimilation_monthly, DataAssimilation_monthlymean_dailyupdate, DataAssimilation_monthly_diag
 
         if rank != 0:
             f = open('../log/OL/log_%s.txt' % rank, 'w')
@@ -295,7 +295,8 @@ class DA_GRACE(OpenLoop):
         '''DA experiment'''
         # da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
-        da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da = DataAssimilation_monthly_diag(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da.configure_design_matrix(DM=dm)
 
         '''running with MPI parallelization'''

@@ -1,41 +1,41 @@
 {
     "bounds": {
         "lat": [
-            -9.9,
-            -43.8
+            0.2,
+            -18.2
         ],
         "lon": [
-            112.4,
-            154.3
+            -60.2,
+            -35.8
         ],
-        "prefix": "OL_test"
+        "prefix": "GDA_81"
     },
     "init": {
-        "mode": "cold",
-        "date": "2002-12-31",
+        "mode": "warm",
+        "date": "1999-12-31",
         "spinup": [
             "2000-01-01",
-            "2005-01-31"
+            "2010-01-31"
         ],
-        "dir": "/media/user/My Book/Fan/W3RA_data/init",
+        "dir": "/work/data_for_w3/w3ra/initial_states",
         "spec": ""
     },
     "run": {
-        "fromdate": "2003-01-01",
-        "todate": "2003-01-31",
+        "fromdate": "2000-01-01",
+        "todate": "2023-05-31",
         "res": 0.1,
         "exttype": "ERA5",
         "save_states_every_day": true,
         "save_output_every_day": false
     },
     "input": {
-        "meteo": "/work/W3RA_Fan/res",
-        "clim": "/work/W3RA_Fan/res",
-        "pars": "/work/W3RA_Fan/res",
-        "mask_fn": "/work/W3RA_Fan/res"
+        "meteo": "/work/data_for_w3/w3ra/crop_input",
+        "clim": "/work/data_for_w3/w3ra/crop_input",
+        "pars": "/work/data_for_w3/w3ra/crop_input",
+        "mask_fn": "/work/data_for_w3/w3ra/crop_input"
     },
     "output": {
-        "dir": "/work/W3RA_Fan/res",
+        "dir": "/work/data_for_w3/w3ra/output",
         "var": {
             "Stot": true,
             "ETtot": false,

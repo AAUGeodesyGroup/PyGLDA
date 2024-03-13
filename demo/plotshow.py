@@ -279,9 +279,9 @@ def map2D_comparison():
 
     '''load GRACE'''
     hf = h5py.File('/home/user/Desktop/res/DRB_gridded_signal.hdf5', 'r')
-    gr_time= hf['time_epoch'][:].astype(str)
+    gr_time = hf['time_epoch'][:].astype(str)
     gr_data = hf['tws'][:]
-    time=[]
+    time = []
 
     for i in range(len(gr_time)):
         m = gr_time[i].split('-')
@@ -336,7 +336,7 @@ def map2D_comparison():
                        spacing=(res, res), region=region)
 
     GRACE = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=res_GRACE.flatten(),
-                       spacing=(res, res), region=region)
+                          spacing=(res, res), region=region)
 
     region = [7, 32, 40, 52]
     fig.grdimage(
@@ -455,8 +455,114 @@ def map2D_comparison():
     pass
 
 
+def tile_GRACE_1():
+    import pygmt
+    import pandas as pd
+    import numpy as np
+    import geopandas as gpd
+    from src_DA.shp2mask import basin_shp_process
+
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='7p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='jet', series=[-200, 200], background='o')
+
+    region = [-90, 20, -30, 20]
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q9c", frame=['xa30f15', 'ya30f15'])
+
+    '''new'''
+    gdf_list = []
+    invalid_basins = []
+    tile = '80'
+    gdf = gpd.read_file(filename='../res/global_shp_new/Tile%s_subbasins.shp' % tile)
+
+    GRACE = h5py.File('/media/user/My Book/Fan/GRACE/output/Tile%s_signal.hdf5'%tile, 'r')
+
+    res = 3
+    err = res / 10
+    lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
+    lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
+    region = [min(lon), max(lon), min(lat), max(lat)]
+    lon, lat = np.meshgrid(lon, lat)
+
+    fshp= '../res/global_shp_new/Tile%s_subbasins.shp' % tile
+    mask= basin_shp_process(res=res, basin_name='Tile%s' % tile).shp_to_mask(shp_path=str(fshp), issave=False).mask
+
+    x = np.full(shape=mask[0].shape, fill_value=np.nan)
+
+    for i in range(1, 1+len(gdf)):
+        x[mask[i]] = GRACE['sub_basin_%s'%i][0]
+        pass
+
+    GR = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=x.flatten(),
+                       spacing=(res, res), region=region)
+    region = [-90, 20, -30, 20]
+    fig.grdimage(
+        grid=GR,
+        cmap=True,
+        frame=['xa5f5', 'ya5f5'] + ['+tOL'],
+        dpi=100,
+        projection='Q9c',
+        region=region,
+        interpolation='n'
+    )
+
+
+    fig.colorbar()
+    fig.plot(data=gdf.boundary, pen="0.2p,black")
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q9c")
+    fig.show()
+    pass
+
+
+def tile_GRACE_2():
+    import geopandas as gpd
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='7p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='jet', series=[-200, 200], background='o')
+
+    region = [-90, 20, -30, 20]
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q9c", frame=['xa30f15', 'ya30f15'])
+
+    res = 0.5
+    err = res / 10
+    lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
+    lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
+    region = [min(lon), max(lon), min(lat), max(lat)]
+    lon, lat = np.meshgrid(lon, lat)
+
+    a= h5py.File('/media/user/My Book/Fan/GRACE/ewh/2002-04-17.hdf5','r')
+    x = np.flipud(a['data'][:])
+
+    GR = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=x.flatten(),
+                       spacing=(res, res), region=region)
+    region = [-90, 20, -30, 20]
+    fig.grdimage(
+        grid=GR,
+        cmap=True,
+        frame=['xa5f5', 'ya5f5'] + ['+tOL'],
+        dpi=100,
+        projection='Q9c',
+        region=region,
+        # interpolation='n'
+    )
+    fig.colorbar()
+
+    tile = '80'
+    gdf = gpd.read_file(filename='../res/global_shp_new/Tile%s_subbasins.shp' % tile)
+    fig.plot(data=gdf.boundary, pen="0.2p,black")
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q9c")
+    fig.show()
+    pass
+
+
 if __name__ == '__main__':
     # model_component_comparison_to_Leire()
     # compariosn_to_GRACE()
     # monthly_update_daily_update()
-    map2D_comparison()
+    # map2D_comparison()
+    tile_GRACE_1()
+    # tile_GRACE_2()

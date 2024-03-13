@@ -34,10 +34,25 @@ class upscaling:
         return new
 
     def configure_GRACE(self, res=0.5):
-        '''load mask'''
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.__basin, res), 'r')
+        from pathlib import Path
+        import os
 
-        self.bshp_mask = mf['basin'][:].astype(bool)
+        '''search for the shape file'''
+        pp = Path('../data/basin/shp/')
+        target = []
+        for root, dirs, files in os.walk(pp):
+            for file_name in files:
+                if (self.__basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
+                    target.append(os.path.join(root, file_name))
+        assert len(target) == 1, target
+
+        mf = basin_shp_process(res=res, basin_name=self.__basin).shp_to_mask(shp_path=str(target[0])).mask
+
+        '''load land mask'''
+        GRACE_05deg_land_mask = '../data/GRACE/GlobalLandMaskForGRACE.hdf5'
+        lm = np.flipud(h5py.File(GRACE_05deg_land_mask, 'r')['resolution_05']['mask'][:])
+
+        self.bshp_mask = (mf[0]*lm).astype(bool)
 
         return self
 

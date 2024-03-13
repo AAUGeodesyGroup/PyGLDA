@@ -135,7 +135,7 @@ def demo_fc_DA_step_3(mode=init_mode.warm):
     demo.generate_settings(mode=mode)
 
     '''post_processing'''
-    demo.post_processing(file_postfix='OL')
+    demo.post_processing(file_postfix='OL', save_dir='/work/data_for_w3/w3ra/res')
 
     pass
 
@@ -278,7 +278,7 @@ def demo_fc_DA_step_7(mode=init_mode.resume):
     demo.generate_settings(mode=mode)
 
     '''post_processing'''
-    demo.post_processing(file_postfix='DA')
+    demo.post_processing(file_postfix='DA', save_dir='/work/data_for_w3/w3ra/res')
 
     pass
 
@@ -334,55 +334,6 @@ def demo_visualization_DA(mode=init_mode.resume):
 
     '''generate/save the figure'''
     demo.visualize_signal(fig_path=figure_output, fig_postfix=fig_postfix, file_postfix='DA')
-    pass
-
-
-def demo_visualization_DA_2(signal='TWS'):
-    """
-    A demo for visualization of the time-series of model states
-    """
-    from src_DA.Analysis import Postprocessing_basin
-    import pygmt
-    import h5py
-    from src_hydro.GeoMathKit import GeoMathKit
-    import json
-
-    '''load OL result'''
-    demo = DA_GRACE(case=case, setting_dir=setting_dir, ens=ens)
-    mode = init_mode.warm
-    begin_time = warm_begin_time
-    end_time = warm_end_time
-
-    demo.configure_time(begin_time=begin_time, end_time=end_time)
-    demo.configure_area(box=box, basin=basin)
-    demo.generate_settings(mode=mode)
-
-    file_postfix = 'OL'
-    pp = Postprocessing_basin(ens=ens, case=case,
-                              date_begin=begin_time,
-                              date_end=end_time)
-    states_OL = pp.get_states(post_fix=file_postfix, dir=demo._outdir2)
-
-    '''load DA result'''
-    begin_time = resume_begin_time
-    end_time = resume_end_time
-    file_postfix = 'DA'
-    pp = Postprocessing_basin(ens=ens, case=case,
-                              date_begin=begin_time,
-                              date_end=end_time)
-
-    states_DA = pp.get_states(post_fix=file_postfix, dir=demo._outdir2)
-
-    '''load GRACE'''
-    dp_dir = setting_dir / 'DA_setting.json'
-    dp4 = json.load(open(dp_dir, 'r'))
-    GRACE = pp.get_GRACE(obs_dir=dp4['obs']['dir'])
-
-    OL_time = states_OL['time']
-    DA_time = states_DA['time']
-
-    basin_num = len(list(states_DA.keys())) - 1
-
     pass
 
 
@@ -498,7 +449,6 @@ if __name__ == '__main__':
     # demo_fc_DA_step_5()
     # demo_fc_DA_step_6()
     # demo_fc_DA_step_7()
-
 
     '''visualization'''
     # demo_visualization_OL()

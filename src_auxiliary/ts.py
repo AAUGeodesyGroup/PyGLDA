@@ -75,7 +75,7 @@ class ts:
         obs is the time series of data to be analyzed.
         """
 
-        x = np.linalg.lstsq(a=self.__DM, b=obs)[0]
+        x = np.linalg.lstsq(a=self.__DM, b=obs, rcond=-1)[0]
 
         res = {'bias': x[0]}
         i = 1
