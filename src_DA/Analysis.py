@@ -261,7 +261,10 @@ class Postprocessing_basin:
         a = gr['ens_1'][:]
 
         ens_num = len(list(gr.keys())) - 3
-        basin_num = np.shape(gr['cov'][0])[0]
+        try:
+            basin_num = np.shape(gr['cov'][0])[0]
+        except Exception:
+            basin_num = 1
 
         for ens_id in range(2, ens_num + 1):
             a += gr['ens_%s' % ens_id]
@@ -370,7 +373,7 @@ class Postprocessing_grid_first:
     def monthlymean(self, state='TWS', date_begin='2002-04-01', date_end='2002-04-02'):
         days = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
 
-        if state is 'TWS':
+        if state == 'TWS':
             statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
         else:
             assert state in ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']

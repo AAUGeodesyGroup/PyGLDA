@@ -42,7 +42,9 @@ class upscaling:
         target = []
         for root, dirs, files in os.walk(pp):
             for file_name in files:
-                if (self.__basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
+                if (str(file_name).split('_')[0] == self.__basin) and file_name.endswith('.shp') and (
+                        'subbasins' in file_name):
+                # if (self.__basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
                     target.append(os.path.join(root, file_name))
         assert len(target) == 1, target
 
@@ -59,7 +61,6 @@ class upscaling:
     def get2D_GRACE(self, GRACE_obs):
         """
         the input is 1-d array, the output is 2-D array at global scale.
-        notice: could be broadcas
         """
         sample = np.full(self.bshp_mask.shape, np.nan)
         sample[self.bshp_mask] = GRACE_obs

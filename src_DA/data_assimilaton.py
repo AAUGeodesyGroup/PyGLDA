@@ -344,6 +344,7 @@ class DataAssimilation_monthly_diag(DataAssimilation_monthly):
         HA = HX - np.mean(HX, 1)[:, None]
 
         '''calculate matrix P'''
+        # print(R)
         P = np.cov(HA) + np.diag(np.diag(R))
 
         '''calculate the gain factor K'''
@@ -356,7 +357,8 @@ class DataAssimilation_monthly_diag(DataAssimilation_monthly):
 
         '''update the states'''
         states_update = ens_states + K @ (obs - HX)
-
+        print(obs)
+        print(HX)
         return states_update
 
 
@@ -559,7 +561,7 @@ class DataAssimilation_monthlymean_dailyupdate(DataAssimilation):
                 self._states_predict = new_state
 
             '''free the memory'''
-            vv= None
+            vv = None
             states_ens_update = None
             states_ens_update_delta = None
             states_old = None

@@ -8,6 +8,7 @@ res_output = '/work/data_for_w3/w3ra/res'
 # figure_output = '/media/user/My Book/Fan/W3RA_data/figure'
 figure_output = '/work/data_for_w3/w3ra/figure'
 
+
 class GDA:
     setting_dir = '../settings/Ucloud_DA'
     ens = 30
@@ -44,10 +45,10 @@ class GDA:
         from src_FlowControl.SingleModel import SingleModel
         from src_hydro.EnumType import init_mode
         '''pre-process input forcing field'''
-        setting_dir = '../settings/single_run'
+        # setting_dir = '../settings/single_run'
 
         '''configuration'''
-        for tile_ID in range(80, 300):
+        for tile_ID in range(56, 80):
 
             try:
                 GDA.set_tile(tile_ID=tile_ID)
@@ -55,7 +56,7 @@ class GDA:
 
                 continue
 
-            demo = SingleModel(case=GDA.case, setting_dir=setting_dir)
+            demo = SingleModel(case=GDA.case, setting_dir=GDA.setting_dir)
 
             demo.configure_time(begin_time=GDA.cold_begin_time, end_time=GDA.resume_end_time)
 
@@ -212,7 +213,7 @@ class GDA:
         comm.barrier()
 
         if rank == 0:
-            demo.post_processing(file_postfix='OL', save_dir='/work/data_for_w3/w3ra/res')
+            demo.post_processing(file_postfix='OL', save_dir=GDA.res_output)
 
             '''change the time to get prepared for DA experiment'''
             demo = DA_GRACE(case=GDA.case, setting_dir=GDA.setting_dir, ens=GDA.ens)
@@ -455,7 +456,9 @@ class GDA:
         target = []
         for root, dirs, files in os.walk(pp):
             for file_name in files:
-                if (GDA.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
+                if (str(file_name).split('_')[0] == GDA.basin) and file_name.endswith('.shp') and (
+                        'subbasins' in file_name):
+                    # if (GDA.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
                     target.append(os.path.join(root, file_name))
         assert len(target) == 1, target
 
@@ -724,13 +727,15 @@ def demo_global_run_complete(tile_ID=80):
     rank = comm.Get_rank()
 
     '''basic configuration of the tile of interest'''
-    GDA.set_tile(
-        tile_ID=tile_ID
-    )
+    if rank == 0:
+        GDA.set_tile(tile_ID=tile_ID)  # to avoid conflict between threads
+    comm.barrier()
+    GDA.set_tile(tile_ID=tile_ID)
 
     '''single_run (cold, warmup) to obtain reliable initial states, 10 years running for assuring accuracy'''
     if rank == 0:
         GDA.single_run(tile_ID=tile_ID)
+        pass
 
     comm.barrier()
 
@@ -771,7 +776,7 @@ def demo_DA_visualization(tile_ID=80):
 
 
 if __name__ == '__main__':
-    tile_ID = 80
-    demo_global_run_complete(tile_ID=tile_ID)
-    # demo_global_run_only_DA(tile_ID=tile_ID)
-    # demo_DA_visualization(tile_ID=tile_ID)
+    # demo2()
+    for tile_ID in [56, 16, 17]:
+        demo_global_run_complete(tile_ID=tile_ID)
+        # demo_DA_visualization(tile_ID=tile_ID)

@@ -79,7 +79,11 @@ class GRACE_perturbed_obs:
             a = np.array(a)
 
             '''perturb the signal'''
-            perturbed_TWS = np.random.multivariate_normal(a, cov, self.ens)
+            if np.ndim(a) == 1:
+                '''in case there is only one subbasin'''
+                perturbed_TWS = np.random.normal(a, np.sqrt(cov), self.ens)[:, None]
+            else:
+                perturbed_TWS = np.random.multivariate_normal(a, cov, self.ens)
 
             new_time.append(time_epochs[index])
             COV.append(cov)

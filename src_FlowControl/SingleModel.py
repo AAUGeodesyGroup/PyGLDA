@@ -132,7 +132,10 @@ class SingleModel:
         target = []
         for root, dirs, files in os.walk(pp):
             for file_name in files:
-                if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
+                if (str(file_name).split('_')[0] == self.basin) and file_name.endswith('.shp') and (
+                        'subbasins' in file_name):
+                # if (str(file_name).split('_')[0]==self.basin) and file_name.endswith('.shp') and ('subbasins' in file_name):
+                # if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
                     target.append(os.path.join(root, file_name))
         assert len(target) == 1
 

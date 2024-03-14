@@ -19,6 +19,9 @@ class GRACE_obs:
 
         self.__cov = obs_h5['cov'][:]
 
+        if np.ndim(self.__cov[0]) < 2:
+            self.__cov = self.__cov[:, None, None]
+
         obs_h5.close()
         pass
 
