@@ -79,14 +79,21 @@ class ts:
 
         res = {'bias': x[0]}
         i = 1
-        for ss in decomposition:
+        for m in range(4):
+            ss = decomposition(m)
             if ss not in self.__signal:
                 continue
             if ss == decomposition.trend:
                 res[ss.name] = x[i]
                 i += 1
                 continue
-            res[ss.name] = np.array([np.sqrt(x[i] ** 2 + x[i + 1] ** 2), np.rad2deg(np.arctan(-x[i + 1] / x[i]))])
+            A = np.sqrt(x[i] ** 2 + x[i + 1] ** 2)
+            phi_1 = np.arccos(x[i]/A)
+            phi_2 = 2*np.pi - phi_1
+            phi = phi_1
+            phi[np.sin(phi_1) * (-x[i+1]/A) < 0] = phi_2[np.sin(phi_1) * (-x[i+1]/A) < 0]
+            res[ss.name] = np.array([A, np.rad2deg(phi)])
+
             i += 2
 
         return res
@@ -121,5 +128,5 @@ def demo2():
 
 
 if __name__ == '__main__':
-    # demo1()
-    demo2()
+    demo1()
+    # demo2()

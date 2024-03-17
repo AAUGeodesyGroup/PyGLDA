@@ -45,15 +45,15 @@ class GDA:
         from src_FlowControl.SingleModel import SingleModel
         from src_hydro.EnumType import init_mode
         '''pre-process input forcing field'''
-        # setting_dir = '../settings/single_run'
+        # GDA.setting_dir = '../settings/single_run'
 
         '''configuration'''
-        for tile_ID in range(56, 80):
+        for tile_ID in range(69, 71):
 
             try:
-                GDA.set_tile(tile_ID=tile_ID)
+                GDA.set_tile(tile_ID=tile_ID, create_folder=False)
             except Exception:
-
+                # print('Not exists')
                 continue
 
             demo = SingleModel(case=GDA.case, setting_dir=GDA.setting_dir)
@@ -71,7 +71,7 @@ class GDA:
         pass
 
     @staticmethod
-    def set_tile(tile_ID=1):
+    def set_tile(tile_ID=1, create_folder=True):
         import geopandas as gpd
 
         if GDA.case == 'GDA_%s' % tile_ID:
@@ -104,17 +104,18 @@ class GDA:
         else:
             GDA.box[3] += 0.2
 
-        '''generate case-specified folder to store figures'''
-        dn = Path(figure_output) / GDA.case
-        if not dn.is_dir():
-            dn.mkdir()
-        GDA.figure_output = str(dn)
+        dn1 = Path(figure_output) / GDA.case
+        GDA.figure_output = str(dn1)
+        dn2 = Path(res_output) / GDA.case
+        GDA.res_output = str(dn2)
 
-        '''generate case-specified folder to store res'''
-        dn = Path(res_output) / GDA.case
-        if not dn.is_dir():
-            dn.mkdir()
-        GDA.res_output = str(dn)
+        if create_folder:
+            '''generate case-specified folder to store figures'''
+            if not dn1.is_dir():
+                dn1.mkdir()
+            '''generate case-specified folder to store res'''
+            if not dn2.is_dir():
+                dn2.mkdir()
 
         pass
 
@@ -547,8 +548,8 @@ class GDA:
         pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
         #
         nan_mask = (1 - np.isnan(res_GRACE)).astype(bool)
-        vmax = np.max(res_DA[nan_mask]) * 0.8
-        vmin = np.min(res_DA[nan_mask]) * 0.8
+        vmax = np.nanmax(res_DA[nan_mask]) * 0.8
+        vmin = np.nanmin(res_DA[nan_mask]) * 0.8
 
         if signal == 'trend':
             pygmt.makecpt(cmap='polar+h0', series=[vmin, vmax], background='o')
@@ -750,11 +751,11 @@ def demo_global_run_complete(tile_ID=80):
     pass
 
 
-def demo_global_run_only_DA(tile_ID=80):
+def demo_global_run_only_DA(tile_ID=80, prepare=False):
     """
     This is a complete processing chain to deal with global data assimilation for each tile.
     """
-    prepare = False
+    # prepare = False
 
     '''basic configuration of the tile of interest'''
     GDA.set_tile(
@@ -777,6 +778,23 @@ def demo_DA_visualization(tile_ID=80):
 
 if __name__ == '__main__':
     # demo2()
-    for tile_ID in [56, 16, 17]:
+    # for tile_ID in [33]:
+    #     demo_global_run_only_DA(prepare=True, tile_ID=tile_ID)
+    for tile_ID in [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19]:
         demo_global_run_complete(tile_ID=tile_ID)
-        # demo_DA_visualization(tile_ID=tile_ID)
+    # demo_DA_visualization(tile_ID=tile_ID)
+
+    # for tile_ID in [20,23,24,25,26,27,28,29,30,33,34,35]:
+    #     demo_global_run_complete(tile_ID=tile_ID)
+
+    # for tile_ID in [36, 38, 39, 40, 41, 42,43,44, 45,48,49, 50]:
+    #     demo_global_run_complete(tile_ID=tile_ID)
+
+    # for tile_ID in [52, 53,54,55,56,57,58,59,64,65,66,67,68,69]:
+    #     demo_global_run_complete(tile_ID=tile_ID)
+
+    # for tile_ID in [70,71,72,73,80,81,82,83,84,85,87,88,89,95]:
+    #     demo_global_run_complete(tile_ID=tile_ID)
+
+    # for tile_ID in [96,99,100,103,104,110,111,119,120]:
+    # demo_global_run_complete(tile_ID=tile_ID)

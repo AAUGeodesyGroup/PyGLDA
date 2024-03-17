@@ -556,11 +556,11 @@ def demo1():
 
 
 def demo2():
-    gr = GRACE_global_preparation().configure_global_mask()
+    gr = GRACE_global_preparation().configure_global_mask(fn='/media/user/Backup Plus/GRACE/GlobalLandMask.hdf5')
     gr.configure_global_shp()
-    # gr.basin_TWS(month_begin='2002-04', month_end='2023-05')
+    gr.basin_TWS(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/Backup Plus/GRACE/ewh', dir_out='/media/user/Backup Plus/GRACE/output')
     # gr.basin_COV(month_begin='2002-04', month_end='2023-05')
-    gr.grid_TWS(month_begin='2002-04', month_end='2023-05')
+    # gr.grid_TWS(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/Backup Plus/GRACE/ewh', dir_out='/media/user/Backup Plus/GRACE/output')
     pass
 
 

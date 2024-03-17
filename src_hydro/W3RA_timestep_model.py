@@ -246,14 +246,6 @@ class timestep_model:
         wz = np.fmax(1e-2, Sz) / SzFC
 
         '''added by Fan to fix runtime error'''
-        inf = np.exp(beta * (wz - 1)) == np.inf
-        if np.sum(inf) > 1:
-            print(beta[inf])
-            print(wz[inf])
-            wz[inf] = 1
-            S0[inf] = S0FC[inf]
-            Sz[inf] = S0FC[inf]
-
         fD = (wz > 1) * np.fmax(FdrainFC, 1 - 1. / wz) + (wz <= 1) * FdrainFC * np.exp(beta * (wz - 1))
         Dz = np.fmax(0, np.fmin(fD * Sz, Sz - 1e-2))
         D0 = Dz
@@ -263,16 +255,6 @@ class timestep_model:
         SzFC = SsFC
         Sz = Ss
         wz = np.fmax(1e-2, Sz) / SzFC
-
-        '''added by Fan to fix runtime error'''
-        inf = np.exp(beta * (wz - 1)) == np.inf
-        if np.sum(inf) > 1:
-            print(beta[inf])
-            print(wz[inf])
-            wz[inf] = 1
-            Ss[inf] = SsFC[inf]
-            Sz[inf] = SsFC[inf]
-
         fD = (wz > 1) * np.fmax(FdrainFC, 1 - 1. / wz) + (wz <= 1) * FdrainFC * np.exp(beta * (wz - 1))
         Dz = np.fmax(0, np.fmin(fD * Sz, Sz - 1e-2))
         Ds = Dz
@@ -282,15 +264,6 @@ class timestep_model:
         SzFC = SdFC
         Sz = Sd
         wz = np.fmax(1e-2, Sz) / SzFC
-
-        '''added by Fan to fix runtime error'''
-        inf = np.exp(beta * (wz - 1)) == np.inf
-        if np.sum(inf) > 1:
-            print(beta[inf])
-            print(wz[inf])
-            wz[inf] = 1
-            Sd[inf] = SdFC[inf]
-            Sd[inf] = SdFC[inf]
         fD = (wz > 1) * np.fmax(FdrainFC, 1 - 1. / wz) + (wz <= 1) * FdrainFC * np.exp(beta * (wz - 1))
         Dz = np.fmax(0, np.fmin(fD * Sz, Sz - 1e-2))  # % drainage from layer z [mm d^-1] (2.5)
         Dd = Dz

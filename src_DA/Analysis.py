@@ -150,7 +150,7 @@ class BasinSignalAnalysis:
         '''start recording data'''
         statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf']
         for day in daylist:
-            print(day.strftime('%Y-%m-%d'))
+            # print(day.strftime('%Y-%m-%d'))
             fn = self.__state_dir / ('state.%s.h5' % day.strftime('%Y%m%d'))
             hf = h5py.File(str(fn), 'r')
             for key in statesnn:

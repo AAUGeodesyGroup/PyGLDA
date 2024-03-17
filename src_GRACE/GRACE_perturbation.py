@@ -79,7 +79,7 @@ class GRACE_perturbed_obs:
             a = np.array(a)
 
             '''perturb the signal'''
-            if np.ndim(a) == 1:
+            if basin_num == 1:
                 '''in case there is only one subbasin'''
                 perturbed_TWS = np.random.normal(a, np.sqrt(cov), self.ens)[:, None]
             else:
