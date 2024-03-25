@@ -113,8 +113,8 @@ class SingleModel:
         shutil.copy(source_file, target_folder)
 
         oldname = 'state.%s.h5' % datetime.strptime(the_last_day, '%Y-%m-%d').strftime('%Y%m%d')
-        x = oldname.split('.')
-        newname = x[0] + '.' + modifydate + '.' + x[2]
+        # x = oldname.split('.')
+        newname = self.case +'_state.' + modifydate + '.h5'
         os.rename(target_folder / oldname, target_folder / newname)
         pass
 

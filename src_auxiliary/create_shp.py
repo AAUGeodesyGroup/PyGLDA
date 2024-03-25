@@ -93,13 +93,13 @@ class global_box_shp:
 
         for tile_id in range(num_basins):
             print('Tile: %s' % (tile_id + 1))
-            self.__create_basin_shp(left_corner_point=(left_corner_point_lat[id_basins == tile_id],
-                                                       left_corner_point_lon[id_basins == tile_id]),
-                                    tile_ID=tile_id + 1)
+            self._create_basin_shp(left_corner_point=(left_corner_point_lat[id_basins == tile_id],
+                                                      left_corner_point_lon[id_basins == tile_id]),
+                                   tile_ID=tile_id + 1)
 
         pass
 
-    def __create_basin_shp(self, left_corner_point=(90, -180), tile_ID=1):
+    def _create_basin_shp(self, left_corner_point=(90, -180), tile_ID=1):
         sub_basin = self.sub_basin
 
         N = self.basin[0] // sub_basin[0]
@@ -189,16 +189,152 @@ class global_box_shp:
 
         pass
 
-
     def removeGlaciers(self):
 
-        tile_glacier =[6,7,21,22] + list(range(121,151))
+        tile_glacier = [6, 7, 21, 22] + list(range(121, 151))
 
         return tile_glacier
 
+
+class global_box_shp_overlap(global_box_shp):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def configure_extension(self, extension=6):
+        self.extension = extension
+        assert extension // self.sub_basin[0] * self.sub_basin[0] == extension
+        assert extension // self.sub_basin[1] * self.sub_basin[1] == extension
+        return self
+
+    def _create_basin_shp(self, left_corner_point=(90, -180), tile_ID=1):
+        sub_basin = self.sub_basin
+
+        left_corner_lat = left_corner_point[0] + self.extension
+        left_corner_lon = left_corner_point[1] - self.extension
+
+        N = self.basin[0] // sub_basin[0] + self.extension * 2 // sub_basin[0]
+        M = self.basin[1] // sub_basin[1] + self.extension * 2 // sub_basin[1]
+
+        # num_sub_basins = N * M
+
+        lat_lu = np.array([left_corner_lat - i * sub_basin[0] for i in range(N)])
+        lon_lu = np.array([left_corner_lon + i * sub_basin[1] for i in range(M)])
+
+        lat_lu = lat_lu[lat_lu <= 90]
+        lat_lu = lat_lu[lat_lu > -90]
+        lon_lu = lon_lu[lon_lu >= -180]
+        lon_lu = lon_lu[lon_lu < 180]
+
+        lat_ru = lat_lu.copy()
+        lon_ru = lon_lu + sub_basin[1]
+        lon_ru = lon_ru[lon_ru <= 180]
+
+        lat_ld = lat_lu - sub_basin[0]
+        lon_ld = lon_lu.copy()
+        lat_ld = lat_ld[lat_ld >= -90]
+
+        num_sub_basins = len(lon_ru) * len(lat_ru)
+
+        # lat_rd = lat_lu - sub_basin[0]
+        # lon_rd = lon_lu + sub_basin[1]
+
+        # lon_lu, lat_lu = np.meshgrid(lon_lu, lat_lu)
+        lon_ru, lat_ru = np.meshgrid(lon_ru, lat_ru)
+        lon_ld, lat_ld = np.meshgrid(lon_ld, lat_ld)
+        # lon_rd, lat_rd = np.meshgrid(lon_rd, lat_rd)
+
+        poly = box(xmin=lon_ld, ymin=lat_ld, xmax=lon_ru, ymax=lat_ru)
+        ID = [i for i in range(1, num_sub_basins + 1)]
+        d = {'ID': ID, 'geometry': list(poly.flatten())}
+        gdf = gpd.GeoDataFrame(d, crs='epsg:4326')
+        gdf.to_file('../res/global_shp_overlap/Tile%s_subbasins.shp' % tile_ID)
+
+        pass
+
+    def delete_invalid_shp(self):
+        """
+        delete invalid sub_basins and basins
+        """
+
+        '''load data'''
+        invalid_subbasin = np.load('../res/invalid_subbasin.npy')
+
+        '''preparation'''
+        sub_basin = self.sub_basin
+        N = 180 // sub_basin[0]
+        M = 360 // sub_basin[1]
+        num_sub_basins = N * M
+        id_basins = np.arange(num_sub_basins).reshape((N, M))
+        lat = 89.5 - np.arange(N) * sub_basin[0]
+        lon = -179.5 + np.arange(M) * sub_basin[1]
+        lon, lat = np.meshgrid(lon, lat)
+
+        N2 = 180 // self.basin[0]
+        M2 = 360 // self.basin[1]
+        num_basins = N2 * M2
+
+        glaciers = self.removeGlaciers()
+
+        sub_id_basins = np.vsplit(id_basins, N2)
+        sub_id = {}
+        i = 0
+        for each in sub_id_basins:
+            a = np.hsplit(each, M2)
+            for m in range(M2):
+                sub_id[i + 1] = a[m]
+                i += 1
+
+        '''filter'''
+        for i in range(1, num_basins + 1):
+            if i in glaciers:
+                continue
+
+            gf = gpd.read_file('../res/global_shp_overlap/Tile%s_subbasins.shp' % i)
+
+            bd = gf.unary_union.bounds
+            x2 = id_basins[((lat <= bd[3]) * (lat >= bd[1]) * (lon >= bd[0]) * (lon <= bd[2])).astype(bool)].flatten()
+
+            '''judge 1st time'''
+            x1 = sub_id[i].flatten()
+            a = []
+            for m in x1:
+                if m in invalid_subbasin:
+                    a.append(False)
+                else:
+                    a.append(True)
+
+            if np.sum(np.array(a)) == 0:
+                continue
+
+            '''judge 2nd time'''
+            a = []
+            for m in x2:
+                if m in invalid_subbasin:
+                    a.append(False)
+                else:
+                    a.append(True)
+
+            if len(gf[a]) == 0:
+                continue
+
+            n = gf[a]
+            n.loc[:, 'ID'] = np.arange(np.sum(a)) + 1
+
+            n.to_file('../res/global_shp_overlap_new/Tile%s_subbasins.shp' % i)
+            pass
+
+        pass
+
+
 def demo1():
-    gbs = global_box_shp().configure_size()
-    gbs.create_shp()
+    # gbs = global_box_shp().configure_size()
+    # gbs.create_shp()
+
+    gbs = global_box_shp_overlap().configure_size().configure_extension(extension=6)
+    # gbs.create_shp()
+    gbs.delete_invalid_shp()
+
     pass
 
 
@@ -213,7 +349,7 @@ def demo2():
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q8c")
 
-    gdf = gpd.read_file(filename='../res/global_shp_new/Tile57_subbasins.shp')
+    gdf = gpd.read_file(filename='../res/global_shp_new/Tile58_subbasins.shp')
 
     fig.plot(data=gdf.boundary, pen="1p,black")
 
@@ -285,9 +421,9 @@ def demo5():
     '''new'''
     gdf_list = []
     invalid_basins = []
-    for tile in range(1, 150+1):
+    for tile in range(1, 150 + 1):
         try:
-            gdf = gpd.read_file(filename='../res/global_shp_new/Tile%s_subbasins.shp'%tile)
+            gdf = gpd.read_file(filename='../res/global_shp_overlap_new/Tile%s_subbasins.shp' % tile)
             gdf_list.append(gdf)
 
         except Exception:
@@ -295,24 +431,22 @@ def demo5():
             continue
 
     full_gdf = pd.concat(gdf_list)
-    fig.plot(data=full_gdf.boundary, pen="0.2p,black",fill = 'lightgreen', transparency= 30)
-
+    fig.plot(data=full_gdf.boundary, pen="0.2p,black", fill='lightgreen', transparency=30)
 
     '''old'''
     gdf_list = []
 
-    for tile in range(1, 150+1):
+    for tile in range(1, 150 + 1):
         if tile in invalid_basins:
             continue
-        gdf = gpd.read_file(filename='../res/global_shp_old/Tile%s_subbasins.shp'%tile)
+        gdf = gpd.read_file(filename='../res/global_shp_overlap/Tile%s_subbasins.shp' % tile)
         # gdf_list.append(gdf)
 
-        fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.5p,red", fill = 'lightblue', transparency= 60)
+        fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.5p,red", fill='lightblue', transparency=60)
         fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.5p,red")
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q9c")
     fig.show()
-
 
     pass
 

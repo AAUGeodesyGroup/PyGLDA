@@ -41,6 +41,7 @@ class DA_GRACE(OpenLoop):
         dp1['input']["pars"] = dp2['out_dir']
         dp1['input']["clim"] = dp2['out_dir']
         dp1['input']["mask_fn"] = dp2['out_dir']
+        dp1['init']['spec'] = self.case
 
         dp1['init']['mode'] = mode.name
         if mode == init_mode.cold:
@@ -81,7 +82,7 @@ class DA_GRACE(OpenLoop):
             for file_name in files:
                 if (str(file_name).split('_')[0] == self.basin) and file_name.endswith('.shp') and (
                         'subbasins' in file_name):
-                # if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
+                    # if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
                     target.append(os.path.join(root, file_name))
         assert len(target) == 1, target
 
@@ -202,14 +203,14 @@ class DA_GRACE(OpenLoop):
         land_mask = str(Path(self._outdir) / self.case / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
 
-        state_sample = Path(configDA.basic.NaNmaskStatesDir) / 'state.h5'
+        state_sample = Path(configDA.basic.NaNmaskStatesDir) / ('%s_state.h5' % self.case)
         bs.mask_nan(sample=state_sample)
 
         par_dir = str(Path(self._outdir) / self.case / 'par')
         dm_save_dir = '../temp'
         dm = DM_basin_average(shp=bs, layer=layer, par_dir=par_dir)
         dm.vertical_aggregation(isVec=True).basin_average()
-        dm.saveDM(out_path=dm_save_dir)
+        # dm.saveDM(out_path=dm_save_dir)
 
         pass
 
@@ -234,7 +235,7 @@ class DA_GRACE(OpenLoop):
 
         shutil.copy(source_folder / taget_fn, target_folder)
 
-        os.replace(target_folder / taget_fn, target_folder / 'state.h5')
+        os.replace(target_folder / taget_fn, target_folder / ('%s_state.h5' % self.case))
 
         pass
 
@@ -248,7 +249,8 @@ class DA_GRACE(OpenLoop):
         import json
         from src_DA.observations import GRACE_obs
         from src_DA.ExtracStates import EnsStates
-        from src_DA.data_assimilaton import DataAssimilation, DataAssimilation_monthly, DataAssimilation_monthlymean_dailyupdate, DataAssimilation_monthly_diag
+        from src_DA.data_assimilaton import DataAssimilation, DataAssimilation_monthly, \
+            DataAssimilation_monthlymean_dailyupdate, DataAssimilation_monthly_diag
 
         if rank != 0:
             f = open('../log/OL/log_%s.txt' % rank, 'w')
@@ -277,22 +279,26 @@ class DA_GRACE(OpenLoop):
         lm = dp2['out_dir']
         land_mask = str(Path(lm) / self.case / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
-        state_sample = Path(configDA.basic.NaNmaskStatesDir) / 'state.h5'
+        state_sample = Path(configDA.basic.NaNmaskStatesDir) / ('%s_state.h5' % self.case)
         bs.mask_nan(sample=state_sample)
 
         '''obtain the design matrix from pre-saved data'''
         layer = {}
         for key, vv in configDA.basic.layer.items():
             layer[states_var[key]] = vv
+        # dm_save_dir = '../temp'
+        # dm = DM_basin_average(shp=bs, layer=layer, LoadfromDisk=True, dir=dm_save_dir)
+        par_dir = str(Path(lm) / self.case / 'par')
         dm_save_dir = '../temp'
-        dm = DM_basin_average(shp=bs, layer=layer, LoadfromDisk=True, dir=dm_save_dir)
+        dm = DM_basin_average(shp=bs, layer=layer, par_dir=par_dir)
+        dm.vertical_aggregation(isVec=True).basin_average()
 
         '''obtain the GRACE observation'''
         gr = GRACE_obs(basin=self.basin, dir_obs=configDA.obs.dir, ens_id=rank)
 
         '''states extract operator'''
         sv = EnsStates(DM=dm, Ens=configDA.basic.ensemble)
-        sv.configure_dir(states_dir= str(Path(dp1['output']['dir']) / ('state_%s_ensemble_%s' % (self.case, rank))))
+        sv.configure_dir(states_dir=str(Path(dp1['output']['dir']) / ('state_%s_ensemble_%s' % (self.case, rank))))
 
         '''DA experiment'''
         # da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
@@ -302,6 +308,8 @@ class DA_GRACE(OpenLoop):
         da.configure_design_matrix(DM=dm)
 
         '''running with MPI parallelization'''
+        print('User case: %s' % self.case)
+        print()
         da.run_mpi()
 
         pass

@@ -91,7 +91,7 @@ class ts:
             phi_1 = np.arccos(x[i]/A)
             phi_2 = 2*np.pi - phi_1
             phi = phi_1
-            phi[np.sin(phi_1) * (-x[i+1]/A) < 0] = phi_2[np.sin(phi_1) * (-x[i+1]/A) < 0]
+            phi[ (-x[i+1]/A) < 0] = phi_2[(-x[i+1]/A) < 0]
             res[ss.name] = np.array([A, np.rad2deg(phi)])
 
             i += 2

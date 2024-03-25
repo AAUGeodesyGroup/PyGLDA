@@ -20,11 +20,22 @@ class GDA:
     cold_begin_time = '2000-01-01'
     cold_end_time = '2010-01-31'
 
+    # warm_begin_time = '2000-01-01'
+    # warm_end_time = '2023-05-31'
     warm_begin_time = '2000-01-01'
-    warm_end_time = '2023-05-31'
+    warm_end_time = '2010-01-31'
 
+    # resume_begin_time = '2002-03-31'
+    # resume_end_time = '2023-05-31'
     resume_begin_time = '2002-03-31'
-    resume_end_time = '2023-05-31'
+    resume_end_time = '2010-01-31'
+
+    tiles1 = [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 38,
+              39]
+
+    tiles2 = [40, 41, 42, 43, 44, 45, 48, 49, 50, 52, 53, 54, 55, 56, 57, 58, 59, 64, 65, 66, 67, 68, 69]
+
+    tiles3 = [70, 71, 72, 73, 80, 81, 82, 83, 84, 85, 87, 88, 89, 95, 96, 99, 100, 103, 104, 110, 111, 119, 120]
 
     pass
 
@@ -37,18 +48,18 @@ class GDA:
         gr.configure_global_shp()
         # gr.basin_TWS(month_begin='2002-04', month_end='2023-05')
         # gr.basin_COV(month_begin='2002-04', month_end='2023-05')
-        gr.grid_TWS(month_begin='2002-04', month_end='2023-05')
+        # gr.grid_TWS(month_begin='2002-04', month_end='2023-05')
         pass
 
     @staticmethod
-    def global_preparation_2():
+    def global_preparation_2(tiles):
         from src_FlowControl.SingleModel import SingleModel
         from src_hydro.EnumType import init_mode
         '''pre-process input forcing field'''
         # GDA.setting_dir = '../settings/single_run'
 
         '''configuration'''
-        for tile_ID in range(69, 71):
+        for tile_ID in tiles:
 
             try:
                 GDA.set_tile(tile_ID=tile_ID, create_folder=False)
@@ -274,7 +285,7 @@ class GDA:
                 demo.generate_perturbed_GRACE_obs()
 
             '''prepare the design matrix'''
-            demo.prepare_design_matrix()
+            # demo.prepare_design_matrix()
 
         comm.barrier()
 
@@ -291,7 +302,7 @@ class GDA:
 
         '''Job finished'''
         sys.stdout = temp
-        print('job finished')
+        print('job finished: %s' % GDA.case)
 
         pass
 
@@ -776,25 +787,46 @@ def demo_DA_visualization(tile_ID=80):
     pass
 
 
-if __name__ == '__main__':
-    # demo2()
-    # for tile_ID in [33]:
-    #     demo_global_run_only_DA(prepare=True, tile_ID=tile_ID)
-    for tile_ID in [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19]:
+def demo_main_node_1():
+    GDA.setting_dir = '../settings/Ucloud_DA_node_1'
+    # GDA.global_preparation_2(tiles=GDA.tiles1)
+
+    for tile_ID in [35, 36, 38, 39, 48, 49, 84, 85]:
+        # for tile_ID in [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 38,
+        #           39]:
         demo_global_run_complete(tile_ID=tile_ID)
-    # demo_DA_visualization(tile_ID=tile_ID)
 
-    # for tile_ID in [20,23,24,25,26,27,28,29,30,33,34,35]:
-    #     demo_global_run_complete(tile_ID=tile_ID)
+    pass
 
-    # for tile_ID in [36, 38, 39, 40, 41, 42,43,44, 45,48,49, 50]:
-    #     demo_global_run_complete(tile_ID=tile_ID)
 
-    # for tile_ID in [52, 53,54,55,56,57,58,59,64,65,66,67,68,69]:
-    #     demo_global_run_complete(tile_ID=tile_ID)
+def demo_main_node_2():
+    GDA.setting_dir = '../settings/Ucloud_DA_node_2'
 
-    # for tile_ID in [70,71,72,73,80,81,82,83,84,85,87,88,89,95]:
-    #     demo_global_run_complete(tile_ID=tile_ID)
+    # GDA.global_preparation_2(tiles=GDA.tiles2)
 
-    # for tile_ID in [96,99,100,103,104,110,111,119,120]:
-    # demo_global_run_complete(tile_ID=tile_ID)
+    for tile_ID in [57, 58, 59, 64, 65, 66, 67, 68, 69]:
+        demo_global_run_complete(tile_ID=tile_ID)
+
+    pass
+
+
+def demo_main_node_3():
+    GDA.setting_dir = '../settings/Ucloud_DA_node_3'
+
+    # GDA.global_preparation_2(tiles=GDA.tiles3)
+
+    for tile_ID in [100, 103, 104, 110, 111, 119, 120]:
+        demo_global_run_complete(tile_ID=tile_ID)
+
+    pass
+
+
+if __name__ == '__main__':
+    # tiles = [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 38, 39,
+    #          40, 41, 42, 43, 44, 45, 48, 49, 50, 52, 53, 54, 55, 56, 57, 58, 59,
+    #          64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 80, 81, 82, 83, 84, 85, 87, 88, 89, 95, 96, 99, 100, 103, 104, 110,
+    #          111, 119, 120]
+
+    demo_main_node_1()
+    # demo_main_node_2()
+    # demo_main_node_3()

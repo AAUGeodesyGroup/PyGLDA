@@ -355,7 +355,11 @@ class GRACE_global_preparation:
 
             print(tn)
             fn = directory / tn
-            time_epoch.append(tn.split('.')[0])
+            date = tn.split('.')[0]
+            if len(date.split('-')) == 2:
+                time_epoch.append(date + '-15')  # assumed to be the mid day of the month but should be checked later
+            else:
+                time_epoch.append(date)
 
             '''flip the data to be compatible with the mask'''
             tws_one_month = np.flipud(h5py.File(fn, 'r')['data'][:])
@@ -388,9 +392,9 @@ class GRACE_global_preparation:
         print('Finished')
         pass
 
-
     def basin_COV(self, month_begin='2002-04', month_end='2002-04',
-                  dir_in='/media/user/My Book/Fan/GRACE/DDK3_timeseries', dir_out='/media/user/My Book/Fan/GRACE/output'):
+                  dir_in='/media/user/My Book/Fan/GRACE/DDK3_timeseries',
+                  dir_out='/media/user/My Book/Fan/GRACE/output'):
 
         '''load mask'''
         res = 1
@@ -439,7 +443,7 @@ class GRACE_global_preparation:
             for tile, tile_mask in mask.items():
                 basins_num = len(list(tile_mask.keys())) - 1
                 '''loop for the subbasins'''
-                vv=[]
+                vv = []
                 for i in range(1, basins_num + 1):
                     a = tws_one_month[:, tile_mask[i]]
                     b = area[tile_mask[i]]
@@ -464,9 +468,8 @@ class GRACE_global_preparation:
         print('Finished')
         pass
 
-
     def grid_TWS(self, month_begin='2002-04', month_end='2002-04',
-                  dir_in='/media/user/My Book/Fan/GRACE/ewh', dir_out='/media/user/My Book/Fan/GRACE/output'):
+                 dir_in='/media/user/My Book/Fan/GRACE/ewh', dir_out='/media/user/My Book/Fan/GRACE/output'):
         """
         basin averaged TWS, monthly time-series, [mm]
         Be careful to deal with mask and TWS.
@@ -512,7 +515,11 @@ class GRACE_global_preparation:
 
             print(tn)
             fn = directory / tn
-            time_epoch.append(tn.split('.')[0])
+            date = tn.split('.')[0]
+            if len(date.split('-')) == 2:
+                time_epoch.append(date + '-15')  # assumed to be the mid day of the month but should be checked later
+            else:
+                time_epoch.append(date)
 
             '''flip the data to be compatible with the mask'''
             tws_one_month = np.flipud(h5py.File(fn, 'r')['data'][:])
@@ -556,11 +563,23 @@ def demo1():
 
 
 def demo2():
-    gr = GRACE_global_preparation().configure_global_mask(fn='/media/user/Backup Plus/GRACE/GlobalLandMask.hdf5')
-    gr.configure_global_shp()
-    gr.basin_TWS(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/Backup Plus/GRACE/ewh', dir_out='/media/user/Backup Plus/GRACE/output')
+    # gr = GRACE_global_preparation().configure_global_mask(fn='/media/user/Backup Plus/GRACE/GlobalLandMask.hdf5')
+    # gr.configure_global_shp()
+    # gr.basin_TWS(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/Backup Plus/GRACE/ewh',
+    #              dir_out='/media/user/Backup Plus/GRACE/output')
+    # gr.grid_TWS(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/Backup Plus/GRACE/ewh',
+    #             dir_out='/media/user/Backup Plus/GRACE/output')
     # gr.basin_COV(month_begin='2002-04', month_end='2023-05')
-    # gr.grid_TWS(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/Backup Plus/GRACE/ewh', dir_out='/media/user/Backup Plus/GRACE/output')
+
+    begin = '2002-04'
+    end = '2010-01'
+    gr = GRACE_global_preparation().configure_global_mask(fn='/media/user/My Book/Fan/GRACE/basin_selection/GlobalLandMask.hdf5')
+    gr.configure_global_shp()
+    gr.basin_TWS(month_begin=begin, month_end=end, dir_in='/media/user/My Book/Fan/GRACE/ewh',
+                 dir_out='/media/user/My Book/Fan/GRACE/output')
+    gr.grid_TWS(month_begin=begin, month_end=end, dir_in='/media/user/My Book/Fan/GRACE/ewh',
+                dir_out='/media/user/My Book/Fan/GRACE/output')
+    gr.basin_COV(month_begin=begin, month_end=end)
     pass
 
 

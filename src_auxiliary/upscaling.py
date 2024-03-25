@@ -8,6 +8,7 @@ class upscaling:
 
     def __init__(self, basin: str):
         self.__basin = basin
+        self.__extra_mask = None
         pass
 
     def configure_model_state(self, GRACEres=0.5, modelres=0.1,
@@ -31,6 +32,9 @@ class upscaling:
         rows, cols = sample.shape
         new = np.nanmin(sample.reshape(rows // n, n, cols // n, n), axis=(1, 3))
 
+        if self.__extra_mask is not None:
+            new[self.__extra_mask == False] = np.nan
+
         return new
 
     def configure_GRACE(self, res=0.5):
@@ -44,7 +48,7 @@ class upscaling:
             for file_name in files:
                 if (str(file_name).split('_')[0] == self.__basin) and file_name.endswith('.shp') and (
                         'subbasins' in file_name):
-                # if (self.__basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
+                    # if (self.__basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
                     target.append(os.path.join(root, file_name))
         assert len(target) == 1, target
 
@@ -54,7 +58,7 @@ class upscaling:
         GRACE_05deg_land_mask = '../data/GRACE/GlobalLandMaskForGRACE.hdf5'
         lm = np.flipud(h5py.File(GRACE_05deg_land_mask, 'r')['resolution_05']['mask'][:])
 
-        self.bshp_mask = (mf[0]*lm).astype(bool)
+        self.bshp_mask = (mf[0] * lm).astype(bool)
 
         return self
 
@@ -64,7 +68,39 @@ class upscaling:
         """
         sample = np.full(self.bshp_mask.shape, np.nan)
         sample[self.bshp_mask] = GRACE_obs
+
+        if self.__extra_mask is not None:
+            sample[self.__extra_mask == False] = np.nan
         return sample
+
+    def extra_mask(self, res=0.5):
+        """this is used to remove the extension of the tile (prevent overlaps)"""
+
+        self.__extra_mask = self.in_mask()
+
+        return self
+
+    def in_mask(self, res=0.5):
+        """this is used to remove the extension of the tile (prevent overlaps)"""
+
+        from pathlib import Path
+        import os
+
+        '''search for the shape file'''
+        pp = Path('../res/global_shp_new_nooverlap')
+        target = []
+        for root, dirs, files in os.walk(pp):
+            for file_name in files:
+                if (str(file_name).split('_')[0] == self.__basin) and file_name.endswith('.shp') and (
+                        'subbasins' in file_name):
+                    # if (self.__basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
+                    target.append(os.path.join(root, file_name))
+        assert len(target) == 1, target
+
+        in_mask = \
+            basin_shp_process(res=res, basin_name=self.__basin).shp_to_mask(shp_path=str(target[0])).mask[0]
+
+        return in_mask
 
 
 def demo1():
