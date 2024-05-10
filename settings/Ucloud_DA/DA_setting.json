@@ -1,9 +1,9 @@
 {
     "basic": {
-        "fromdate": "2000-01-01",
+        "fromdate": "2002-03-31",
         "todate": "2023-05-31",
-        "basin": "Tile81",
-        "basin_shp": "../data/basin/shp/global_shp_new/Tile81_subbasins.shp",
+        "basin": "Tile96",
+        "basin_shp": "../data/basin/shp/global_shp_new/Tile96_subbasins.shp",
         "NaNmaskStatesDir": "/work/data_for_w3/w3ra/states_sample",
         "ensemble": 30,
         "layer": {

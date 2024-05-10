@@ -1,5 +1,5 @@
 {
-    "date_begin": "2000-01",
+    "date_begin": "2002-03",
     "date_end": "2023-05",
     "out_dir": "/work/data_for_w3/w3ra/crop_input",
     "mask_dir": "/work/data_for_w3/w3ra/global/pyW3RA/mask",

@@ -1,27 +1,27 @@
 {
     "bounds": {
         "lat": [
-            0.2,
-            -18.2
+            -17.8,
+            -36.2
         ],
         "lon": [
             -60.2,
-            -35.8
+            -38.8
         ],
-        "prefix": "GDA_81"
+        "prefix": "GDA_96"
     },
     "init": {
-        "mode": "warm",
-        "date": "1999-12-31",
+        "mode": "resume",
+        "date": "2002-03-30",
         "spinup": [
             "2000-01-01",
             "2010-01-31"
         ],
         "dir": "/work/data_for_w3/w3ra/initial_states",
-        "spec": ""
+        "spec": "GDA_96"
     },
     "run": {
-        "fromdate": "2000-01-01",
+        "fromdate": "2002-03-31",
         "todate": "2023-05-31",
         "res": 0.1,
         "exttype": "ERA5",

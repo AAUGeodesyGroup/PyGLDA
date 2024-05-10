@@ -17,18 +17,21 @@ class GDA:
     box = [50.5, 42, 8.5, 29.5]
     basin = 'tile0'
 
-    cold_begin_time = '2000-01-01'
-    cold_end_time = '2010-01-31'
+    # cold_begin_time = '2000-01-01'
+    # cold_end_time = '2010-01-31'
 
-    # warm_begin_time = '2000-01-01'
-    # warm_end_time = '2023-05-31'
+    cold_begin_time = '2010-02-01'
+    cold_end_time = '2010-03-31'
+
     warm_begin_time = '2000-01-01'
-    warm_end_time = '2010-01-31'
+    warm_end_time = '2023-05-31'
+    # warm_begin_time = '2000-01-01'
+    # warm_end_time = '2010-01-31'
 
-    # resume_begin_time = '2002-03-31'
-    # resume_end_time = '2023-05-31'
     resume_begin_time = '2002-03-31'
-    resume_end_time = '2010-01-31'
+    resume_end_time = '2023-05-31'
+    # resume_begin_time = '2002-03-31'
+    # resume_end_time = '2010-01-31'
 
     tiles1 = [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 38,
               39]
@@ -155,7 +158,7 @@ class GDA:
         modifydate = (datetime.strptime(GDA.warm_begin_time, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y%m%d')
         demo.create_ini_states(mode=init_mode.cold, modifydate=modifydate)
 
-        demo.extract_signal()
+        # demo.extract_signal()
 
         pass
 
@@ -694,35 +697,14 @@ class GDA:
         pass
 
 
-def demo1():
+def demo_prepare_GRACE():
     GDA.global_preparation_1()
     pass
 
 
-def demo2():
-    GDA.global_preparation_2()
-    pass
-
-
-def demo3():
-    # GDA.setting_dir = '../settings/single_run'
-    GDA.single_run(tile_ID=81)
-    pass
-
-
-def demo4():
-    # GDA.setting_dir = '../settings/single_run'
-    GDA.single_run_visualization(tile_ID=81)
-    pass
-
-
-def demo5():
-    GDA.OL_run(tile_ID=81, prepare=True)
-    pass
-
-
-def demo6():
-    GDA.DA_run(tile_ID=81, prepare=False)
+def demo_prepare_forcing():
+    import numpy as np
+    GDA.global_preparation_2(tiles=np.arange(300))
     pass
 
 
@@ -789,23 +771,24 @@ def demo_DA_visualization(tile_ID=80):
 
 def demo_main_node_1():
     GDA.setting_dir = '../settings/Ucloud_DA_node_1'
-    # GDA.global_preparation_2(tiles=GDA.tiles1)
+    GDA.global_preparation_2(tiles=GDA.tiles1)
 
-    for tile_ID in [35, 36, 38, 39, 48, 49, 84, 85]:
-        # for tile_ID in [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 38,
-        #           39]:
-        demo_global_run_complete(tile_ID=tile_ID)
-
-    pass
+    # for tile_ID in [35, 36, 38, 39, 48, 49, 84, 85]:
+    #     # for tile_ID in [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 38,
+    #     #           39]:
+    #     demo_global_run_complete(tile_ID=tile_ID)
+    #
+    # pass
 
 
 def demo_main_node_2():
     GDA.setting_dir = '../settings/Ucloud_DA_node_2'
 
     # GDA.global_preparation_2(tiles=GDA.tiles2)
+    GDA.global_preparation_2(tiles=[39])
 
-    for tile_ID in [57, 58, 59, 64, 65, 66, 67, 68, 69]:
-        demo_global_run_complete(tile_ID=tile_ID)
+    # for tile_ID in [57, 58, 59, 64, 65, 66, 67, 68, 69]:
+    #     demo_global_run_complete(tile_ID=tile_ID)
 
     pass
 
@@ -815,7 +798,7 @@ def demo_main_node_3():
 
     # GDA.global_preparation_2(tiles=GDA.tiles3)
 
-    for tile_ID in [100, 103, 104, 110, 111, 119, 120]:
+    for tile_ID in [56]:
         demo_global_run_complete(tile_ID=tile_ID)
 
     pass
@@ -827,6 +810,6 @@ if __name__ == '__main__':
     #          64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 80, 81, 82, 83, 84, 85, 87, 88, 89, 95, 96, 99, 100, 103, 104, 110,
     #          111, 119, 120]
 
-    demo_main_node_1()
-    # demo_main_node_2()
+    # demo_main_node_1()
+    demo_main_node_2()
     # demo_main_node_3()

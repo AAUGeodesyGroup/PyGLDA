@@ -1,8 +1,8 @@
 {
     "ensemble": 30,
     "dir": {
-        "in": "/work/data_for_w3/w3ra/crop_input/GDA_81",
-        "out": "/work/data_for_w3/w3ra/crop_input/GDA_81"
+        "in": "/work/data_for_w3/w3ra/crop_input/GDA_96",
+        "out": "/work/data_for_w3/w3ra/crop_input/GDA_96"
     },
     "forcing": {
         "2t": {

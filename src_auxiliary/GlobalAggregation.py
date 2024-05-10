@@ -201,11 +201,11 @@ class tile_aggregation:
 
     def aggregate(self, temp=None, tile_ID=0, H_inside_mask=None):
         if self.__tile_change(tile_ID=tile_ID):
-            print('SSSS')
+            # print('SSSS')
             if self.AG_map is None:
                 self.AG_map = self.__AG_map_h
             else:
-                print('v')
+                # print('v')
                 self.AG_map = self.__vertical_aggregation(self.AG_map, self.__AG_map_h, self.__AG_mask_h)
             self.__AG_map_h = None
             self.__AG_mask_h = None
@@ -215,7 +215,7 @@ class tile_aggregation:
             self.__AG_mask_h = H_inside_mask
             return
 
-        print('h')
+        # print('h')
         self.__AG_map_h = self.__horizontal_aggregation(self.__AG_map_h, temp, H_inside_mask)
         self.__AG_mask_h += H_inside_mask
 
@@ -726,5 +726,5 @@ def demo2():
 
 
 if __name__ == '__main__':
-    demo1()
-    # demo2()
+    # demo1()
+    demo2()

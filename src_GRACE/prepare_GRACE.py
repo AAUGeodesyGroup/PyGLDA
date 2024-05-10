@@ -572,7 +572,7 @@ def demo2():
     # gr.basin_COV(month_begin='2002-04', month_end='2023-05')
 
     begin = '2002-04'
-    end = '2010-01'
+    end = '2023-05'
     gr = GRACE_global_preparation().configure_global_mask(fn='/media/user/My Book/Fan/GRACE/basin_selection/GlobalLandMask.hdf5')
     gr.configure_global_shp()
     gr.basin_TWS(month_begin=begin, month_end=end, dir_in='/media/user/My Book/Fan/GRACE/ewh',
