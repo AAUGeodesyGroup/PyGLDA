@@ -1,4 +1,4 @@
-# pyW3ra: a python translation of W3RA
+# pyW3ra: a python translation of W3RA and a de-coupled data assimilation platform
 
 #### Description
 {**When you're done, you can delete the content in this README and update the file with details for others getting started with your repository**}

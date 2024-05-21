@@ -225,7 +225,7 @@ class ERA5_for_W3RA:
 
 
 def demo1():
-    ERA5_download = ERA5_for_W3().setPath().setDate(begin='1995-01', end='1999-12')
+    ERA5_download = ERA5_for_W3().setPath('/media/user/My Book/Fan/ERA5/Raw_W3').setDate(begin='1994-10', end='1994-10')
     ERA5_download.getDataByMonth()
     pass
 
@@ -237,5 +237,5 @@ def demo2():
 
 
 if __name__ == '__main__':
-    # demo1()
-    demo2()
+    demo1()
+    # demo2()

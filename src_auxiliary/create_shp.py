@@ -451,10 +451,42 @@ def demo5():
     pass
 
 
+def showbox():
+    import pygmt
+
+    fig = pygmt.Figure()
+
+    # Define region of interest
+    region = [-11.1, 45.1, 33.9, 76.1]
+
+    # Assign a value of 0 for all water masses and a value of 1 for all land
+    # masses.
+    # Use shoreline data with (l)ow resolution and set the grid spacing to
+    # 5 arc-minutes in x and y direction.
+    grid = pygmt.grdlandmask(region=region, spacing="5m", maskvalues=[0, 1], resolution="l")
+
+    # Plot clipped grid
+    fig.basemap(region=region, projection="M12c", frame=True)
+
+    # Define a colormap to be used for two categories, define the range of the
+    # new discrete CPT using series=(lowest_value, highest_value, interval),
+    # use color_model="+cwater,land" to write the discrete color palette
+    # "batlow" in categorical format and add water/land as annotations for the
+    # colorbar.
+    pygmt.makecpt(cmap="batlow", series=(0, 1, 1), color_model="+cwater,land")
+
+    fig.grdimage(grid=grid, cmap=True)
+    fig.colorbar(position="JMR+o0.5c/0c+w8c")
+
+    fig.show()
+
+    pass
+
 if __name__ == '__main__':
     # shp_change_Danube()
     # demo1()
     # demo2()
     # demo3()
     # demo4()
-    demo5()
+    # demo5()
+    showbox()
