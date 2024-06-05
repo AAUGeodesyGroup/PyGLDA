@@ -88,7 +88,12 @@ class GRACE_preparation:
 
             print(tn)
             fn = directory / tn
-            time_epoch.append(tn.split('.')[0])
+
+            date = tn.split('.')[0]
+            if len(date.split('-')) == 2:
+                time_epoch.append(date + '-15')  #TODO: assumed to be the mid day of the month but should be checked later
+            else:
+                time_epoch.append(date)
 
             tws_one_month = h5py.File(fn, 'r')['data'][:]
 
@@ -357,7 +362,7 @@ class GRACE_global_preparation:
             fn = directory / tn
             date = tn.split('.')[0]
             if len(date.split('-')) == 2:
-                time_epoch.append(date + '-15')  # assumed to be the mid day of the month but should be checked later
+                time_epoch.append(date + '-15')  #TODO: assumed to be the mid day of the month but should be checked later
             else:
                 time_epoch.append(date)
 
@@ -552,13 +557,13 @@ def demo1():
     # GR = GRACE_preparation(basin_name='MDB',
     #                        shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
     # GR.basin_TWS(month_begin='2002-04', month_end='2023-06')
-    GR = GRACE_preparation(basin_name='DRB',
+    GR = GRACE_preparation(basin_name='DRB_basin',
                            shp_path='../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp')
 
     GR.generate_mask()
-    # GR.basin_TWS(month_begin='2002-04', month_end='2023-06')
-    # GR.basin_COV(month_begin='2002-04', month_end='2023-06')
-    GR.grid_TWS(month_begin='2002-04', month_end='2023-06')
+    GR.basin_TWS(month_begin='2002-04', month_end='2010-01')
+    GR.basin_COV(month_begin='2002-04', month_end='2010-01')
+    GR.grid_TWS(month_begin='2002-04', month_end='2010-01')
     pass
 
 
@@ -584,4 +589,5 @@ def demo2():
 
 
 if __name__ == '__main__':
-    demo2()
+    demo1()
+    # demo2()

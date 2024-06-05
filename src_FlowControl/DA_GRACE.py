@@ -127,7 +127,7 @@ class DA_GRACE(OpenLoop):
         pass
 
     def gather_OLmean(self, post_fix='OL'):
-
+        """gather the OL mean to be reduced from GRACE to acquire the TWS anomaly"""
         dp_dir = self.setting_dir / 'DA_setting.json'
         configDA = config_DA.loadjson(dp_dir).process()
 

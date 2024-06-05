@@ -560,11 +560,50 @@ def tile_GRACE_2():
 
 
 
+def Danube_exp():
+    import pandas as pd
+    import geopandas as gpd
+
+    region = [5, 30, 40, 55]
+
+    grid = pygmt.datasets.load_earth_relief(resolution="10m", region=region)
+    fig = pygmt.Figure()
+    fig.grdimage(grid=grid, projection="Q10c", frame="a5", cmap="geo")
+    fig.coast(shorelines="1/0.2p", projection="Q10c",borders=["1/0.5p,black", "2/0.5p,red", "3/0.5p,blue"])
+    fig.colorbar(position="jTR+o0.4c/0.4c+h+w5c/0.3c+ml",
+    # Add a box around the colobar with a fill ("+g") in "white" color and
+    # a transparency ("@") of 30 % and with a 0.8-points thick black
+    # outline ("+p")
+     frame=["a1500", "x", "y+lm"])
+
+    geo_df = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    fig.plot(data=geo_df.geometry, pen="1.5p,blue")
+    fig.text(x=13, y=48, text='Upper Basin',fill='white@40')
+    fig.text(x=20, y=46, text='Middle Basin', fill='white@40')
+    fig.text(x=26, y=45, text='Lower Basin', fill='white@40')
+
+    # fig.show()
+
+    # fig.shift_origin(yshift='-10c')
+    # # pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    # # pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
+    # # pygmt.makecpt(cmap='polar', series=[1, 11, 1], background='o')
+    #
+    #
+    #
+    # fig.coast(shorelines="1/0.2p", region=region, projection="Q8c")
+
+    #
+    fig.show()
+
+    pass
+
 
 if __name__ == '__main__':
     # model_component_comparison_to_Leire()
     # compariosn_to_GRACE()
     # monthly_update_daily_update()
     # map2D_comparison()
-    tile_GRACE_1()
+    # tile_GRACE_1()
     # tile_GRACE_2()
+    Danube_exp()

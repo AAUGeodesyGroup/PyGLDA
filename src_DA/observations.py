@@ -39,8 +39,12 @@ class GRACE_obs:
     def set_month(self, month='2002-01'):
 
         for date in self.__time_list:
+            if len(date.split('-')) == 2:
+                thismonth = date
+            else:
+                thismonth = datetime.strptime(date, '%Y-%m-%d').strftime('%Y-%m')
 
-            if datetime.strptime(date, '%Y-%m-%d').strftime('%Y-%m') == month:
+            if thismonth == month:
                 self.__date_index = self.__time_list.index(date)
                 break
             else:

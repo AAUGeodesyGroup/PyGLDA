@@ -7,10 +7,6 @@ from src_hydro.EnumType import states_var, forcing, forcingSource, perturbation_
 from src_hydro.GeoMathKit import GeoMathKit
 from datetime import datetime, timedelta
 from pathlib import Path
-import netCDF4 as nc
-import scipy.io as scio
-import metview as mv
-import calendar
 
 
 class load_forcing:
@@ -60,6 +56,7 @@ class load_forcing:
         return ext
 
     def __getForcingFromE20WFDEI(self, date: datetime):
+        import scipy.io as scio
         """
         This code is demonstrating a comparison between the matlab code and python code. Not sure if we use it again.
         The data is stored in a yearly basis for each variable. Reading mat files (after being interpolated) on daily basis

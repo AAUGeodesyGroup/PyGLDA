@@ -251,6 +251,8 @@ class Postprocessing_basin:
         str_time = list(gr['time_epoch'][:].astype(str))
         fraction_time = []
         for tt in str_time:
+            if len(tt.split('-')) == 2:
+                tt = tt + '-15'
             da = datetime.strptime(tt, '%Y-%m-%d')
             fraction_time.append(da.year + (da.month - 1) / 12 + da.day / 365.25)
 
