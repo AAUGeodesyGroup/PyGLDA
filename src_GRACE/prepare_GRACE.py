@@ -557,13 +557,14 @@ def demo1():
     # GR = GRACE_preparation(basin_name='MDB',
     #                        shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
     # GR.basin_TWS(month_begin='2002-04', month_end='2023-06')
-    GR = GRACE_preparation(basin_name='DRB_basin',
-                           shp_path='../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp')
+    GR = GRACE_preparation(basin_name='GDRB',
+                           shp_path='../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp')
 
     GR.generate_mask()
     GR.basin_TWS(month_begin='2002-04', month_end='2010-01')
-    GR.basin_COV(month_begin='2002-04', month_end='2010-01')
     GR.grid_TWS(month_begin='2002-04', month_end='2010-01')
+    GR.basin_COV(month_begin='2002-04', month_end='2010-01')
+
     pass
 
 

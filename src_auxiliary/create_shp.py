@@ -327,6 +327,70 @@ class global_box_shp_overlap(global_box_shp):
         pass
 
 
+class basin2grid_shp:
+
+    def __init__(self, grid=(3, 3)):
+        sub_basin = grid
+
+        N = 180 // sub_basin[0]
+        M = 360 // sub_basin[1]
+
+        num_sub_basins = N * M
+
+        lat_lu = np.array([90 - i * sub_basin[0] for i in range(N)])
+        lon_lu = np.array([-180 + i * sub_basin[1] for i in range(M)])
+
+        lat_ru = lat_lu.copy()
+        lon_ru = lon_lu + sub_basin[1]
+
+        lat_ld = lat_lu - sub_basin[0]
+        lon_ld = lon_lu.copy()
+
+        # lat_rd = lat_lu - sub_basin[0]
+        # lon_rd = lon_lu + sub_basin[1]
+
+        # lon_lu, lat_lu = np.meshgrid(lon_lu, lat_lu)
+        lon_ru, lat_ru = np.meshgrid(lon_ru, lat_ru)
+        lon_ld, lat_ld = np.meshgrid(lon_ld, lat_ld)
+        # lon_rd, lat_rd = np.meshgrid(lon_rd, lat_rd)
+
+        poly = box(xmin=lon_ld, ymin=lat_ld, xmax=lon_ru, ymax=lat_ru)
+        ID = [i for i in range(1, num_sub_basins + 1)]
+        d = {'ID': ID, 'geometry': list(poly.flatten())}
+        self.gdf = gpd.GeoDataFrame(d, crs='epsg:4326')
+
+        pass
+
+    def create_shp(self, new_basin_name, shp):
+        import shapely
+        from shapely.ops import unary_union
+        import pandas as pd
+
+        basin_shp = gpd.read_file(shp)
+        basin_all = gpd.GeoDataFrame({'geometry': gpd.GeoSeries(basin_shp.unary_union)}, crs='epsg:4326')
+
+        grid = self.gdf
+
+        index = shapely.intersects(basin_shp.unary_union, grid.geometry).values
+
+        new = []
+
+        for i in np.arange(len(index)):
+            if not index[i]:
+                continue
+
+            mm = grid[grid.ID == i + 1]
+            mm = mm.drop(columns = ['ID'])
+            new.append(mm.overlay(basin_all, how='intersection',keep_geom_type=True))
+
+        gdf = gpd.GeoDataFrame(pd.concat(new))
+        ID = [i for i in range(1, len(gdf) + 1)]
+        d = {'ID': ID, 'geometry': gdf.geometry}
+        new_shp = gpd.GeoDataFrame(d, crs='epsg:4326')
+        new_shp.to_file('../temp/%s.shp' % new_basin_name)
+        pass
+
+
 def demo1():
     # gbs = global_box_shp().configure_size()
     # gbs.create_shp()
@@ -482,12 +546,41 @@ def showbox():
 
     pass
 
+
+def demo_show_basin_grid():
+    import pygmt
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='polar', series=[1, 11, 1], background='o')
+
+    region = [0, 35, 40, 60]
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q8c")
+
+    gdf = gpd.read_file(filename='../temp/GDRB_subbasins.shp')
+
+    fig.plot(data=gdf.boundary, pen="1p,black")
+
+    fig.show()
+
+    pass
+
+
+def demo_basin_grid():
+    b2g = basin2grid_shp(grid=(3, 3))
+    b2g.create_shp(new_basin_name='GDRB_subbasins', shp='../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp')
+
+    pass
+
+
 if __name__ == '__main__':
     # shp_change_Danube()
     # demo1()
     # demo2()
     # demo3()
     # demo4()
-    demo5()
+    # demo5()
     # showbox()
-
+    demo_basin_grid()
+    # demo_show_basin_grid()

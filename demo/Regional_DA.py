@@ -17,9 +17,13 @@ class RDA:
     setting_dir = '../settings/Ucloud_DA'
     ens = 30
 
-    case = 'RDA_DRB_BasinScale'
-    basin = 'DRB'
-    shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
+    # case = 'RDA_DRB_BasinScale'
+    # basin = 'DRB'
+    # shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
+
+    case = 'RDA_GDRB_BasinScale'
+    basin = 'GDRB'
+    shp_path = '../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp'
 
     box = [50.5, 42, 8.5, 29.5]
 
@@ -758,8 +762,8 @@ if __name__ == '__main__':
     # RDA.prepare_Forcing()
 
     '''multiple threads'''
-    # demo_global_run_complete(prepare=True)
+    demo_global_run_complete(prepare=True)
     # demo_global_run_only_DA(prepare=False)
 
     '''single thread for plotting'''
-    demo_DA_visualization()
+    # demo_DA_visualization()
