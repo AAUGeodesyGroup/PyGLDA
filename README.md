@@ -4,7 +4,7 @@
 Data assimilation (DA) has been widely used to merge the hydrological 'model' and the remote sensing 'observations', to complement each other towards a better temporal, horizontal and vertical disaggregation of the TWS estimates.
 In this study, we present a free, open-source, parallel and Python based PyGDA system to address the challenges of the High-Resolution Global DA (HRGDA) for GRACE and W3RA hydrologocal model, where the framework has been completely re-designed relative to previous studies to be able to run HRGDA (up to 0.1 degree and daily) efficiently and stably.
 
-<img src="structure.jpg" width="400">
+<img src="structure.jpg" width="450">
 
 #### Contact
 Fan Yang (fany@plan.aau.dk) , Ehsan Forootan (efo@plan.aau.dk)
