@@ -1,36 +1,58 @@
-# pyW3ra: a python translation of W3RA and a de-coupled data assimilation platform
+# PyGLDA: a fine-scale Python-based Global Land Data Assimilation system for integrating satellite gravity data into hydrological models
 
 #### Description
-{**When you're done, you can delete the content in this README and update the file with details for others getting started with your repository**}
+Data assimilation (DA) has been widely used to merge the hydrological 'model' and the remote sensing 'observations', to complement each other towards a better temporal, horizontal and vertical disaggregation of the TWS estimates.
+In this study, we present a free, open-source, parallel and Python based PyGDA system to address the challenges of the High-Resolution Global DA (HRGDA) for GRACE and W3RA hydrologocal model, where the framework has been completely re-designed relative to previous studies to be able to run HRGDA (up to 0.1 degree and daily) efficiently and stably.
+
+<img src="res/structure.jpg" width="400">
+
+#### Contact
+Fan Yang (fany@plan.aau.dk) , Ehsan Forootan (efo@plan.aau.dk)
+
+Geodesy Group (see https://aaugeodesy.com/), Department of Sustainability and Planning, Aalborg University, Aalborg 9000, Denmark
+
+This work is supported by the Danmarks Frie Forskningsfond [10.46540/2035-00247B] through the DANSk-LSM project. Additional supports come from and national Natural Science Foundation of China (Grant No. 42274112 and No. 41804016).
+
+
+#### Features
+1. A novel unified framework to enable it to address both the basin-scale and grid-scale DA, where the area to be computed is defined as the 'basin' and the grid is treated as the 'sub-basin'. Any shape file that has well defined the basin and sub-basins is accepted to launch PyGDA;
+2. A novel framework to seamlessly transit from regional DA to global DA by introducing domain localization and weighting algorithms; 
+3. Computation of the spatial covariance of the observations, i.e., GRACE based TWS, is available between arbitrary sub-basins/grids for the first time. Accounting for the spatial covariance into the DA is also allowed in PyGDA;
+4. Flexible options in the grid resolution: a choice of 0.1 degree and 0.5 degree is available for the employed global W3RA model; a flexible choice of the grid/sub-basin to be assimilated, e.g., from 1 degree to 5 degree with an increment of 0.5 degree;
+5. Flexible choice of perturbation, e.g., which forcing data and which model parameters to be perturbed in which noise distribution (Gaussian or Triangle; additive or multiplicative);
+6. In addition to the general Ensemble Kalman filter, a novel Kalman smoother that achieves optimal temporal disaggregation from monthly increment to daily increment is facilitated.
 
 #### Software Architecture
-Software architecture description
+1. A flexible modular structure to de-couple PyGDA into three individual modules: (1) hydrological model, (2) GRACE processing and (3) mathematical DA integration. This makes possible to easily develop/modify/replace any individual module;
+2. A high-level programming language (object-oriented Python) for easy comprehension of the code and to facilitate extensibility. The Python translation of W3RA model is distributed;
+3. Easy/fast installation for cross-platform to the users’ needs and capacity (e.g., Windows, Linux and parallel computation at high performance clusters);
+4. Optimization by using high-performance Numpy package as the basic data container to reach comparable numerical efficiency as C++, Fortran and Matlab;
+5. User-friendly interaction by (1) controlling/configuring PyGDA with JSON setting file, where a wide options are available for a different purpose; and (2) state-of-the-art data structure H5DF for reading and writing spatiotemporal data to allow for efficient management of data storage.
 
 #### Installation
+Please follow below the step-by-step instruction to do the installation, given that the Conda environment has been established already. A simpler installation via `.yml` to copy the environment will also be released soon. While PyGLDA does not specify the version of Python, it is strongly recommended to use python > 3.9. 
+1.  pip install netcdf4
+2.  conda install metview-batch  -c conda-forge
+3.  conda install metview-python  -c conda-forge
+4.  pip install cdsapi
+5.  conda install -c conda-forge mpi4py mpich
+6.  pip install h5py
+7.  pip install scipy
+8.  pip install geopandas
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+To test if it is properly installed, please type below command and see if it passes.
+1. mpiexec -n 5 python -m mpi4py.bench helloworld
+2. metview -slog
+3. python3 -m metview selfcheck
+
+Potential installation troubles:
+1. metview-related issues please refer to https://metview.readthedocs.io/en/latest/index.html
+2. mpi4py-related issues please refer to https://mpi4py.readthedocs.io/en/latest/install.html
+
 
 #### Instructions
-
+A few demo are present to showcase the use of PyGLDA. Each demo has its detailed comments in its script. To run the demo, a bunch of sample data are necessary to be installed.
 1.  xxxx
 2.  xxxx
 3.  xxxx
 
-#### Contribution
-
-1.  Fork the repository
-2.  Create Feat_xxx branch
-3.  Commit your code
-4.  Create Pull Request
-
-
-#### Gitee Feature
-
-1.  You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
-2.  Gitee blog [blog.gitee.com](https://blog.gitee.com)
-3.  Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
-4.  The most valuable open source project [GVP](https://gitee.com/gvp)
-5.  The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
-6.  The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
