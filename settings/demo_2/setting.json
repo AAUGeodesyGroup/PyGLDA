@@ -1,0 +1,66 @@
+{
+    "bounds": {
+        "lat": [
+            76.1,
+            33.9
+        ],
+        "lon": [
+            -11.1,
+            45.1
+        ],
+        "prefix": "case_study_EU"
+    },
+    "init": {
+        "mode": "resume",
+        "date": "2005-03-31",
+        "spinup": [
+            "2005-01-01",
+            "2005-12-31"
+        ],
+        "dir": "../../../External Data/w3ra/initial_states",
+        "spec": "case_study_EU"
+    },
+    "run": {
+        "fromdate": "2005-04-01",
+        "todate": "2005-12-31",
+        "res": 0.1,
+        "exttype": "ERA5",
+        "save_states_every_day": true,
+        "save_output_every_day": false
+    },
+    "input": {
+        "meteo": "../../../External Data/w3ra/crop_input",
+        "clim": "../../../External Data/w3ra/crop_input",
+        "pars": "../../../External Data/w3ra/crop_input",
+        "mask_fn": "../../../External Data/w3ra/crop_input"
+    },
+    "output": {
+        "dir": "../../../External Data/w3ra/output",
+        "var": {
+            "Stot": true,
+            "ETtot": false,
+            "Qtot": false,
+            "Qnet": false,
+            "E0": false,
+            "Ei": false,
+            "Et": false,
+            "Es": false,
+            "Er": false,
+            "RSn": false,
+            "RLn": false,
+            "LE": false,
+            "H": false,
+            "albedo": false,
+            "LAI": false,
+            "Ssnow": false,
+            "z_g": false,
+            "S0": false,
+            "Sroot": false,
+            "Ssoil": false,
+            "Sg": false,
+            "Ts": false,
+            "fsnow": false,
+            "Sr": false
+        }
+    }
+}

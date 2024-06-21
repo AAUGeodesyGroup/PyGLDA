@@ -1,0 +1,36 @@
+{
+    "basic": {
+        "fromdate": "2005-04-01",
+        "todate": "2005-12-31",
+        "basin": "Tile81",
+        "basin_shp": "../data/basin/shp/global_shp_new/Tile81_subbasins.shp",
+        "NaNmaskStatesDir": "../../../External Data/w3ra/states_sample",
+        "ensemble": 2,
+        "layer": {
+            "S0": true,
+            "Ss": true,
+            "Sd": true,
+            "Sr": true,
+            "Sg": true,
+            "Mleaf": true,
+            "FreeWater": true,
+            "DrySnow": true
+        }
+    },
+    "obs": {
+        "name": "GRACE",
+        "dir": "../../../External Data/GRACE/obs",
+        "GRACE": {
+            "EWH_grid_dir": "../../../External Data/GRACE/obs",
+            "cov_dir": "../../../External Data/GRACE/obs",
+            "preprocess_res": "../../../External Data/GRACE/output",
+            "OL_mean": "../../../External Data/GRACE/OLmean"
+        }
+    },
+    "model": {
+        "name": "w3ra_v0"
+    },
+    "method": {
+        "fusion_method": "EnKF_v0"
+    }
+}

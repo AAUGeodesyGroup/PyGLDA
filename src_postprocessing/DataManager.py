@@ -4,7 +4,7 @@ import h5py
 from pathlib import Path
 from src_hydro.GeoMathKit import GeoMathKit
 from calendar import monthrange
-from Enumtype import data_var
+from src_postprocessing.Enumtype import data_var
 import shutil
 
 
@@ -88,7 +88,55 @@ class dataManager_single_run:
 
         pass
 
-    def aggregation_other(self, date_begin='2002-04-01', date_end='2002-04-02', variable= 'tws'):
+    def aggregation_monthly(self, date_begin='2002-04-01', date_end='2002-04-02'):
+
+        daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
+
+        '''start recording data'''
+
+        mm = -1
+        yy = -1
+        mres = []
+        for day in daylist:
+            if day.month != mm:
+                if len(mres) > 0:
+                    h5_w.create_dataset(name='%s%02d' % (yy, mm), data=np.mean(np.array(mres), axis=0))
+
+                mm = day.month
+                print(day.strftime('%Y%m'))
+
+                if day.year != yy:
+                    fn_w = self._out_dir / ('%s.%s.h5' % (self._variable.name, day.strftime('%Y')))
+                    h5_w = h5py.File(fn_w, 'w')
+                    yy = day.year
+                mres = []
+
+            fn_r = self._state_dir / ('state.%s.h5' % day.strftime('%Y%m%d'))
+            try:
+                hf = h5py.File(str(fn_r), 'r')
+            except Exception:
+                if day != daylist[-1]:
+                    print('Gap found for this day: %s' % day.strftime('%Y%m%d'))
+                continue
+
+            ta = []
+            for key in self._statesnn:
+                vv = np.sum(hf[key][:] * self._Fhru, axis=0)
+                if key == 'Mleaf':
+                    vv *= 4
+                ta.append(vv)
+            ta_sum = np.sum(np.array(ta), axis=0)
+
+            ta_sum_2D = np.full(np.shape(self._mask), np.nan)
+
+            ta_sum_2D[self._mask] = ta_sum
+
+            mres.append(ta_sum_2D)
+            # h5_w.create_dataset(name=day.strftime('%Y%m%d'), data=ta_sum_2D)
+
+        pass
+
+    def aggregation_other(self, date_begin='2002-04-01', date_end='2002-04-02', variable='tws'):
         daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
 
         '''start recording data'''
@@ -111,7 +159,7 @@ class dataManager_single_run:
                 continue
 
             ta_sum_2D = np.full(np.shape(self._mask), np.nan)
-            ta_sum_2D[self._mask] = hf['Stot'][0,:]
+            ta_sum_2D[self._mask] = hf['Stot'][0, :]
 
             h5_w.create_dataset(name=day.strftime('%Y%m%d'), data=ta_sum_2D)
 

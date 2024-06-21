@@ -45,6 +45,7 @@ class SingleModel:
         dp1['input']["pars"] = dp2['out_dir']
         dp1['input']["clim"] = dp2['out_dir']
         dp1['input']["mask_fn"] = dp2['out_dir']
+        dp1['init']['spec'] = self.case
 
         dp1['init']['mode'] = mode.name
         if mode == init_mode.cold:

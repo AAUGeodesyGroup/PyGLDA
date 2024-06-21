@@ -487,7 +487,8 @@ def demo5():
     invalid_basins = []
     for tile in range(1, 150 + 1):
         try:
-            gdf = gpd.read_file(filename='../res/global_shp_overlap_new/Tile%s_subbasins.shp' % tile)
+            # gdf = gpd.read_file(filename='../res/global_shp_overlap_new/Tile%s_subbasins.shp' % tile)
+            gdf = gpd.read_file(filename='../res/global_shp_new_nooverlap/Tile%s_subbasins.shp' % tile)
             gdf_list.append(gdf)
 
         except Exception:
@@ -503,13 +504,20 @@ def demo5():
     for tile in range(1, 150 + 1):
         if tile in invalid_basins:
             continue
-        gdf = gpd.read_file(filename='../res/global_shp_overlap/Tile%s_subbasins.shp' % tile)
+        # gdf = gpd.read_file(filename='../res/global_shp_overlap/Tile%s_subbasins.shp' % tile)
+        # gdf = gpd.read_file(filename='../res/global_shp_new/Tile%s_subbasins.shp' % tile)
+        gdf1 = gpd.read_file(filename='../res/global_shp_old/Tile%s_subbasins.shp' % tile)
+        # gdf = gpd.read_file(filename='../res/global_shp_overlap_new/Tile%s_subbasins.shp' % tile)
+        gdf = gpd.read_file(filename='../res/global_shp_new_nooverlap/Tile%s_subbasins.shp' % tile)
         # gdf_list.append(gdf)
 
         fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.5p,red", fill='lightblue', transparency=60)
-        fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.5p,red")
+        fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.5p,blue")
+        fig.plot(data=gpd.GeoSeries(gdf1.unary_union.boundary), pen="0.5p,red")
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q9c")
+    fig.savefig('/home/user/Documents/globalDA/GDA_grid.png')
+    fig.savefig('/home/user/Documents/globalDA/GDA_grid.pdf')
     fig.show()
 
     pass
@@ -551,17 +559,21 @@ def demo_show_basin_grid():
     import pygmt
     fig = pygmt.Figure()
     pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
-    pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
+    pygmt.config(FONT_ANNOT='8p', COLOR_NAN='white')
     pygmt.makecpt(cmap='polar', series=[1, 11, 1], background='o')
 
-    region = [0, 35, 40, 60]
-
-    fig.coast(shorelines="1/0.2p", region=region, projection="Q8c")
+    region = [5, 32, 40, 52]
+    fig.basemap(region=region, projection="Q8c", frame=True)
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q8c",land="darkgray", water="skyblue")
 
     gdf = gpd.read_file(filename='../temp/GDRB_subbasins.shp')
 
-    fig.plot(data=gdf.boundary, pen="1p,black")
+    for i in range(1,20):
+        x = gdf[gdf.ID==i].centroid.item().x
+        y = gdf[gdf.ID == i].centroid.item().y
+        fig.text(x=x, y=y, text="%s"%i, font='red')
 
+    fig.plot(data=gdf.boundary, pen="1p,black")
     fig.show()
 
     pass
@@ -580,7 +592,7 @@ if __name__ == '__main__':
     # demo2()
     # demo3()
     # demo4()
-    # demo5()
+    demo5()
     # showbox()
-    demo_basin_grid()
+    # demo_basin_grid()
     # demo_show_basin_grid()

@@ -11,13 +11,11 @@ def TWS_trend_annual_phase():
     from src_auxiliary.upscaling import upscaling
     from datetime import datetime
     from src_hydro.GeoMathKit import GeoMathKit
-    import geopandas as gpd
     import h5py
     import numpy as np
     import json
-    import os
     from pathlib import Path
-    from demo.global_DA import GDA
+    from src_FlowControl.global_DA import GDA
     import warnings
     warnings.filterwarnings("ignore")
 
@@ -326,13 +324,11 @@ def TWS_trend_annual_phase_overlap_average():
     from src_auxiliary.upscaling import upscaling
     from datetime import datetime
     from src_hydro.GeoMathKit import GeoMathKit
-    import geopandas as gpd
     import h5py
     import numpy as np
     import json
-    import os
     from pathlib import Path
-    from demo.global_DA import GDA
+    from src_FlowControl.global_DA import GDA
     import warnings
     warnings.filterwarnings("ignore")
 
@@ -351,7 +347,7 @@ def TWS_trend_annual_phase_overlap_average():
     ''''''
 
     for tile_ID in range(1, 300):
-    # for tile_ID in [68, 69, 83]:
+        # for tile_ID in [68, 69, 83]:
 
         try:
             GDA.set_tile(tile_ID=tile_ID, create_folder=False)
@@ -422,7 +418,6 @@ def TWS_trend_annual_phase_overlap_average():
         temp = us.get2D_model_state(res_DA['annual'][1])
         DA_phasemap.aggregate(temp=temp, tile_ID=tile_ID, H_inside_mask=hmask)
 
-
         for key in ['trend', 'annual']:
             if key == 'trend':
 
@@ -468,8 +463,6 @@ def TWS_trend_annual_phase_overlap_average():
                     temp = us.get2D_model_state(res_OL[key][1])
                     # temp[us.bshp_mask == False] = np.nan
                     OL_map['phase'][~np.isnan(temp)] = temp[~np.isnan(temp)]
-
-
 
     '''save the global map for visualization'''
     fn = h5py.File('/work/data_for_w3/w3ra/temp/GDA_DA_map.h5', 'w')
@@ -532,6 +525,16 @@ def plot_TWS_trend_annual_phase():
     region = [min(lon), max(lon), min(lat), max(lat)]
     lon, lat = np.meshgrid(lon, lat)
 
+    x=DA_map['phase'].flatten()
+    y=OL_map['phase'].flatten()
+    z=GR_map['phase'].flatten()
+
+    xy=np.corrcoef(x[(~np.isnan(x)) * (~np.isnan(y))], y[(~np.isnan(x)) * (~np.isnan(y))])
+    xz = np.corrcoef(x[(~np.isnan(x)) * (~np.isnan(z))], z[(~np.isnan(x)) * (~np.isnan(z))])
+
+    RMSxy=np.mean((x[(~np.isnan(x)) * (~np.isnan(y))]- y[(~np.isnan(x)) * (~np.isnan(y))])**2)**0.5
+    RMSxz = np.mean((x[(~np.isnan(x)) * (~np.isnan(z))] - z[(~np.isnan(x)) * (~np.isnan(z))]) ** 2)**0.5
+
     DA_trend = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=DA_map['trend'].flatten(),
                              spacing=(res, res), region=region)
 
@@ -559,7 +562,7 @@ def plot_TWS_trend_annual_phase():
     GRACE_phase = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=GR_map['phase'].flatten() / 360 * 12,
                                 spacing=(res, res), region=region)
 
-    ps = 'Q12c'
+    ps = 'Q180/0/12c'
     offset = '-8.5c'
 
     '''plot trend'''
@@ -725,6 +728,54 @@ def demo2():
     pass
 
 
+def demo_SR_nooverlap_aggregation():
+    from pathlib import Path
+    begin_year = 2023
+    end_year = 2024
+
+    tiles1 = [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 38,
+              39]
+
+    tiles2 = [40, 41, 42, 43, 44, 45, 48, 49, 50, 52, 53, 54, 55, 56, 57, 58, 59, 64, 65, 66, 67, 68, 69]
+
+    tiles3 = [70, 71, 72, 73, 80, 81, 82, 83, 84, 85, 87, 88, 89, 95, 96, 99, 100, 103, 104, 110, 111, 119, 120]
+
+    tile = tiles1 + tiles2 + tiles3
+
+    dir_in = '/work/data_for_w3/w3ra/save_data/SR/'
+    mask_dir = '/work/data_for_w3/w3ra/crop_input/'
+
+    '''load mask'''
+    gg_mask = {}
+    gg_mask2 = {}
+    for tt in tile:
+        fn = h5py.File(Path(mask_dir) / ('GDA_%s' % tt) / 'mask' / 'mask_global.h5', 'r')
+        gg_mask[tt] = fn['mask'][:].astype(bool)
+        fn1 = h5py.File(Path(mask_dir) / ('GDA_%s' % tt) / 'mask' / 'mask.h5', 'r')
+        gg_mask2[tt] = fn1['mask'][:].astype(bool)
+
+    shape = np.shape(fn['mask'][:])
+
+    for yy in np.arange(start=begin_year, stop=end_year + 1):
+        final = h5py.File(name=Path(dir_in) / ('W3RA_%s_monthly_10km.h5df' % yy), mode='w')
+        print('Year-------------: %s' % yy)
+        for month in range(1, 13):
+            # print(month)
+            if yy == 2024 and month > 5:
+                continue
+            gg = np.full(shape, fill_value=np.nan)
+            for tt in tile:
+                # print(tt)
+                # print('%02d'%month)
+                fn = h5py.File(name=Path(dir_in) / ('GDA_%s' % tt) / ('TotalWater.%s.h5' % yy), mode='r')
+                gg[gg_mask[tt]] = fn['%s%02d' % (yy, month)][:][gg_mask2[tt]]
+
+            final.create_dataset(name='%s-%02d' % (yy, month), data=gg)
+
+    pass
+
+
 if __name__ == '__main__':
     # demo1()
     demo2()
+    # demo_SR_nooverlap_aggregation()

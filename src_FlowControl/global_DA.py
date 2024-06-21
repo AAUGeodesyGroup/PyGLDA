@@ -20,16 +20,16 @@ class GDA:
     # cold_begin_time = '2000-01-01'
     # cold_end_time = '2010-01-31'
 
-    cold_begin_time = '2010-02-01'
-    cold_end_time = '2010-03-31'
+    cold_begin_time = '1998-01-01'
+    cold_end_time = '2023-03-31'
 
     warm_begin_time = '2000-01-01'
     warm_end_time = '2023-05-31'
     # warm_begin_time = '2000-01-01'
     # warm_end_time = '2010-01-31'
 
-    resume_begin_time = '2002-03-31'
-    resume_end_time = '2023-05-31'
+    resume_begin_time = '2023-03-31'
+    resume_end_time = '2024-05-31'
     # resume_begin_time = '2002-03-31'
     # resume_end_time = '2010-01-31'
 
@@ -39,6 +39,7 @@ class GDA:
     tiles2 = [40, 41, 42, 43, 44, 45, 48, 49, 50, 52, 53, 54, 55, 56, 57, 58, 59, 64, 65, 66, 67, 68, 69]
 
     tiles3 = [70, 71, 72, 73, 80, 81, 82, 83, 84, 85, 87, 88, 89, 95, 96, 99, 100, 103, 104, 110, 111, 119, 120]
+
 
     pass
 
@@ -142,21 +143,23 @@ class GDA:
         '''configuration'''
         GDA.set_tile(tile_ID=tile_ID)
         demo = SingleModel(case=GDA.case, setting_dir=GDA.setting_dir)
-        demo.configure_time(begin_time=GDA.cold_begin_time, end_time=GDA.cold_end_time)
+        # demo.configure_time(begin_time=GDA.cold_begin_time, end_time=GDA.cold_end_time)
+        demo.configure_time(begin_time=GDA.resume_begin_time, end_time=GDA.resume_end_time)
         demo.configure_area(box=GDA.box, basin=GDA.basin)
 
         '''change the sub-setting files according to the main setting'''
-        demo.generate_settings(mode=init_mode.cold)
+        # demo.generate_settings(mode=init_mode.cold)
+        demo.generate_settings(mode=init_mode.resume)
 
         '''crop the data (forcing field, climatologies, parameters and land mask) at regions of interest'''
         # demo.preprocess()
 
         # '''run the model'''
-        demo.model_run()
+        # demo.model_run()
 
         '''create ini states?'''
         modifydate = (datetime.strptime(GDA.warm_begin_time, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y%m%d')
-        demo.create_ini_states(mode=init_mode.cold, modifydate=modifydate)
+        # demo.create_ini_states(mode=init_mode.cold, modifydate=modifydate)
 
         # demo.extract_signal()
 
@@ -771,24 +774,25 @@ def demo_DA_visualization(tile_ID=80):
 
 def demo_main_node_1():
     GDA.setting_dir = '../settings/Ucloud_DA_node_1'
-    GDA.global_preparation_2(tiles=GDA.tiles1)
+    # GDA.global_preparation_2(tiles=GDA.tiles1)
 
-    # for tile_ID in [35, 36, 38, 39, 48, 49, 84, 85]:
-    #     # for tile_ID in [3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 38,
-    #     #           39]:
-    #     demo_global_run_complete(tile_ID=tile_ID)
-    #
-    # pass
+    for tile_ID in GDA.tiles1:
+    # for tile_ID in [34]:
+        # demo_global_run_complete(tile_ID=tile_ID)
+        GDA.single_run(tile_ID=tile_ID)
+
+    pass
 
 
 def demo_main_node_2():
     GDA.setting_dir = '../settings/Ucloud_DA_node_2'
 
     # GDA.global_preparation_2(tiles=GDA.tiles2)
-    GDA.global_preparation_2(tiles=[39])
+    # GDA.global_preparation_2(tiles=[39])
 
-    # for tile_ID in [57, 58, 59, 64, 65, 66, 67, 68, 69]:
-    #     demo_global_run_complete(tile_ID=tile_ID)
+    for tile_ID in GDA.tiles2:
+        # demo_global_run_complete(tile_ID=tile_ID)
+        GDA.single_run(tile_ID=tile_ID)
 
     pass
 
@@ -798,8 +802,28 @@ def demo_main_node_3():
 
     # GDA.global_preparation_2(tiles=GDA.tiles3)
 
-    for tile_ID in [56]:
-        demo_global_run_complete(tile_ID=tile_ID)
+    for tile_ID in GDA.tiles3:
+        # demo_global_run_complete(tile_ID=tile_ID)
+        GDA.single_run(tile_ID=tile_ID)
+
+    pass
+
+def demo_data_manager():
+    from src_postprocessing.DataManager import dataManager_single_run,data_var
+
+    GDA.setting_dir = '../settings/Ucloud_DA_node_1'
+
+    # GDA.global_preparation_2(tiles=GDA.tiles2)
+    # GDA.global_preparation_2(tiles=[39])
+
+    for tile_ID in GDA.tiles1+GDA.tiles2+GDA.tiles3:
+        # demo_global_run_complete(tile_ID=tile_ID)
+        GDA.single_run(tile_ID=tile_ID)
+
+        dsr = dataManager_single_run().configure(setting_fn=Path(GDA.setting_dir)/'setting.json',
+                                                 out_dir='/work/data_for_w3/w3ra/save_data/SR',
+                                                 variable=data_var.TotalWater)
+        dsr.aggregation_monthly(date_begin='2023-01-01', date_end='2024-06-01')
 
     pass
 
@@ -811,5 +835,6 @@ if __name__ == '__main__':
     #          111, 119, 120]
 
     # demo_main_node_1()
-    demo_main_node_2()
+    # demo_main_node_2()
     # demo_main_node_3()
+    demo_data_manager()

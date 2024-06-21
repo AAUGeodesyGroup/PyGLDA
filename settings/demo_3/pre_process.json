@@ -1,0 +1,9 @@
+{
+    "date_begin": "2005-04",
+    "date_end": "2005-12",
+    "out_dir": "../../../External Data/w3ra/crop_input",
+    "mask_dir": "../../../External Data//w3ra/global/pyW3RA/mask",
+    "forcing_dir": "../../../External Data/ERA5/",
+    "clim_dir": "../../../External Data/w3ra/global/pyW3RA/clim",
+    "par_dir": "../../../External Data/w3ra/global/pyW3RA/par"
+}

@@ -357,8 +357,8 @@ class DataAssimilation_monthly_diag(DataAssimilation_monthly):
 
         '''update the states'''
         states_update = ens_states + K @ (obs - HX)
-        print(obs)
-        print(HX)
+        # print(obs)
+        # print(HX)
         return states_update
 
 

@@ -153,7 +153,7 @@ class RDA:
         demo.generate_settings(mode=init_mode.cold)
 
         '''crop the data (forcing field, climatologies, parameters and land mask) at regions of interest'''
-        # demo.preprocess()
+        demo.preprocess()
 
         # '''run the model'''
         demo.model_run()
@@ -762,8 +762,8 @@ if __name__ == '__main__':
     # RDA.prepare_Forcing()
 
     '''multiple threads'''
-    demo_global_run_complete(prepare=True)
+    # demo_global_run_complete(prepare=True)
     # demo_global_run_only_DA(prepare=False)
 
     '''single thread for plotting'''
-    # demo_DA_visualization()
+    demo_DA_visualization()

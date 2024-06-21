@@ -7,7 +7,7 @@ In this study, we present a free, open-source, parallel and Python based PyGDA s
 <img src="structure.jpg" width="450">
 
 #### Contact
-Fan Yang (fany@plan.aau.dk) , Ehsan Forootan (efo@plan.aau.dk)
+Fan Yang (fany@plan.aau.dk) , Ehsan Forootan (efo@plan.aau.dk), Maike Schumacher (maikes@plan.aau.dk)
 
 Geodesy Group (see https://aaugeodesy.com/), Department of Sustainability and Planning, Aalborg University, Aalborg 9000, Denmark
 
@@ -51,8 +51,14 @@ Potential installation troubles:
 
 
 #### Instructions
-A few demo are present to showcase the use of PyGLDA. Each demo has its detailed comments in its script. To run the demo, a bunch of sample data are necessary to be installed.
-1.  xxxx
-2.  xxxx
-3.  xxxx
+Three demo (demo1, demo2, demo3) are present under `/py-w3ra/demo` to showcase the use of PyGLDA. Each demo has its detailed comments in its script. To run the demo, a bunch of sample data are necessary to be installed.
+The sample data is distributed together with the code at the given data repository, named after `External Data`.
+To begin with the demo, we suggest to place the sample data at its default place, which is under `/PyGLDA/External Dara/`.
+Nevertheless, as an advanced user, one can place data at any desired place as long as the setting files are well configured.
+Below we give a brief introduction of three demo.
+1.  demo_1.py.  In this demo, we show how to update the meteorological forcing field (ERA5-land) online
+2.  demo_2.py.  In this demo, we show how to configure and implement the W3RA water balance model.
+3.  demo_3.py.  In this demo, we show how to implement basin-scale regional data assimilation, grid-scale data assimilation and 
+the grid-scale global data assimilation.
+Please feel free to contact us for possible more examples. 
 
