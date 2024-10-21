@@ -591,6 +591,27 @@ def demo2():
     pass
 
 
+def demo3():
+    # GR = GRACE_preparation(basin_name='Brahmaputra',
+    #                        shp_path='../data/basin/shp/Brahmaputra_3_shapefiles/Brahmaputra_3_subbasins.shp')
+    # GR = GRACE_preparation(basin_name='MDB',
+    #                        shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
+    # GR.basin_TWS(month_begin='2002-04', month_end='2023-06')
+    # GR = GRACE_preparation(basin_name='GDRB',
+    #                        shp_path='../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp')
+    GR = GRACE_preparation(basin_name='DRBtype2',
+                           shp_path='/media/user/My Book/Fan/GRACE_spatial_resolution_study/DRB/shp/DRB.shp')
+
+    GR.generate_mask()
+    GR.basin_TWS(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/My Book/Fan/GRACE/ewh',
+                 dir_out='/media/user/My Book/Fan/GRACE_spatial_resolution_study/DRB')
+    # GR.grid_TWS(month_begin='2005-01', month_end='2023-05')
+    GR.basin_COV(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/My Book/Fan/GRACE_spatial_resolution_study/degree_60/sample/DDK3/',
+                  dir_out='/media/user/My Book/Fan/GRACE_spatial_resolution_study/DRB')
+
+    pass
+
+
 if __name__ == '__main__':
-    demo1()
+    demo3()
     # demo2()

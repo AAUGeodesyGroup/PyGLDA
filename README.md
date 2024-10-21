@@ -11,7 +11,7 @@ Fan Yang (fany@plan.aau.dk) , Ehsan Forootan (efo@plan.aau.dk), Maike Schumacher
 
 Geodesy Group (see https://aaugeodesy.com/), Department of Sustainability and Planning, Aalborg University, Aalborg 9000, Denmark
 
-This work is supported by the Danmarks Frie Forskningsfond [10.46540/2035-00247B] through the DANSk-LSM project. Additional supports come from and national Natural Science Foundation of China (Grant No. 42274112 and No. 41804016).
+This work is supported by the Danmarks Frie Forskningsfond [10.46540/2035-00247B] through the DANSk-LSM project. Additional supports come from and national Natural Science Foundation of China (Grant No. 42274112 and No. 41804016). We also acknowledge the support of W3RA model via https://www.dropbox.com/scl/fo/b0hneugr9vao0rqm4oh86/AEPPU-QG6kgh9wTlIBgiwMQ?rlkey=q7ux08mitdghnoac3e4spwaev&e=1&dl=0
 
 
 #### Features
@@ -44,6 +44,8 @@ To test if it is properly installed, please type below command and see if it pas
 1. mpiexec -n 5 python -m mpi4py.bench helloworld
 2. metview -slog
 3. python3 -m metview selfcheck
+
+(Optionally) To make the visualization function, one has to install PyGMT (better to create an individual environment for its installation), see https://www.pygmt.org/latest/.
 
 Potential installation troubles:
 1. metview-related issues please refer to https://metview.readthedocs.io/en/latest/index.html
