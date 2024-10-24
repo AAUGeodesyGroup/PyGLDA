@@ -21,9 +21,9 @@ class RDA:
     # basin = 'DRB'
     # shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
 
-    case = 'RDA_GDRB_BasinScale'
-    basin = 'GDRB'
-    shp_path = '../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp'
+    case = 'United_States'
+    basin = 'US'
+    shp_path = '../data/basin/shp/USgrid/US_subbasins.shp'
 
     box = [50.5, 42, 8.5, 29.5]
 
@@ -36,13 +36,13 @@ class RDA:
 
     '''for open-loop'''
     warm_begin_time = '2002-01-01'
-    warm_end_time = '2010-01-31'
+    warm_end_time = '2023-03-31'
     # warm_begin_time = '2000-01-01'
     # warm_end_time = '2010-01-31'
 
     '''for data assimilation'''
     resume_begin_time = '2002-03-31'
-    resume_end_time = '2010-01-31'
+    resume_end_time = '2023-03-31'
 
     # resume_begin_time = '2002-03-31'
     # resume_end_time = '2010-01-31'
@@ -153,7 +153,7 @@ class RDA:
         demo.generate_settings(mode=init_mode.cold)
 
         '''crop the data (forcing field, climatologies, parameters and land mask) at regions of interest'''
-        demo.preprocess()
+        # demo.preprocess()
 
         # '''run the model'''
         demo.model_run()
@@ -719,7 +719,7 @@ def demo_global_run_complete(prepare=True):
 
     '''single_run (cold, warmup) to obtain reliable initial states, 10 years running for assuring accuracy'''
     if rank == 0:
-        RDA.single_run()
+        # RDA.single_run()
         pass
 
     comm.barrier()
@@ -759,7 +759,9 @@ def demo_DA_visualization():
 
 
 if __name__ == '__main__':
+    '''single threads for preparing data'''
     # RDA.prepare_Forcing()
+    # RDA.single_run()
 
     '''multiple threads'''
     # demo_global_run_complete(prepare=True)

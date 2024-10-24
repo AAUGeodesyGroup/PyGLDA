@@ -330,6 +330,9 @@ class global_box_shp_overlap(global_box_shp):
 class basin2grid_shp:
 
     def __init__(self, grid=(3, 3)):
+        self.__func = None
+        self.__shp = None
+        self.__new_basin_name = None
         sub_basin = grid
 
         N = 180 // sub_basin[0]
@@ -359,19 +362,30 @@ class basin2grid_shp:
         d = {'ID': ID, 'geometry': list(poly.flatten())}
         self.gdf = gpd.GeoDataFrame(d, crs='epsg:4326')
 
-        pass
+    def configure(self, new_basin_name, original_shp):
+        self.__new_basin_name = new_basin_name
+        self.__shp = original_shp
+        return self
 
-    def create_shp(self, new_basin_name, shp):
+    def create_shp(self):
         import shapely
         from shapely.ops import unary_union
         import pandas as pd
 
-        basin_shp = gpd.read_file(shp)
-        basin_all = gpd.GeoDataFrame({'geometry': gpd.GeoSeries(basin_shp.unary_union)}, crs='epsg:4326')
+        new_basin_name, shp = self.__new_basin_name, self.__shp
+
+        basin_shp = gpd.read_file(shp).to_crs(crs='epsg:4326')
+
+        if basin_shp.unary_union.geom_type == 'MultiPolygon':
+            bb = max(basin_shp.unary_union.geoms, key=lambda a: a.area)
+        else:
+            bb = basin_shp.unary_union
+
+        basin_all = gpd.GeoDataFrame({'geometry': gpd.GeoSeries(bb)}, crs='epsg:4326')
 
         grid = self.gdf
 
-        index = shapely.intersects(basin_shp.unary_union, grid.geometry).values
+        index = shapely.intersects(bb, grid.geometry).values
 
         new = []
 
@@ -380,15 +394,49 @@ class basin2grid_shp:
                 continue
 
             mm = grid[grid.ID == i + 1]
-            mm = mm.drop(columns = ['ID'])
-            new.append(mm.overlay(basin_all, how='intersection',keep_geom_type=True))
+            mm = mm.drop(columns=['ID'])
+            new.append(mm.overlay(basin_all, how='intersection', keep_geom_type=True))
 
         gdf = gpd.GeoDataFrame(pd.concat(new))
         ID = [i for i in range(1, len(gdf) + 1)]
         d = {'ID': ID, 'geometry': gdf.geometry}
         new_shp = gpd.GeoDataFrame(d, crs='epsg:4326')
+
+        if self.__func is not None:
+            new_shp = self.__func(new_shp)
+
         new_shp.to_file('../temp/%s.shp' % new_basin_name)
         pass
+
+    def set_modify_func(self, func):
+        self.__func = func
+        return self
+
+    @staticmethod
+    def example_func1(gdf):
+        """
+
+        """
+
+        '''requirement of minimal area'''
+        propotion = 8
+        gdf = gdf[gdf.area >= (gdf.area.values.max()) / propotion]
+
+        '''must not be a multiPolygon'''
+        # gdf = gdf[gdf.type == 'Polygon']
+
+        '''requirement of the centroid, e.g., must be inside a box'''
+        # lon_ld = -130
+        # lat_ld = 20
+        # lon_ru = -65
+        # lat_ru = 50
+        # poly = box(xmin=lon_ld, ymin=lat_ld, xmax=lon_ru, ymax=lat_ru)
+        # gdf = gdf[poly.contains(gdf.centroid)]
+
+        '''reorganization'''
+        gdf['ID']= np.arange(start=1, stop=gdf.shape[0]+1)
+
+        return gdf
 
 
 def demo1():
@@ -564,14 +612,14 @@ def demo_show_basin_grid():
 
     region = [5, 32, 40, 52]
     fig.basemap(region=region, projection="Q8c", frame=True)
-    fig.coast(shorelines="1/0.2p", region=region, projection="Q8c",land="darkgray", water="skyblue")
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q8c", land="darkgray", water="skyblue")
 
     gdf = gpd.read_file(filename='../temp/GDRB_subbasins.shp')
 
-    for i in range(1,20):
-        x = gdf[gdf.ID==i].centroid.item().x
+    for i in range(1, 20):
+        x = gdf[gdf.ID == i].centroid.item().x
         y = gdf[gdf.ID == i].centroid.item().y
-        fig.text(x=x, y=y, text="%s"%i, font='red')
+        fig.text(x=x, y=y, text="%s" % i, font='red')
 
     fig.plot(data=gdf.boundary, pen="1p,black")
     fig.show()
@@ -589,10 +637,10 @@ def demo_basin_grid():
 if __name__ == '__main__':
     # shp_change_Danube()
     # demo1()
-    # demo2()
+    demo2()
     # demo3()
     # demo4()
-    demo5()
+    # demo5()
     # showbox()
     # demo_basin_grid()
     # demo_show_basin_grid()

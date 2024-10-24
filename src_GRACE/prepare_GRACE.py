@@ -15,11 +15,12 @@ class GRACE_preparation:
     def __init__(self, basin_name='MDB', shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp'):
         self.basin_name = basin_name
         self.__shp_path = shp_path
+        self.configure_global_land_ocean_mask()
         pass
 
     def generate_mask(self, box_mask=None):
         """
-        generate and save global mask for later use
+        generate and save basin mask for later use
         """
 
         '''for signal: 0.5 degree'''
@@ -32,6 +33,16 @@ class GRACE_preparation:
 
         pass
 
+    def configure_global_land_ocean_mask(self, fn='../data/GRACE/GlobalLandMaskForGRACE.hdf5'):
+        """
+        This is to prevent accounting for the oceanic GRACE into the land observations.
+        lat: 90=>-90
+        lon:-180=>180
+        """
+        self._1deg_mask = np.flipud(h5py.File(fn, 'r')['resolution_1']['mask'][:])
+        self._05deg_mask = np.flipud(h5py.File(fn, 'r')['resolution_05']['mask'][:])
+        return self
+
     def basin_TWS(self, month_begin='2002-04', month_end='2002-04',
                   dir_in='/media/user/My Book/Fan/GRACE/ewh', dir_out='/media/user/My Book/Fan/GRACE/output'):
         """
@@ -41,7 +52,7 @@ class GRACE_preparation:
         tws: lon: -180-->180, lat: -90--->90
         """
 
-        '''load mask'''
+        '''load basin mask'''
         res = 0.5
         mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
 
@@ -51,7 +62,7 @@ class GRACE_preparation:
         for i in range(1, basins_num + 1):
             key = 'sub_basin_%d' % i
             '''flip upside down to be compatible with the TWS dataset'''
-            mask[key] = np.flipud(mf[key][:])
+            mask[key] = np.flipud(mf[key][:]*self._05deg_mask)
 
         '''load latitude'''
         err = res / 10
@@ -142,7 +153,7 @@ class GRACE_preparation:
         for i in range(1, basins_num + 1):
             key = 'sub_basin_%d' % i
             '''flip upside down to be compatible with the TWS dataset'''
-            mask[key] = np.flipud(mf[key][:])
+            mask[key] = np.flipud(mf[key][:]*self._1deg_mask)
 
         '''load latitude'''
         err = res / 10
@@ -223,7 +234,7 @@ class GRACE_preparation:
 
         basins_num = len(list(mf.keys())) - 1
 
-        mask = mf['basin'][:]
+        mask = mf['basin'][:]*self._05deg_mask
 
         '''calculate the basin averaged TWS, monthly'''
         directory = Path(dir_in)
@@ -281,6 +292,9 @@ class GRACE_global_preparation:
         pass
 
     def configure_global_mask(self, fn='/media/user/My Book/Fan/W3RA_data/basin_selection/GlobalLandMaskForGRACE.hdf5'):
+        """
+        This is to prevent accounting for the oceanic GRACE into the land observations.
+        """
         self._1deg_mask = np.flipud(h5py.File(fn, 'r')['resolution_1']['mask'][:])
         self._05deg_mask = np.flipud(h5py.File(fn, 'r')['resolution_05']['mask'][:])
         return self

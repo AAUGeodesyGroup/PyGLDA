@@ -14,8 +14,8 @@ from datetime import datetime, timedelta
 
 class GRACE_CSR_mascon(GRACE_preparation):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, basin_name='MDB', shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp'):
+        super().__init__(basin_name=basin_name, shp_path=shp_path)
         pass
 
     def basin_TWS(self, month_begin='2002-04', month_end='2002-04',
@@ -34,7 +34,7 @@ class GRACE_CSR_mascon(GRACE_preparation):
         mask = {}
         for i in range(1, basins_num + 1):
             key = 'sub_basin_%d' % i
-            mask[key] = mf[key][:]
+            mask[key] = mf[key][:]*self._05deg_mask
 
         '''load latitude'''
         err = res / 10
@@ -62,7 +62,7 @@ class GRACE_CSR_mascon(GRACE_preparation):
         available_month['2011-10'] -= 1
         available_month['2011-11'] = available_month['2011-10'] + 1
         available_month['2015-04'] -= 1
-        available_month['2015-05'] = available_month['2015-04'] + 1
+        # available_month['2015-05'] = available_month['2015-04'] + 1
 
         mascon_data = np.array(csr['lwe_thickness'])[:, 0::2, 0::2]  # the unit is centimeter
 
@@ -129,7 +129,7 @@ class GRACE_CSR_mascon(GRACE_preparation):
 
         basins_num = len(list(mf.keys())) - 1
 
-        mask = mf['basin'][:]
+        mask = mf['basin'][:]*self._05deg_mask
 
         '''load latitude'''
         err = res / 10
@@ -157,7 +157,7 @@ class GRACE_CSR_mascon(GRACE_preparation):
         available_month['2011-10'] -= 1
         available_month['2011-11'] = available_month['2011-10'] + 1
         available_month['2015-04'] -= 1
-        available_month['2015-05'] = available_month['2015-04'] + 1
+        # available_month['2015-05'] = available_month['2015-04'] + 1
 
         mascon_data = np.array(csr['lwe_thickness'])[:, 0::2, 0::2]  # the unit is centimeter
 
@@ -177,8 +177,8 @@ class GRACE_CSR_mascon(GRACE_preparation):
             time_epoch.append(this_month_shortname + '-15')  # TODO: assumed to be the mid day of the month but should be checked later
 
             data = mascon_data[available_month[this_month_shortname]].copy()
-            '''convert to be compatible with the mask grid definition'''
-            data = np.flipud(data)
+            '''convert to be compatible with the mask grid definition, convert unit from cm to mm'''
+            data = np.flipud(data)*10
             tws_one_month = np.roll(data, 360)
 
             a = tws_one_month[mask.astype(bool)]
@@ -206,6 +206,28 @@ def demo1():
     # dp.basin_COV()
     pass
 
+def demo2():
+
+    # GR = GRACE_CSR_mascon(basin_name='US',
+    #                        shp_path='/media/user/Backup Plus/GRACE/shapefiles/USgrid/UnitedStatesGrid.shp')
+
+    GR = GRACE_CSR_mascon(basin_name='Africa',
+                           shp_path='/media/user/Backup Plus/GRACE/shapefiles/Africa/AfricaGrid.shp')
+
+    GR.generate_mask()
+
+    GR.basin_TWS(month_begin='2002-04', month_end='2023-05',
+                  dir_in='/media/user/Backup Plus/GRACE/Mascon/CSR',
+                  dir_out='/media/user/My Book/Fan/GRACE/output')
+
+    GR.grid_TWS(month_begin='2002-04', month_end='2023-05',
+                  dir_in='/media/user/Backup Plus/GRACE/Mascon/CSR',
+                  dir_out='/media/user/My Book/Fan/GRACE/output')
+
+    GR.basin_COV(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/My Book/Fan/GRACE_spatial_resolution_study/degree_60/sample/DDK3/',
+                  dir_out='/media/user/My Book/Fan/GRACE/output')
+
+    pass
 
 if __name__ == '__main__':
-    demo1()
+    demo2()

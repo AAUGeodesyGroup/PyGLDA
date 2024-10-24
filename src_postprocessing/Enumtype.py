@@ -5,5 +5,12 @@ class data_var(Enum):
     GroundWater = 0
     TotalWater = 1
     SoilWater = 2
-    SurfaceWater = 3
-    Discharge = 4
+    DeepSoilWater = 3
+    SurfaceWater = 4
+    Discharge = 5
+
+
+class data_dim(Enum):
+    one_dimension = 1
+    two_dimension = 2
+
