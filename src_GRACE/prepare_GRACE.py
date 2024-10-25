@@ -8,6 +8,7 @@ from src_DA.shp2mask import basin_shp_process
 from src_hydro.GeoMathKit import GeoMathKit
 import os
 from pathlib import Path
+from datetime import datetime
 
 
 class GRACE_preparation:
@@ -130,7 +131,7 @@ class GRACE_preparation:
         hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
 
         hm.close()
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
         pass
 
     def basin_COV(self, month_begin='2002-04', month_end='2002-04',
@@ -215,7 +216,7 @@ class GRACE_preparation:
         hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
 
         hm.close()
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
 
         pass
 
@@ -282,7 +283,7 @@ class GRACE_preparation:
         hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
 
         hm.close()
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
         pass
 
 
@@ -408,7 +409,7 @@ class GRACE_global_preparation:
             hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
             hm.close()
 
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def basin_COV(self, month_begin='2002-04', month_end='2002-04',
@@ -484,7 +485,7 @@ class GRACE_global_preparation:
             hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
             hm.close()
 
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def grid_TWS(self, month_begin='2002-04', month_end='2002-04',
@@ -561,7 +562,7 @@ class GRACE_global_preparation:
             hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
             hm.close()
 
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
 

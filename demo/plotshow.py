@@ -746,7 +746,7 @@ def CorrelationGDRB():
     # harvest = cov
 
     # corr_matrix = np.corrcoef(harvest)
-    corr_matrix =correlation_from_covariance(cov)
+    corr_matrix = correlation_from_covariance(cov)
     im, _ = heatmap(corr_matrix, vegetables, vegetables,
                     cmap="PuOr", vmin=-1, vmax=1,
                     cbarlabel="correlation coeff.")
@@ -768,8 +768,8 @@ def show_component_ensemble():
     from src_hydro.GeoMathKit import GeoMathKit
     from src_DA.Analysis import Postprocessing_basin
 
-    ens= 30
-    case= 'RDA_DRB_BasinScale'
+    ens = 30
+    case = 'RDA_DRB_BasinScale'
     basin = 'DRB'
     file_postfix = 'DA'
 
@@ -808,7 +808,7 @@ def show_component_ensemble():
         fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
                     frame=["WSne", "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
 
-        mm=np.zeros(len(states['basin_0'][state][0]))
+        mm = np.zeros(len(states['basin_0'][state][0]))
         for es in reversed(range(1, ens + 1)):
             vv = states['basin_0'][state][es]
 
@@ -817,8 +817,8 @@ def show_component_ensemble():
             else:
                 fig.plot(x=fan_time, y=vv, pen="0.3p,grey")
 
-            mm+=vv
-        mm/=ens
+            mm += vv
+        mm /= ens
         fig.plot(x=fan_time, y=mm, pen="1p,blue", label='%s' % (state), transparency=30)
         fig.legend(position='jTR', box='+gwhite+p0.5p')
         fig.shift_origin(yshift='-4c')
@@ -840,7 +840,7 @@ def show_subbasin():
 
     signal = 'TWS'
 
-    ens=30
+    ens = 30
     case = 'RDA_GDRB_BasinScale'
     basin = 'GDRB'
     '''for open-loop'''
@@ -882,7 +882,7 @@ def show_subbasin():
 
     for j in range(len(keys)):
         i += 1
-        if j>0:break
+        if j > 0: break
         basin_id = 'basin_%s' % j
         GRACE_ens_mean = GRACE['ens_mean'][basin_id]
         GRACE_original = GRACE['original'][basin_id]
@@ -905,7 +905,7 @@ def show_subbasin():
             sp_1 = 0.5
         sp_2 = sp_1 * 2
 
-        if j==3:
+        if j == 3:
             ff = 'WSne'
         else:
             ff = 'Wsne'
@@ -921,9 +921,9 @@ def show_subbasin():
         # fig.plot(x=GR_time, y=GRACE_original, pen="0.5p,purple,--.", label='%s' % ('GRACE_original'),
         #          transparency=30)
         fig.plot(x=GR_time, y=GRACE_original, style="c.15c", fill="black", label='%s' % ('GRACE'), transparency=30)
-        if j==0:
+        if j == 0:
             text = ''
-        elif j==1:
+        elif j == 1:
             text = '(b) DRB-UB'
         elif j == 2:
             text = '(c) DRB-MB'
@@ -965,10 +965,10 @@ def show_trend_annual():
     import os
     import pygmt
 
-    signal='trend'
-    # signal = 'annual'
+    # signal='trend'
+    signal = 'annual'
 
-    ens=30
+    ens = 30
     case = 'RDA_DRB_BasinScale'
     basin = 'DRB'
     '''for open-loop'''
@@ -976,11 +976,12 @@ def show_trend_annual():
     end_time = '2010-01-31'
     res_output = '/home/user/Desktop/res1/RDA_DRB_BasinScale'
     shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
+    # res_output = '/home/user/Desktop/res1/RDA_GDRB_BasinScale'
+    # shp_path = '../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp'
     box = [50.5, 42, 8.5, 29.5]
 
     '''load shp'''
     gdf = gpd.read_file(shp_path)
-
 
     '''load DA'''
     hf = h5py.File(Path(res_output) / ('monthly_mean_TWS_%s_DA.h5' % basin), 'r')
@@ -1067,6 +1068,7 @@ def show_trend_annual():
     if signal == 'trend':
         pygmt.makecpt(cmap='polar+h0', series=[vmin, vmax], background='o')
     else:
+        vmax = 80
         pygmt.makecpt(cmap='jet', series=[0, vmax], background='o')
 
     res = 0.5
@@ -1085,6 +1087,16 @@ def show_trend_annual():
     GRACE = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=res_GRACE.flatten(),
                           spacing=(res, res), region=region)
 
+    ss_GRACE = np.array(GRACE)
+    ss_GRACE = ss_GRACE[~np.isnan(ss_GRACE)]
+
+    ss_OL = np.array(OL)
+    ss_OL = ss_OL[~np.isnan(ss_OL)]
+
+    ss_DA = np.array(DA)
+    ss_DA = ss_DA[~np.isnan(ss_DA)]
+    print(np.corrcoef(ss_DA, ss_OL))
+    print(np.corrcoef(ss_DA, ss_GRACE))
     region = [box[2] - 2, box[3] + 2, box[1] - 2, box[0] + 2]
     ps = 'Q8c'
     offset = '-6c'
@@ -1191,6 +1203,285 @@ def show_trend_annual():
     pass
 
 
+def otherfigure1():
+    from src_DA.Analysis import Postprocessing_basin
+    import pygmt
+    import h5py
+    from src_hydro.GeoMathKit import GeoMathKit
+    import json
+    from pathlib import Path
+    import numpy as np
+    from src_hydro.EnumType import init_mode
+    from src_FlowControl.DA_GRACE import DA_GRACE
+
+    signal = 'TWS'
+
+    ens = 30
+    case = 'RDA_GDRB_BasinScale'
+    basin = 'GDRB'
+    '''for open-loop'''
+    begin_time = '2002-01-01'
+    end_time = '2010-01-31'
+    data_dir = '/home/user/Desktop/res1/RDA_GDRB_BasinScale'
+
+    '''load OL result'''
+    file_postfix = 'OL'
+    pp = Postprocessing_basin(ens=ens, case=case, basin=basin,
+                              date_begin=begin_time,
+                              date_end=end_time)
+    # states_OL = pp.get_states(post_fix=file_postfix, dir=demo._outdir2)
+    states_OL = pp.load_states(prefix=(file_postfix + '_' + basin), load_dir=data_dir)
+    file_postfix = 'DA'
+    states_DA = pp.load_states(prefix=(file_postfix + '_' + basin), load_dir=data_dir)
+
+    '''load GRACE'''
+    # dp_dir = Path(setting_dir) / 'DA_setting.json'
+    # dp4 = json.load(open(dp_dir, 'r'))
+    # GRACE = pp.get_GRACE(obs_dir=dp4['obs']['dir'])
+    GRACE = pp.load_GRACE(prefix=(file_postfix + '_' + basin), load_dir=data_dir)
+
+    OL_time = states_OL['time']
+    DA_time = states_DA['time']
+    GR_time = GRACE['time']
+
+    basin_num = len(list(states_DA.keys())) - 1
+
+    '''plot figure'''
+    fig = pygmt.Figure()
+
+    keys = list(GRACE['ens_mean'].keys())
+    keys
+
+    j = 0
+    basin_id = 'basin_%s' % j
+    GRACE_ens_mean = GRACE['ens_mean'][basin_id]
+    GRACE_original = GRACE['original'][basin_id]
+    OL = states_OL[basin_id][signal][0]
+    OL_ens_mean = np.mean(np.array(list(states_OL[basin_id][signal].values()))[1:, ], axis=0)
+    DA_ens_mean = np.mean(np.array(list(states_DA[basin_id][signal].values()))[1:, ], axis=0)
+
+    values = [GRACE_ens_mean, OL, OL_ens_mean, DA_ens_mean]
+    vvmin = []
+    vvmax = []
+    for vv in values:
+        vvmin.append(np.min(vv[5:]))
+        vvmax.append(np.max(vv[5:]))
+
+    vmin, vmax = min(vvmin), min(vvmax)
+    dmin = vmin - (vmax - vmin) * 0.1
+    dmax = vmax + (vmax - vmin) * 0.6
+    sp_1 = int(np.round((vmax - vmin) / 5))
+    if sp_1 == 0:
+        sp_1 = 0.5
+    sp_2 = sp_1 * 2
+
+    ff = 'WSne'
+
+    fig.basemap(region=[2006, 2007, 200, 500], projection='X8c/4c',
+                frame=[ff, "xa0.08f0.08g0.08",
+                       'ya50f50g50+lwater [mm]'])
+
+    # fig.plot(x=OL_time, y=OL, pen="0.5p,blue,-", label='%s' % ('OL_unperturbed'), transparency=30)
+
+    # fig.plot(x=OL_time, y=OL_ens_mean, pen="0.5p,red", label='%s' % ('OL_ens_mean'), transparency=30)
+    fig.plot(x=DA_time, y=DA_ens_mean * 1.2 - 50, pen="1p,green", label='Daily')
+    # fig.plot(x=GR_time, y=GRACE_ens_mean, pen="0.5p,black", label='%s' % ('GRACE_ens_mean'), transparency=30)
+    # fig.plot(x=GR_time, y=GRACE_original, pen="0.5p,purple,--.", label='%s' % ('GRACE_original'),
+    #          transparency=30)
+    fig.plot(x=GR_time, y=GRACE_original, style="c.15c", fill="black")
+
+    time1 = (GR_time[1:] - GR_time[0:-1]) / 2 + GR_time[0:-1]
+    time2 = time1 + 0.001
+
+    GRACE2 = GRACE_original[0:-1]
+    GRACE3 = GRACE_original[1:]
+
+    GRACE = []
+    time = []
+    for a in range(len(time1)):
+        time.append(GR_time[a])
+        GRACE.append(GRACE_original[a])
+        time.append(time1[a])
+        GRACE.append(GRACE2[a])
+        time.append(time2[a])
+        GRACE.append(GRACE3[a])
+
+    fig.plot(x=time, y=GRACE, pen="1p,blue", label='Monthly mean')
+    fig.plot(x=OL_time, y=OL * 1.8 - 250, pen="1p,grey", label='Model')
+
+    fig.legend(position='jTR')
+
+    pass
+
+    # fig_postfix = '0'
+    # fig.savefig(str(Path(figure_output) / ('DA_%s_%s_%s.pdf' % (basin, signal, fig_postfix))))
+    # fig.savefig(str(Path(figure_output) / ('DA_%s_%s_%s.png' % (basin, signal, fig_postfix))))
+
+    fig.show()
+
+    pass
+
+
+def otherfigure2():
+    import pygmt
+    import numpy as np
+    import geopandas as gpd
+    from shapely import box
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='8p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='polar', series=[1, 11, 1], background='o')
+
+    region = [5, 32, 40, 52]
+    fig.basemap(region=region, projection="Q8c", frame=True)
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q8c", land="darkgray", water="skyblue")
+
+    gdf = gpd.read_file(filename='../temp/GDRB_subbasins.shp')
+    # gdf = gpd.read_file(filename='../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp')
+
+    for i in range(1, 20):
+        x = gdf[gdf.ID == i].centroid.item().x
+        y = gdf[gdf.ID == i].centroid.item().y
+        fig.text(x=x, y=y, text="%s" % i, font='red')
+
+    fig.plot(data=gdf.boundary, pen="1p,black")
+    fig.show()
+    pass
+
+
+def otherfigure3():
+    import pygmt
+    import geopandas as gpd
+    import h5py
+
+    res = 0.5
+    err = res / 10
+    lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
+    lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
+    region = [min(lon), max(lon), min(lat), max(lat)]
+    lon, lat = np.meshgrid(lon, lat)
+
+    tt = h5py.File(mode='r', name='../data/basin/mask/DRB_basin_res_%s.h5' % (res))
+
+    v = []
+    No = 1
+    x = tt['sub_basin_%s' % No][:] * (1 + 0.001)
+    v.append(1)
+
+    No = 2
+    y = tt['sub_basin_%s' % No][:] * (0.53)
+    # x[x==0] += y[x==0]
+    x += y
+    v.append(0.53)
+
+    No = 3
+    y = tt['sub_basin_%s' % No][:] * (-0.43)
+    # x[x==0] += y[x==0]
+    x += y
+    v.append(-0.43)
+
+    x[x == 0] = np.NaN
+    grace = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=x.flatten(),
+                          spacing=(res, res), region=region)
+
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='rainbow', series=[-1, 1, 0.1], background='o')
+
+    region = [8.5, 29.5, 42, 50.5]
+
+    fig.grdimage(
+        grid=grace,
+        cmap=True,
+        frame=['xa5f5g5', 'ya5f5g5'] + ['+tDanube: basin-average'],
+        dpi=100,
+        projection='Q12c',
+        region=region,
+        interpolation='n'
+    )
+    # fig.colorbar()
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q12c", water="skyblue")
+    # fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
+
+    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    fig.plot(data=gdf.boundary, pen="1p,black")
+    for i in range(1, 4):
+        x = gdf[gdf.ID == i].centroid.item().x
+        y = gdf[gdf.ID == i].centroid.item().y
+        fig.text(x=x, y=y, text="%.2f" % v[i - 1], font='18p,black')
+
+    # ===============================================
+    fig.shift_origin(yshift='-6.5c')
+    res = 0.5
+    err = res / 10
+    lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
+    lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
+    region = [min(lon), max(lon), min(lat), max(lat)]
+    lon, lat = np.meshgrid(lon, lat)
+
+    tt2 = h5py.File(mode='r', name='../data/basin/mask/GDRB_res_%s.h5' % (res))
+
+    hm = h5py.File('/media/user/My Book/Fan/GRACE/output/GDRB_cov.hdf5', 'r')
+    i = 0
+    cov = hm['data'][i, :, :]
+    def correlation_from_covariance(covariance):
+        v = np.sqrt(np.diag(covariance))
+        outer_v = np.outer(v, v)
+        correlation = covariance / outer_v
+        correlation[covariance == 0] = 0
+        return correlation
+    cov = correlation_from_covariance(cov)
+
+    pp = 11
+    No = 1
+    x = tt2['sub_basin_%s' % No][:] * cov[pp, No-1]
+
+    for No in range(18):
+        y = tt2['sub_basin_%s' % (No + 2)][:] * cov[pp, No + 1]
+        # x[x==0] += y[x==0]
+        x += y
+
+
+    x[x == 0] = np.NaN
+    grace = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=x.flatten(),
+                          spacing=(res, res), region=region)
+
+    # fig = pygmt.Figure()
+    # pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    # pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
+    # pygmt.makecpt(cmap='polar', series=[1, 11, 1], background='o')
+
+    region = [8.5, 29.5, 42, 50.5]
+
+    fig.grdimage(
+        grid=grace,
+        cmap=True,
+        frame=['xa5f5g5', 'ya5f5g5'] + ['+tDanube: grid'],
+        dpi=100,
+        projection='Q12c',
+        region=region,
+        interpolation='n'
+    )
+    fig.colorbar(frame='a0.2f0.1g0.1')
+
+    # fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
+
+    fig.coast(shorelines="1/0.2p", region=region, projection="Q12c", water="skyblue")
+    gdf = gpd.read_file('../data/basin/shp/GDRB_shapefiles')
+    fig.plot(data=gdf.boundary, pen="1p,black")
+
+    for i in range(1, 19):
+        x = gdf[gdf.ID == i].centroid.item().x
+        y = gdf[gdf.ID == i].centroid.item().y
+        fig.text(x=x, y=y, text="%.2f" % cov[pp, i-1], font='11p,black')
+
+    fig.show()
+    # fig.savefig('dd.png')
+
+    pass
+
+
 if __name__ == '__main__':
     # model_component_comparison_to_Leire()
     # compariosn_to_GRACE()
@@ -1199,7 +1490,10 @@ if __name__ == '__main__':
     # tile_GRACE_1()
     # tile_GRACE_2()
     # Danube_exp()
-    # CorrelationGDRB()
+    # Correlatio nGDRB()
     # show_component_ensemble()
     # show_subbasin()
-    show_trend_annual()
+    # otherfigure2()
+    # show_trend_annual()
+    # otherfigure2()
+    otherfigure3()

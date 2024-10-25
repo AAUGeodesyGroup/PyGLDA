@@ -72,7 +72,7 @@ class SingleModel:
 
         dp2 = self.setting_dir / 'pre_process.json'
         pre.process(dp2=str(dp2))
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def model_run(self, arg='resume'):
@@ -156,7 +156,7 @@ class SingleModel:
         an.get_basin_average(save=True, date_begin=self.period[0].strftime('%Y-%m-%d'),
                              date_end=self.period[1].strftime('%Y-%m-%d'),
                              save_dir=str(statedir / ('output_%s' % self.case)))
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def visualize_signal(self, fig_path: str, fig_postfix='0'):

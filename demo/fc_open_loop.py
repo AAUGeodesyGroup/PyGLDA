@@ -4,6 +4,7 @@ sys.path.append('../')
 
 from src_FlowControl.OpenLoop import OpenLoop
 from src_hydro.EnumType import init_mode
+from datetime import datetime
 
 case = 'OL_test'
 setting_dir = '../settings/OL_run'
@@ -105,7 +106,7 @@ def demo_fc_OL_step_2():
 
     '''Job finished'''
     sys.stdout = temp
-    print('job finished')
+    print('job finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     pass
 
 

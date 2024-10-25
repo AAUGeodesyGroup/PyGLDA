@@ -111,7 +111,7 @@ class GRACE_CSR_mascon(GRACE_preparation):
         hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
 
         hm.close()
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
 
         pass
 
@@ -194,7 +194,7 @@ class GRACE_CSR_mascon(GRACE_preparation):
         hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
 
         hm.close()
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
 
         pass
 
@@ -212,7 +212,7 @@ def demo2():
     #                        shp_path='/media/user/Backup Plus/GRACE/shapefiles/USgrid/UnitedStatesGrid.shp')
 
     GR = GRACE_CSR_mascon(basin_name='Africa',
-                           shp_path='/media/user/Backup Plus/GRACE/shapefiles/Africa/AfricaGrid.shp')
+                           shp_path='/media/user/Backup Plus/GRACE/shapefiles/Africa/Africa_subbasins.shp')
 
     GR.generate_mask()
 

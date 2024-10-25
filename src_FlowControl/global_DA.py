@@ -3,6 +3,7 @@ import sys
 sys.path.append('../')
 
 from pathlib import Path
+from datetime import datetime
 
 res_output = '/work/data_for_w3/w3ra/res'
 # figure_output = '/media/user/My Book/Fan/W3RA_data/figure'
@@ -248,7 +249,7 @@ class GDA:
 
         '''Job finished'''
         sys.stdout = temp
-        print('job finished')
+        print('job finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
 
@@ -308,7 +309,7 @@ class GDA:
 
         '''Job finished'''
         sys.stdout = temp
-        print('job finished: %s' % GDA.case)
+        print('job finished: %s, %s' % (GDA.case, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
         pass
 

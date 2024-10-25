@@ -200,6 +200,7 @@ class DA_GRACE(OpenLoop):
 
         bs = basin_shp_process(res=0.1, basin_name=basin).shp_to_mask(shp_path=shp_path)
 
+        print('Preparing OBS design matrix: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         land_mask = str(Path(self._outdir) / self.case / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
 
@@ -210,7 +211,7 @@ class DA_GRACE(OpenLoop):
         dm_save_dir = '../temp'
         dm = DM_basin_average(shp=bs, layer=layer, par_dir=par_dir)
         dm.vertical_aggregation(isVec=True).basin_average()
-        # dm.saveDM(out_path=dm_save_dir)
+        dm.saveDM(out_path=dm_save_dir)
 
         pass
 
@@ -256,6 +257,8 @@ class DA_GRACE(OpenLoop):
             f = open('../log/OL/log_%s.txt' % rank, 'w')
             sys.stdout = f
 
+        print('Configure DA experiments: %s'%datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
         '''configure DA'''
         dp_dir = self.setting_dir / 'DA_setting.json'
         configDA = config_DA.loadjson(dp_dir).process()
@@ -269,6 +272,7 @@ class DA_GRACE(OpenLoop):
         ext = ext_adapter(par=par, settings=settings)
         model_instance = model_run_daily(settings=settings, par=par, model_init=model_init, ext=ext)
 
+        print('Configure shapefile: %s'%datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         '''define the basin-shp file and derive the corresponding mask'''
         basin = configDA.basic.basin
         shp_path = configDA.basic.basin_shp
@@ -282,16 +286,17 @@ class DA_GRACE(OpenLoop):
         state_sample = Path(configDA.basic.NaNmaskStatesDir) / ('%s_state.h5' % self.case)
         bs.mask_nan(sample=state_sample)
 
+        print('Configure OBS and its design matrix: %s'%datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         '''obtain the design matrix from pre-saved data'''
         layer = {}
         for key, vv in configDA.basic.layer.items():
             layer[states_var[key]] = vv
-        # dm_save_dir = '../temp'
-        # dm = DM_basin_average(shp=bs, layer=layer, LoadfromDisk=True, dir=dm_save_dir)
-        par_dir = str(Path(lm) / self.case / 'par')
         dm_save_dir = '../temp'
-        dm = DM_basin_average(shp=bs, layer=layer, par_dir=par_dir)
-        dm.vertical_aggregation(isVec=True).basin_average()
+        dm = DM_basin_average(shp=bs, layer=layer, LoadfromDisk=True, dir=dm_save_dir)
+        # par_dir = str(Path(lm) / self.case / 'par')
+        # dm_save_dir = '../temp'
+        # dm = DM_basin_average(shp=bs, layer=layer, par_dir=par_dir)
+        # dm.vertical_aggregation(isVec=True).basin_average()
 
         '''obtain the GRACE observation'''
         gr = GRACE_obs(basin=self.basin, dir_obs=configDA.obs.dir, ens_id=rank)

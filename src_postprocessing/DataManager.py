@@ -55,9 +55,8 @@ class dataManager_single_run:
 
         self._dims = dims
 
-
         print()
-        print('=================Collecting data for %s================='%variable.name)
+        print('=================Collecting data for %s=================' % variable.name)
 
         return self
 
@@ -82,13 +81,13 @@ class dataManager_single_run:
             fn_w = Path(save_mask) / ('%s.h5' % ss.bounds.prefix)
             h5_w = h5py.File(fn_w, 'w')
             h5_w.create_dataset(name='mask', data=self._mask.astype(int))
-            h5_w.create_dataset(name='lat', data= lats)
+            h5_w.create_dataset(name='lat', data=lats)
             h5_w.create_dataset(name='lon', data=lons)
             h5_w.close()
 
         return self
 
-    def change_variable(self, variable= data_var.TotalWater):
+    def change_variable(self, variable=data_var.TotalWater):
         statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
         self._variable = variable
         # TODO: discharge data to be preserved
@@ -104,9 +103,8 @@ class dataManager_single_run:
             self._statesnn = ['Sd']
 
         print()
-        print('=================Collecting data for %s================='%variable.name)
+        print('=================Collecting data for %s=================' % variable.name)
         return self
-
 
     def aggregation_daily(self, date_begin='2002-04-01', date_end='2002-04-02'):
         """
@@ -568,11 +566,34 @@ def demo2():
     shp_path = '../data/basin/shp/USgrid/US_subbasins.shp'
     global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir='../data/basin/mask').shp_to_mask(
         shp_path=shp_path).mask[0]
-    dsr = dataManager_ensemble_statistic().configure(setting_fn='../settings/Ucloud_DA/setting.json',
-                                                     out_dir_mean='/work/data_for_w3/w3ra/save_data/DA_monthly_mean',
-                                                     out_dir_std='/work/data_for_w3/w3ra/save_data/DA_monthly_std',
-                                                     variable=data_var.TotalWater, dims=data_dim.one_dimension)
-    dsr.reduce_datasize(global_basin_mask=global_basin_mask, save_mask='/work/data_for_w3/w3ra/save_data/Mask')
+
+    '''DA results'''
+    # dsr = dataManager_ensemble_statistic().configure(setting_fn='../settings/Ucloud_DA/setting.json',
+    #                                                  out_dir_mean='/work/data_for_w3/w3ra/save_data/DA_monthly_mean',
+    #                                                  out_dir_std='/work/data_for_w3/w3ra/save_data/DA_monthly_std',
+    #                                                  variable=data_var.TotalWater, dims=data_dim.one_dimension)
+    # dsr.reduce_datasize(global_basin_mask=global_basin_mask, save_mask='/work/data_for_w3/w3ra/save_data/Mask')
+    #
+    # '''====================================================================='''
+    # dsr.aggregation_monthly(date_begin='2002-01-01', date_end='2023-03-31')
+    #
+    # dsr.change_variable(variable=data_var.GroundWater)
+    # dsr.aggregation_monthly(date_begin='2002-01-01', date_end='2023-03-31')
+    #
+    # dsr.change_variable(variable=data_var.DeepSoilWater)
+    # dsr.aggregation_monthly(date_begin='2002-01-01', date_end='2023-03-31')
+    #
+    # dsr.change_variable(variable=data_var.SoilWater)
+    # dsr.aggregation_monthly(date_begin='2002-01-01', date_end='2023-03-31')
+    #
+    # dsr.change_variable(variable=data_var.SurfaceWater)
+    # dsr.aggregation_monthly(date_begin='2002-01-01', date_end='2023-03-31')
+
+    '''OpenLoop results'''
+    dsr = dataManager_ensemble_member(ens=0).configure(setting_fn='../settings/Ucloud_DA/setting.json',
+                                                  out_dir='/work/data_for_w3/w3ra/save_data/OL_monthly_mean',
+                                                  variable=data_var.TotalWater, dims=data_dim.one_dimension)
+    dsr.reduce_datasize(global_basin_mask=global_basin_mask)
 
     '''====================================================================='''
     dsr.aggregation_monthly(date_begin='2002-01-01', date_end='2023-03-31')
@@ -588,6 +609,7 @@ def demo2():
 
     dsr.change_variable(variable=data_var.SurfaceWater)
     dsr.aggregation_monthly(date_begin='2002-01-01', date_end='2023-03-31')
+
     pass
 
 

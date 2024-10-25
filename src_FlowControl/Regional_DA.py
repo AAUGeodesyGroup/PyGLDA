@@ -21,9 +21,13 @@ class RDA:
     # basin = 'DRB'
     # shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
 
-    case = 'United_States'
-    basin = 'US'
-    shp_path = '../data/basin/shp/USgrid/US_subbasins.shp'
+    # case = 'United_States'
+    # basin = 'US'
+    # shp_path = '../data/basin/shp/USgrid/US_subbasins.shp'
+
+    case = 'Africa'
+    basin = 'Africa'
+    shp_path = '../data/basin/shp/Africa/Africa_subbasins.shp'
 
     box = [50.5, 42, 8.5, 29.5]
 
@@ -249,7 +253,7 @@ class RDA:
 
         '''Job finished'''
         sys.stdout = temp
-        print('job finished')
+        print('job finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
 
@@ -292,7 +296,7 @@ class RDA:
                 demo.generate_perturbed_GRACE_obs()
 
             '''prepare the design matrix'''
-            # demo.prepare_design_matrix()
+            demo.prepare_design_matrix()
 
         comm.barrier()
 
@@ -309,7 +313,7 @@ class RDA:
 
         '''Job finished'''
         sys.stdout = temp
-        print('job finished: %s' % RDA.case)
+        print('job finished: %s, %s' % (RDA.case, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
         pass
 
@@ -764,8 +768,8 @@ if __name__ == '__main__':
     # RDA.single_run()
 
     '''multiple threads'''
-    # demo_global_run_complete(prepare=True)
-    # demo_global_run_only_DA(prepare=False)
+    # demo_global_run_complete(prepare=False)
+    demo_global_run_only_DA(prepare=True)
 
     '''single thread for plotting'''
-    demo_DA_visualization()
+    # demo_DA_visualization()

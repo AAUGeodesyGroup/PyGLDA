@@ -6,6 +6,7 @@ sys.path.append('../')
 
 from src_FlowControl.DA_GRACE import DA_GRACE
 from src_hydro.EnumType import init_mode
+from datetime import datetime
 
 case = 'DA_test'
 setting_dir = '../settings/DA_local'
@@ -105,7 +106,7 @@ def demo_fc_DA_step_2():
 
     '''Job finished'''
     sys.stdout = temp
-    print('job finished')
+    print('job finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     pass
 
 
@@ -220,7 +221,7 @@ def demo_fc_DA_step5():
 
     '''Job finished'''
     sys.stdout = temp
-    print('job finished')
+    print('job finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     pass
 

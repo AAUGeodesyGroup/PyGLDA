@@ -7,6 +7,7 @@ import h5py
 from src_hydro.GeoMathKit import GeoMathKit
 import os
 from pathlib import Path
+from datetime import datetime
 
 
 class GRACE_perturbed_obs:
@@ -97,7 +98,7 @@ class GRACE_perturbed_obs:
         self.TWS['unperturbation'] = np.array(un_TWS)
         self.TWS['ens'] = np.array(TWS)
 
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         return self
 
     def remove_temporal_mean(self):

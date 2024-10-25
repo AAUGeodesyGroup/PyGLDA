@@ -75,7 +75,7 @@ class OpenLoop(SingleModel):
         # pp.perturbe_coherent_forcing(percentage=0.3)
         pp.perturb_par_spatial_coherence()
         pp.perturb_forcing_spatial_coherence()
-        print('Finished!')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
 
@@ -103,7 +103,7 @@ class OpenLoop(SingleModel):
         ext = ext_adapter(par=par, settings=settings)
         model_instance = model_run(settings=settings, par=par, model_init=model_init, ext=ext)
         model_instance.execute()
-        print('\nFinished')
+        print('\nFinished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def extract_signal(self, postfix=None):
@@ -175,7 +175,7 @@ class OpenLoop(SingleModel):
         hf = h5py.File(Path(save_dir) / ('monthly_mean_%s_%s.h5' % (state, postfix)), 'w')
         for key, vv in mm.items():
             hf.create_dataset(name=key, data=vv[:])
-        print('Finished')
+        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def post_processing(self, file_postfix=None, save_dir = '../temp', isGRACE= False):
