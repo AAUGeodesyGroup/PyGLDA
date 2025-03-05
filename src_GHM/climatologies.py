@@ -1,7 +1,7 @@
-from src_hydro.config_settings import config_settings
-from src_hydro.config_parameters import config_parameters
-from src_hydro.EnumType import states_var, forcing
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.config_settings import config_settings
+from src_GHM.config_parameters import config_parameters
+from src_GHM.EnumType import states_var, forcing
+from src_GHM.GeoMathKit import GeoMathKit
 from datetime import datetime
 from pathlib import Path
 import numpy as np

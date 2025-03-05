@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 import pygmt
 import h5py
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.GeoMathKit import GeoMathKit
 
 
 def model_component_comparison_to_Leire():
@@ -95,9 +95,9 @@ def compariosn_to_GRACE():
 
     hf.close()
 
-    '''load src_GRACE'''
+    '''load src_OBS'''
     data_path = Path('/media/user/My Book/Fan/W3/exp/comparison_GRACE_W3_Aus')
-    grace = h5py.File(data_path / 'src_GRACE.hdf5', 'r')
+    grace = h5py.File(data_path / 'src_OBS.hdf5', 'r')
     grace_time = grace['year_fraction'][:]
 
     '''figure'''
@@ -115,7 +115,7 @@ def compariosn_to_GRACE():
         w3ra = tws_dict['basin_%s' % id]
         fig.plot(x=fan_time, y=w3ra - np.mean(w3ra), pen="0.5p,black", label='W3RA')
 
-        fig.plot(x=grace_time, y=grace_tws * 1000 / grace_scale_factor, pen="0.5p,blue", label='src_GRACE')
+        fig.plot(x=grace_time, y=grace_tws * 1000 / grace_scale_factor, pen="0.5p,blue", label='src_OBS')
         fig.legend(position='jBR', box='+gwhite+p0.5p')
 
         fig.shift_origin(yshift='-4.5c')
@@ -133,7 +133,7 @@ def compariosn_to_GRACE():
         w3ra = tws_dict['basin_%s' % id]
         fig.plot(x=fan_time, y=w3ra - np.mean(w3ra), pen="0.5p,black", label='W3RA')
 
-        fig.plot(x=grace_time, y=grace_tws * 1000 / grace_scale_factor, pen="0.5p,blue", label='src_GRACE')
+        fig.plot(x=grace_time, y=grace_tws * 1000 / grace_scale_factor, pen="0.5p,blue", label='src_OBS')
         fig.legend(position='jBR', box='+gwhite+p0.5p')
 
         fig.shift_origin(yshift='-4.5c')
@@ -149,7 +149,7 @@ def monthly_update_daily_update():
     from src_DA.Analysis import Postprocessing_basin
     import pygmt
     import h5py
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     import json
     from pathlib import Path
     import numpy as np
@@ -240,7 +240,7 @@ def map2D_comparison():
     from src_auxiliary.ts import ts
     from src_auxiliary.upscaling import upscaling
     from datetime import datetime
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     import geopandas as gpd
 
     signal = 'trend'
@@ -765,7 +765,7 @@ def CorrelationGDRB():
 def show_component_ensemble():
     import pygmt
     import h5py
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     from src_DA.Analysis import Postprocessing_basin
 
     ens = 30
@@ -831,22 +831,30 @@ def show_subbasin():
     from src_DA.Analysis import Postprocessing_basin
     import pygmt
     import h5py
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     import json
     from pathlib import Path
     import numpy as np
-    from src_hydro.EnumType import init_mode
+    from src_GHM.EnumType import init_mode
     from src_FlowControl.DA_GRACE import DA_GRACE
+    from src_auxiliary.ts import ts
 
     signal = 'TWS'
 
     ens = 30
-    case = 'RDA_GDRB_BasinScale'
-    basin = 'GDRB'
+    # case = 'RDA_GDRB_BasinScale'
+    # basin = 'GDRB'
+    # '''for open-loop'''
+    # begin_time = '2002-01-01'
+    # end_time = '2010-01-31'
+    # data_dir = '/home/user/Desktop/res1/RDA_GDRB_BasinScale'
+
+    case = 'RDA_DRB_BasinScale'
+    basin = 'DRB'
     '''for open-loop'''
     begin_time = '2002-01-01'
     end_time = '2010-01-31'
-    data_dir = '/home/user/Desktop/res1/RDA_GDRB_BasinScale'
+    data_dir = '/home/user/Desktop/res1/RDA_DRB_BasinScale'
 
     '''load OL result'''
     file_postfix = 'OL'
@@ -882,7 +890,7 @@ def show_subbasin():
 
     for j in range(len(keys)):
         i += 1
-        if j > 0: break
+        # if j > 0: break
         basin_id = 'basin_%s' % j
         GRACE_ens_mean = GRACE['ens_mean'][basin_id]
         GRACE_original = GRACE['original'][basin_id]
@@ -915,12 +923,21 @@ def show_subbasin():
 
         # fig.plot(x=OL_time, y=OL, pen="0.5p,blue,-", label='%s' % ('OL_unperturbed'), transparency=30)
         fig.plot(x=OL_time, y=OL, pen="1p,grey", label='%s' % ('OL'), transparency=30)
+        tsd = ts().set_period(time=np.array(OL_time)).setDecomposition()
+        res = tsd.getSignal(obs=OL)
+        print(res['annual'][1])
         # fig.plot(x=OL_time, y=OL_ens_mean, pen="0.5p,red", label='%s' % ('OL_ens_mean'), transparency=30)
         fig.plot(x=DA_time, y=DA_ens_mean, pen="1p,green", label='%s' % ('DA'), transparency=30)
         # fig.plot(x=GR_time, y=GRACE_ens_mean, pen="0.5p,black", label='%s' % ('GRACE_ens_mean'), transparency=30)
         # fig.plot(x=GR_time, y=GRACE_original, pen="0.5p,purple,--.", label='%s' % ('GRACE_original'),
         #          transparency=30)
+        tsd = ts().set_period(time=np.array(DA_time)).setDecomposition()
+        res = tsd.getSignal(obs=DA_ens_mean)
+        print(res['annual'][1])
         fig.plot(x=GR_time, y=GRACE_original, style="c.15c", fill="black", label='%s' % ('GRACE'), transparency=30)
+        tsd = ts().set_period(time=np.array(GR_time)).setDecomposition()
+        res = tsd.getSignal(obs=GRACE_original)
+        print(res['annual'][1])
         if j == 0:
             text = ''
         elif j == 1:
@@ -957,7 +974,7 @@ def show_trend_annual():
     from src_auxiliary.ts import ts
     from src_auxiliary.upscaling import upscaling
     from datetime import datetime
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     import geopandas as gpd
     import h5py
     import numpy as np
@@ -969,15 +986,15 @@ def show_trend_annual():
     signal = 'annual'
 
     ens = 30
-    case = 'RDA_DRB_BasinScale'
-    basin = 'DRB'
+    case = 'RDA_GDRB_BasinScale'
+    basin = 'GDRB'
     '''for open-loop'''
     begin_time = '2002-01-01'
     end_time = '2010-01-31'
-    res_output = '/home/user/Desktop/res1/RDA_DRB_BasinScale'
-    shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
-    # res_output = '/home/user/Desktop/res1/RDA_GDRB_BasinScale'
-    # shp_path = '../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp'
+    # res_output = '/home/user/Desktop/res1/RDA_DRB_BasinScale'
+    # shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
+    res_output = '/home/user/Desktop/res1/RDA_GDRB_BasinScale'
+    shp_path = '../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp'
     box = [50.5, 42, 8.5, 29.5]
 
     '''load shp'''
@@ -1066,10 +1083,10 @@ def show_trend_annual():
     vmin = -10
 
     if signal == 'trend':
-        pygmt.makecpt(cmap='polar+h0', series=[vmin, vmax], background='o')
+        pygmt.makecpt(cmap='polar+h0', series=[vmin, vmax], background='o',reverse=True)
     else:
         vmax = 80
-        pygmt.makecpt(cmap='jet', series=[0, vmax], background='o')
+        pygmt.makecpt(cmap='jet', series=[0, vmax], background='o',reverse=False)
 
     res = 0.5
     err = res / 10
@@ -1118,7 +1135,7 @@ def show_trend_annual():
     fig.grdimage(
         grid=DA,
         cmap=True,
-        frame=['xa5f5', 'ya5f5'] + ['+t(b) DA'],
+        frame=['xa5f5', 'ya5f5'] + ['+t(b) Gridded DA'],
         dpi=100,
         projection=ps,
         region=region,
@@ -1173,7 +1190,7 @@ def show_trend_annual():
     fig.grdimage(
         grid=DA,
         cmap=True,
-        frame=['xa5f5', 'ya5f5'] + ['+t(e) DA, smoothed'],
+        frame=['xa5f5', 'ya5f5'] + ['+t(e) Gridded DA, smoothed'],
         dpi=100,
         projection=ps,
         region=region,
@@ -1207,11 +1224,11 @@ def otherfigure1():
     from src_DA.Analysis import Postprocessing_basin
     import pygmt
     import h5py
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     import json
     from pathlib import Path
     import numpy as np
-    from src_hydro.EnumType import init_mode
+    from src_GHM.EnumType import init_mode
     from src_FlowControl.DA_GRACE import DA_GRACE
 
     signal = 'TWS'
@@ -1494,6 +1511,6 @@ if __name__ == '__main__':
     # show_component_ensemble()
     # show_subbasin()
     # otherfigure2()
-    # show_trend_annual()
+    show_trend_annual()
     # otherfigure2()
-    otherfigure3()
+    # otherfigure3()

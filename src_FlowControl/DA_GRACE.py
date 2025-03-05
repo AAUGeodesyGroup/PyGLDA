@@ -2,10 +2,10 @@ import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from src_FlowControl.OpenLoop import OpenLoop
-from src_GRACE.prepare_GRACE import GRACE_preparation
+from src_OBS.prepare_GRACE import GRACE_preparation
 from src_DA.configure_DA import config_DA
-from src_GRACE.GRACE_perturbation import GRACE_perturbed_obs
-from src_hydro.EnumType import states_var, init_mode
+from src_OBS.GRACE_perturbation import GRACE_perturbed_obs
+from src_GHM.EnumType import states_var, init_mode
 from src_DA.shp2mask import basin_shp_process
 from src_DA.ObsDesignMatrix import DM_basin_average
 import h5py
@@ -102,7 +102,7 @@ class DA_GRACE(OpenLoop):
         basin = configDA.basic.basin
         shp_path = configDA.basic.basin_shp
 
-        '''pre-process of src_GRACE'''
+        '''pre-process of src_OBS'''
         dp_dir = self.setting_dir / 'setting.json'
         dp1 = json.load(open(dp_dir, 'r'))
         boxmask = {'lat': dp1['bounds']['lat'],
@@ -242,11 +242,11 @@ class DA_GRACE(OpenLoop):
 
     def run_DA(self, rank: int):
         """The main entrance to the data assimilation experiment"""
-        from src_hydro.config_settings import config_settings
-        from src_hydro.config_parameters import config_parameters
-        from src_hydro.model_initialise import model_initialise
-        from src_hydro.ext_adapter import ext_adapter
-        from src_hydro.hotrun import model_run_daily
+        from src_GHM.config_settings import config_settings
+        from src_GHM.config_parameters import config_parameters
+        from src_GHM.model_initialise import model_initialise
+        from src_GHM.ext_adapter import ext_adapter
+        from src_GHM.hotrun import model_run_daily
         import json
         from src_DA.observations import GRACE_obs
         from src_DA.ExtracStates import EnsStates

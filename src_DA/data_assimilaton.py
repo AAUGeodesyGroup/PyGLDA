@@ -1,6 +1,6 @@
-from src_hydro.hotrun import model_run_daily
+from src_GHM.hotrun import model_run_daily
 from src_DA.configure_DA import config_DA
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.GeoMathKit import GeoMathKit
 from src_DA.observations import GRACE_obs
 from src_DA.ExtracStates import EnsStates
 from src_DA.ObsDesignMatrix import DM_basin_average
@@ -113,7 +113,7 @@ class DataAssimilation:
             obs_cov = self._obs.get_cov()
 
             if obs is None:
-                '''src_GRACE is not available at this time epoch'''
+                '''src_OBS is not available at this time epoch'''
                 pass
                 continue
 
@@ -235,7 +235,7 @@ class DataAssimilation_monthly(DataAssimilation):
                 pass
 
             if obs is None:
-                '''src_GRACE is not available at this month'''
+                '''src_OBS is not available at this month'''
                 pass
                 continue
 
@@ -479,7 +479,7 @@ class DataAssimilation_monthlymean_dailyupdate(DataAssimilation):
                 pass
 
             if obs is None:
-                '''src_GRACE is not available at this month'''
+                '''src_OBS is not available at this month'''
                 pass
                 continue
 

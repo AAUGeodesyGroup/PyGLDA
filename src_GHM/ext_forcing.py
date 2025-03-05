@@ -1,10 +1,10 @@
 import h5py
 import numpy as np
 
-from src_hydro.config_settings import config_settings
-from src_hydro.config_parameters import config_parameters
-from src_hydro.EnumType import states_var, forcing, forcingSource, perturbation_choice_forcing_field
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.config_settings import config_settings
+from src_GHM.config_parameters import config_parameters
+from src_GHM.EnumType import states_var, forcing, forcingSource, perturbation_choice_forcing_field
+from src_GHM.GeoMathKit import GeoMathKit
 from datetime import datetime, timedelta
 from pathlib import Path
 

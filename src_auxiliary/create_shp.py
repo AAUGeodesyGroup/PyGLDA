@@ -1,6 +1,7 @@
 import numpy as np
 import geopandas as gpd
 from shapely import box
+from pathlib import Path
 
 
 def shp_change_Danube():
@@ -367,13 +368,14 @@ class basin2grid_shp:
         self.__shp = original_shp
         return self
 
-    def create_shp(self):
+    def create_shp(self, out_dir='../temp'):
         import shapely
         from shapely.ops import unary_union
         import pandas as pd
 
         new_basin_name, shp = self.__new_basin_name, self.__shp
 
+        # basin_shp = gpd.read_file(shp)
         basin_shp = gpd.read_file(shp).to_crs(crs='epsg:4326')
 
         if basin_shp.unary_union.geom_type == 'MultiPolygon':
@@ -405,7 +407,8 @@ class basin2grid_shp:
         if self.__func is not None:
             new_shp = self.__func(new_shp)
 
-        new_shp.to_file('../temp/%s.shp' % new_basin_name)
+        new_shp.to_file(Path(out_dir)/('%s.shp'%new_basin_name))
+        # new_shp.to_file('../temp/%s.shp' % new_basin_name)
         pass
 
     def set_modify_func(self, func):

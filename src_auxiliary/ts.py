@@ -92,6 +92,7 @@ class ts:
             phi_2 = 2*np.pi - phi_1
             phi = phi_1
             phi[ (-x[i+1]/A) < 0] = phi_2[(-x[i+1]/A) < 0]
+            # if (-x[i+1]/A) < 0: phi=phi_2
             res[ss.name] = np.array([A, np.rad2deg(phi)])
 
             i += 2
@@ -109,7 +110,7 @@ def demo1():
 
 def demo2():
     from datetime import datetime
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     hf = h5py.File('/home/user/Desktop/res/monthly_mean_TWS_DRB_DA.h5', 'r')
 
     time = []
@@ -128,5 +129,5 @@ def demo2():
 
 
 if __name__ == '__main__':
-    demo1()
-    # demo2()
+    # demo1()
+    demo2()

@@ -4,7 +4,7 @@ sys.path.append('../')
 
 import numpy as np
 import h5py
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.GeoMathKit import GeoMathKit
 import os
 from pathlib import Path
 from datetime import datetime
@@ -18,8 +18,8 @@ class GRACE_perturbed_obs:
         self.TWS = None
         pass
 
-    def configure_dir(self, input_dir='/media/user/My Book/Fan/src_GRACE/output',
-                      obs_dir='/media/user/My Book/Fan/src_GRACE/obs'):
+    def configure_dir(self, input_dir='/media/user/My Book/Fan/src_OBS/output',
+                      obs_dir='/media/user/My Book/Fan/src_OBS/obs'):
 
         self.__input_dir = Path(input_dir)
         self.__obs_dir = Path(obs_dir)
@@ -67,7 +67,7 @@ class GRACE_perturbed_obs:
 
             '''to confirm if cov is consistent with signal. '''
             assert month.strftime('%Y-%m') in time_epochs_2[
-                index], 'src_GRACE signal is likely incompatible with its cov!'
+                index], 'src_OBS signal is likely incompatible with its cov!'
 
             '''obtain the cov of this month'''
             cov = C_h5fn['data'][index]
@@ -195,13 +195,13 @@ def visualization():
             vv = obs['ens_%s' % ens][:, id]
 
             if ens == 1:
-                fig.plot(x=time, y=vv, pen="0.3p,grey", label='Perturbed src_GRACE')
+                fig.plot(x=time, y=vv, pen="0.3p,grey", label='Perturbed src_OBS')
             else:
                 fig.plot(x=time, y=vv, pen="0.3p,grey")
 
         ens = 0
         vv = obs['ens_%s' % ens][:, id]
-        fig.plot(x=time, y=vv, pen="0.8p,blue", label='Unperturbed src_GRACE')
+        fig.plot(x=time, y=vv, pen="0.8p,blue", label='Unperturbed src_OBS')
 
         fig.legend(position='jTR', box='+gwhite+p0.5p')
         fig.shift_origin(yshift='-4.5c')

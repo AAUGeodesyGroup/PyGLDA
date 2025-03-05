@@ -5,8 +5,8 @@ sys.path.append('../')
 import numpy as np
 import h5py
 import netCDF4 as nc
-from src_GRACE.prepare_GRACE import GRACE_preparation
-from src_hydro.GeoMathKit import GeoMathKit
+from src_OBS.prepare_GRACE import GRACE_preparation
+from src_GHM.GeoMathKit import GeoMathKit
 import os
 from pathlib import Path
 from datetime import datetime, timedelta

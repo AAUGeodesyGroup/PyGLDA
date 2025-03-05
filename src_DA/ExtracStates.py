@@ -1,9 +1,9 @@
-from src_hydro.EnumType import states_var
+from src_GHM.EnumType import states_var
 import numpy as np
 import h5py
 from pathlib import Path
 from datetime import datetime
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.GeoMathKit import GeoMathKit
 from src_DA.ObsDesignMatrix import DM_basin_average
 
 

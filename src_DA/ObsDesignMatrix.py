@@ -1,4 +1,4 @@
-from src_hydro.EnumType import states_var
+from src_GHM.EnumType import states_var
 from src_DA.shp2mask import basin_shp_process
 import numpy as np
 from scipy.linalg import block_diag

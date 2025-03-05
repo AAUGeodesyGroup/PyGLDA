@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import numpy as np
 from src_DA.EnumDA import HydroModel, FusionMethod
-from src_hydro.EnumType import states_var
+from src_GHM.EnumType import states_var
 
 
 class config_DA:
@@ -82,13 +82,13 @@ class config_DA:
     class config_obs:
 
         def __init__(self):
-            self.name = 'src_GRACE'
+            self.name = 'src_OBS'
             self.dir = '/media/user/My Book/Fan/GRACE/obs'
             self.GRACE = {
-                'EWH_grid_dir': '/media/user/My Book/Fan/src_GRACE/ewh',
-                'cov_dir': '/media/user/My Book/Fan/src_GRACE/DDK3_timeseries',
-                'preprocess_res': '/media/user/My Book/Fan/src_GRACE/output',
-                'OL_mean': '/media/user/My Book/Fan/src_GRACE/OLmean'
+                'EWH_grid_dir': '/media/user/My Book/Fan/src_OBS/ewh',
+                'cov_dir': '/media/user/My Book/Fan/src_OBS/DDK3_timeseries',
+                'preprocess_res': '/media/user/My Book/Fan/src_OBS/output',
+                'OL_mean': '/media/user/My Book/Fan/src_OBS/OLmean'
             }
 
     class config_method:

@@ -5,7 +5,7 @@ import h5py
 import numpy as np
 import sys
 from src_FlowControl.SingleModel import SingleModel
-from src_hydro.EnumType import init_mode
+from src_GHM.EnumType import init_mode
 
 
 class OpenLoop(SingleModel):
@@ -80,11 +80,11 @@ class OpenLoop(SingleModel):
         pass
 
     def model_run(self):
-        from src_hydro.config_settings import config_settings
-        from src_hydro.config_parameters import config_parameters
-        from src_hydro.model_initialise import model_initialise
-        from src_hydro.ext_adapter import ext_adapter
-        from src_hydro.hotrun import model_run
+        from src_GHM.config_settings import config_settings
+        from src_GHM.config_parameters import config_parameters
+        from src_GHM.model_initialise import model_initialise
+        from src_GHM.ext_adapter import ext_adapter
+        from src_GHM.hotrun import model_run
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
@@ -180,7 +180,7 @@ class OpenLoop(SingleModel):
 
     def post_processing(self, file_postfix=None, save_dir = '../temp', isGRACE= False):
         import h5py
-        from src_hydro.GeoMathKit import GeoMathKit
+        from src_GHM.GeoMathKit import GeoMathKit
         from src_DA.Analysis import Postprocessing_basin, Postprocessing_grid_second
         import json
 
@@ -218,7 +218,7 @@ class OpenLoop(SingleModel):
     def visualize_signal(self, fig_path: str, fig_postfix='0', file_postfix=None, data_dir=None):
         import pygmt
         import h5py
-        from src_hydro.GeoMathKit import GeoMathKit
+        from src_GHM.GeoMathKit import GeoMathKit
         from src_DA.Analysis import Postprocessing_basin
 
         '''collect basin average results'''

@@ -3,10 +3,10 @@ import sys
 sys.path.append('../')
 
 import numpy as np
-from src_hydro.config_settings import config_settings
+from src_GHM.config_settings import config_settings
 import h5py
 from pathlib import Path
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.GeoMathKit import GeoMathKit
 from calendar import monthrange
 from src_postprocessing.Enumtype import data_var, data_dim
 import shutil
@@ -567,7 +567,12 @@ def demo2():
     global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir='../data/basin/mask').shp_to_mask(
         shp_path=shp_path).mask[0]
 
-    '''DA results'''
+    # basin = 'Africa'
+    # shp_path = '../data/basin/shp/Africa/Africa_subbasins.shp'
+    # global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir='../data/basin/mask').shp_to_mask(
+    #     shp_path=shp_path).mask[0]
+
+    # '''DA results'''
     # dsr = dataManager_ensemble_statistic().configure(setting_fn='../settings/Ucloud_DA/setting.json',
     #                                                  out_dir_mean='/work/data_for_w3/w3ra/save_data/DA_monthly_mean',
     #                                                  out_dir_std='/work/data_for_w3/w3ra/save_data/DA_monthly_std',

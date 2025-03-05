@@ -3,7 +3,7 @@ import sys
 sys.path.append('../')
 
 from src_FlowControl.OpenLoop import OpenLoop
-from src_hydro.EnumType import init_mode
+from src_GHM.EnumType import init_mode
 from datetime import datetime
 
 case = 'OL_test'

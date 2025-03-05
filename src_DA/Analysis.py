@@ -7,7 +7,7 @@ from pathlib import Path
 import h5py
 from src_DA.shp2mask import basin_shp_process
 from datetime import datetime, timedelta
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.GeoMathKit import GeoMathKit
 
 
 class BasinSignalAnalysis:

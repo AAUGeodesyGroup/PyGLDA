@@ -8,7 +8,7 @@ import h5py
 import json
 from pathlib import Path
 from datetime import datetime
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.GeoMathKit import GeoMathKit
 
 
 class perturbe_method(Enum):

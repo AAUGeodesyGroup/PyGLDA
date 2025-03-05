@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 import numpy as np
-from src_hydro.EnumType import init_mode
+from src_GHM.EnumType import init_mode
 
 
 class SingleModel:
@@ -63,7 +63,7 @@ class SingleModel:
         return self
 
     def preprocess(self):
-        from src_hydro.preprocess import preprocess_base
+        from src_GHM.preprocess import preprocess_base
         print()
         print('Data preparation...')
         '''preprocess'''
@@ -76,11 +76,11 @@ class SingleModel:
         pass
 
     def model_run(self, arg='resume'):
-        from src_hydro.config_settings import config_settings
-        from src_hydro.config_parameters import config_parameters
-        from src_hydro.model_initialise import model_initialise
-        from src_hydro.ext_adapter import ext_adapter
-        from src_hydro.hotrun import model_run
+        from src_GHM.config_settings import config_settings
+        from src_GHM.config_parameters import config_parameters
+        from src_GHM.model_initialise import model_initialise
+        from src_GHM.ext_adapter import ext_adapter
+        from src_GHM.hotrun import model_run
 
         print()
         print('Model is going to start running...')
@@ -96,7 +96,7 @@ class SingleModel:
 
     def create_ini_states(self, mode: init_mode, modifydate: str):
         import shutil
-        from src_hydro.config_settings import config_settings
+        from src_GHM.config_settings import config_settings
         import os
         """place the state of the last day into the ini folder"""
         dp = self.setting_dir / 'setting.json'
@@ -162,7 +162,7 @@ class SingleModel:
     def visualize_signal(self, fig_path: str, fig_postfix='0'):
         import pygmt
         import h5py
-        from src_hydro.GeoMathKit import GeoMathKit
+        from src_GHM.GeoMathKit import GeoMathKit
 
         '''basin average time-series'''
 
@@ -220,7 +220,7 @@ class SingleModel:
     def visualize_comparison_GRACE(self, fig_path: str, fig_postfix='0'):
         import pygmt
         import h5py
-        from src_hydro.GeoMathKit import GeoMathKit
+        from src_GHM.GeoMathKit import GeoMathKit
         import json
 
         '''basin average time-series'''

@@ -1,11 +1,11 @@
 import numpy as np
-from src_hydro.config_settings import config_settings
+from src_GHM.config_settings import config_settings
 import h5py
 import json
 from pathlib import Path
 import metview as mv
 from datetime import datetime
-from src_hydro.GeoMathKit import GeoMathKit
+from src_GHM.GeoMathKit import GeoMathKit
 
 
 class preprocess_base:

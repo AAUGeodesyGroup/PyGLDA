@@ -31,12 +31,12 @@ Modified from matlab to python by Fan Yang (fany@plan.aau.dk) in Aalborg Univers
 
 import numpy as np
 
-from src_hydro.config_settings import config_settings
-from src_hydro.config_parameters import config_parameters
-from src_hydro.EnumType import states_var, output_var, forcing
-from src_hydro.GeoMathKit import GeoMathKit
-from src_hydro.ext_adapter import ext_adapter
-from src_hydro.snow_submodel import snow_submodel
+from src_GHM.config_settings import config_settings
+from src_GHM.config_parameters import config_parameters
+from src_GHM.EnumType import states_var, output_var, forcing
+from src_GHM.GeoMathKit import GeoMathKit
+from src_GHM.ext_adapter import ext_adapter
+from src_GHM.snow_submodel import snow_submodel
 
 
 class timestep_model:

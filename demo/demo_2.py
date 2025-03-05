@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../')
 from src_FlowControl.SingleModel import SingleModel
-from src_hydro.EnumType import init_mode
+from src_GHM.EnumType import init_mode
 from datetime import datetime, timedelta
 
 '''This is a demo to show how to run W3RA model. Be aware that the script is not able to work unless the sample data 

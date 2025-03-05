@@ -1,21 +1,21 @@
 {
     "bounds": {
         "lat": [
-            18.2,
-            -0.2
+            76.1,
+            33.9
         ],
         "lon": [
-            107.8,
-            126.2
+            -11.1,
+            45.1
         ],
-        "prefix": "GDA_73"
+        "prefix": "case_study_SR"
     },
     "init": {
         "mode": "cold",
         "date": "1999-12-31",
         "spinup": [
-            "2000-01-01",
-            "2023-05-31"
+            "1994-01-01",
+            "2022-12-31"
         ],
         "dir": "/media/user/My Book/Fan/W3RA_data/initial_states",
         "spec": ""

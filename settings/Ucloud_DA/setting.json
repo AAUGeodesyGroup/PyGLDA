@@ -1,28 +1,28 @@
 {
     "bounds": {
         "lat": [
-            -17.8,
-            -36.2
+            37.54040707879831,
+            -35.02199796184608
         ],
         "lon": [
-            -60.2,
-            -38.8
+            -17.73278290048678,
+            51.2
         ],
-        "prefix": "GDA_96"
+        "prefix": "Africa"
     },
     "init": {
         "mode": "resume",
         "date": "2002-03-30",
         "spinup": [
             "2000-01-01",
-            "2010-01-31"
+            "2001-12-31"
         ],
         "dir": "/work/data_for_w3/w3ra/initial_states",
-        "spec": "GDA_96"
+        "spec": "Africa"
     },
     "run": {
         "fromdate": "2002-03-31",
-        "todate": "2023-05-31",
+        "todate": "2023-03-31",
         "res": 0.1,
         "exttype": "ERA5",
         "save_states_every_day": true,
@@ -37,7 +37,7 @@
     "output": {
         "dir": "/work/data_for_w3/w3ra/output",
         "var": {
-            "Stot": true,
+            "Stot": false,
             "ETtot": false,
             "Qtot": false,
             "Qnet": false,

@@ -10,7 +10,7 @@ def TWS_trend_annual_phase():
     from src_auxiliary.ts import ts
     from src_auxiliary.upscaling import upscaling
     from datetime import datetime
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     import h5py
     import numpy as np
     import json
@@ -323,7 +323,7 @@ def TWS_trend_annual_phase_overlap_average():
     from src_auxiliary.ts import ts
     from src_auxiliary.upscaling import upscaling
     from datetime import datetime
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     import h5py
     import numpy as np
     import json

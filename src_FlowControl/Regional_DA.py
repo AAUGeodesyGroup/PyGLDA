@@ -56,7 +56,7 @@ class RDA:
     def prepare_GRACE():
 
         """preparation for GRACE and forcing fields for global tiles"""
-        from src_GRACE.prepare_GRACE import GRACE_preparation
+        from src_OBS.prepare_GRACE import GRACE_preparation
         GR = GRACE_preparation(basin_name=RDA.basin,
                                shp_path=RDA.shp_path)
         GR.generate_mask()
@@ -72,7 +72,7 @@ class RDA:
     @staticmethod
     def prepare_Forcing():
         from src_FlowControl.SingleModel import SingleModel
-        from src_hydro.EnumType import init_mode
+        from src_GHM.EnumType import init_mode
         '''pre-process input forcing field'''
         # GDA.setting_dir = '../settings/single_run'
 
@@ -145,7 +145,7 @@ class RDA:
     @staticmethod
     def single_run():
         from src_FlowControl.SingleModel import SingleModel
-        from src_hydro.EnumType import init_mode
+        from src_GHM.EnumType import init_mode
 
         '''configuration'''
         RDA.set_box()
@@ -173,7 +173,7 @@ class RDA:
     @staticmethod
     def single_run_visualization():
         from src_FlowControl.SingleModel import SingleModel
-        from src_hydro.EnumType import init_mode
+        from src_GHM.EnumType import init_mode
         from datetime import datetime, timedelta
 
         '''configuration'''
@@ -195,7 +195,7 @@ class RDA:
     @staticmethod
     def OL_run(prepare=True):
         from src_FlowControl.DA_GRACE import DA_GRACE
-        from src_hydro.EnumType import init_mode
+        from src_GHM.EnumType import init_mode
         from mpi4py import MPI
         import sys
         temp = sys.stdout
@@ -260,7 +260,7 @@ class RDA:
     @staticmethod
     def DA_run(prepare=True):
         from src_FlowControl.DA_GRACE import DA_GRACE
-        from src_hydro.EnumType import init_mode
+        from src_GHM.EnumType import init_mode
         from mpi4py import MPI
         import sys
         temp = sys.stdout
@@ -320,7 +320,7 @@ class RDA:
     @staticmethod
     def DA_visualization_basin_ensemble():
         from src_FlowControl.DA_GRACE import DA_GRACE
-        from src_hydro.EnumType import init_mode
+        from src_GHM.EnumType import init_mode
 
         RDA.set_box()
 
@@ -342,11 +342,11 @@ class RDA:
         from src_DA.Analysis import Postprocessing_basin
         import pygmt
         import h5py
-        from src_hydro.GeoMathKit import GeoMathKit
+        from src_GHM.GeoMathKit import GeoMathKit
         import json
         from pathlib import Path
         import numpy as np
-        from src_hydro.EnumType import init_mode
+        from src_GHM.EnumType import init_mode
         from src_FlowControl.DA_GRACE import DA_GRACE
 
         RDA.set_box()
@@ -463,7 +463,7 @@ class RDA:
         from src_auxiliary.ts import ts
         from src_auxiliary.upscaling import upscaling
         from datetime import datetime
-        from src_hydro.GeoMathKit import GeoMathKit
+        from src_GHM.GeoMathKit import GeoMathKit
         import geopandas as gpd
         import h5py
         import numpy as np
@@ -769,7 +769,7 @@ if __name__ == '__main__':
 
     '''multiple threads'''
     # demo_global_run_complete(prepare=False)
-    demo_global_run_only_DA(prepare=True)
+    # demo_global_run_only_DA(prepare=True)
 
     '''single thread for plotting'''
-    # demo_DA_visualization()
+    demo_DA_visualization()

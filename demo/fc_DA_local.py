@@ -5,7 +5,7 @@ import numpy as np
 sys.path.append('../')
 
 from src_FlowControl.DA_GRACE import DA_GRACE
-from src_hydro.EnumType import init_mode
+from src_GHM.EnumType import init_mode
 from datetime import datetime
 
 case = 'DA_test'
@@ -287,7 +287,7 @@ def demo_visualization_DA_2(signal='TWS'):
     from src_DA.Analysis import Postprocessing_basin
     import pygmt
     import h5py
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     import json
     from pathlib import Path
 
@@ -389,7 +389,7 @@ def demo_visualization_DA_2(signal='TWS'):
     from src_DA.Analysis import Postprocessing_basin
     import pygmt
     import h5py
-    from src_hydro.GeoMathKit import GeoMathKit
+    from src_GHM.GeoMathKit import GeoMathKit
     import json
     from pathlib import Path
     import numpy as np

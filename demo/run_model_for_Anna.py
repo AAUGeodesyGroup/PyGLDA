@@ -3,7 +3,7 @@ import sys
 sys.path.append('../')
 
 from src_FlowControl.SingleModel import SingleModel
-from src_hydro.EnumType import init_mode
+from src_GHM.EnumType import init_mode
 from datetime import datetime,timedelta
 
 # case = 'single_run_test'
