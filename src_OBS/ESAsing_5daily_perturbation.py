@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from datetime import datetime
 from src_OBS.GRACE_perturbation import GRACE_perturbed_obs
-from src_OBS.obs_auxiliary import aux_ESAsing_5daily, obs_auxiliary
+from src_OBS.obs_auxiliary import obs_auxiliary
 
 
 class ESAsing_5daily_perturbed_obs(GRACE_perturbed_obs):
@@ -19,7 +19,7 @@ class ESAsing_5daily_perturbed_obs(GRACE_perturbed_obs):
         self.obs_aux = None
         pass
 
-    def configure_obs_aux(self, obs_aux: aux_ESAsing_5daily):
+    def configure_obs_aux(self, obs_aux: obs_auxiliary):
         '''get a complete time list for all ESA simulation dataset'''
         self.obs_aux = obs_aux
         return self
@@ -87,6 +87,7 @@ class ESAsing_5daily_perturbed_obs(GRACE_perturbed_obs):
 
 
 def demo3():
+    from src_OBS.obs_auxiliary import aux_ESAsing_5daily
     # ob = GRACE_obs(ens=30, basin_name='MDB')
     ob = ESAsing_5daily_perturbed_obs(ens=30, basin_name='Brahmaputra_ExpZero')
     ob.configure_dir(input_dir='/media/user/My Book/Fan/ESA_SING/TestRes',
@@ -100,6 +101,93 @@ def demo3():
     ob.perturb_TWS().save()
     pass
 
+
+def demo4():
+    from src_OBS.obs_auxiliary import aux_ESAsing_5daily
+    """
+    It is assumed that the date increases at daily basis.
+    This tool helps to decide when and how the update takes place
+    """
+    day_begin = '2003-09-01'
+    day_end = '2006-12-31'
+    obs_aux12 = aux_ESAsing_5daily().setTimeReference(day_begin=day_begin, day_end=day_end,
+                                                    dir_in='/media/user/My Book/Fan/ESA_SING/ESA_5daily')
+
+    '''configure time period'''
+    daylist = GeoMathKit.dayListByDay(begin='2004-01-01',
+                                      end='2005-01-01')
+
+    '''configure observation reference'''
+    obs_aux = obs_aux12.getTimeReference().copy()
+    duration = obs_aux['duration']
+    data_first = []
+    data_end = []
+    for data in duration:
+        a, b = data.split('_')
+        data_first.append(datetime.strptime(a, "%Y-%m-%d"))
+        data_end.append(datetime.strptime(b, "%Y-%m-%d"))
+        pass
+
+    ''''''
+    NewRecord = []
+    KeepRecord = []
+    AssimilationRecord = []
+    AssimilationInfo = []
+
+    newRecord = False
+    keepRecord = False
+    assimilation = False
+
+    nod = 0
+    dates_in_list = []
+
+    '''find the match of the first data set'''
+    data_index = None
+    for day in daylist:
+        if day in data_first:
+            data_index = data_first.index(day)
+            break
+
+    assert data_index is not None
+    current_index = data_index
+
+    '''start loop'''
+    for day in daylist:
+        if day == data_first[data_index]:
+            newRecord = True
+            keepRecord = True
+
+            current_index = data_index
+            data_index += 1
+            nod = 1
+            dates_in_list = [day]
+
+        else:
+            newRecord = False
+
+            if data_end[current_index] >= day > data_first[current_index]:
+                keepRecord = True
+                nod += 1
+                dates_in_list.append(day)
+            else:
+                keepRecord = False
+
+        if day == data_end[current_index]:
+            assimilation = True
+            time_epoch = obs_aux['time_epoch'][current_index]
+            number_of_days = nod
+            AssimilationInfo.append([time_epoch, dates_in_list, current_index])
+        else:
+            assimilation = False
+
+        NewRecord.append(newRecord)
+        KeepRecord.append(keepRecord)
+        AssimilationRecord.append(assimilation)
+
+    return {'NewRecord': NewRecord,
+            'KeepRecord': KeepRecord,
+            'AssimilationRecord': AssimilationRecord,
+            'AssimilationInfo': AssimilationInfo}
 
 def visualization():
     import pygmt
@@ -162,5 +250,5 @@ def visualization():
 
 
 if __name__ == '__main__':
-    # demo3()
-    visualization()
+    demo4()
+    # visualization()

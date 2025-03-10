@@ -2,6 +2,7 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 import h5py
+from src_OBS.obs_auxiliary import obs_auxiliary
 
 
 class GRACE_obs:
@@ -66,6 +67,9 @@ class GRACE_obs:
         else:
             return self.__cov[self.__date_index]
 
+    def set_aux(self, aux: obs_auxiliary):
+        self.obs_aux = aux
+        return self
 
 def demo1():
     gr = GRACE_obs()
