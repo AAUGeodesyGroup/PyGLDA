@@ -9,7 +9,9 @@ from mpi4py import MPI
 
 
 class DataAssimilation:
-
+    """
+    Simple version : only update the epoch where obs is available.
+    """
     def __init__(self, DA_setting: config_DA, model: model_run_daily, obs: GRACE_obs, sv: EnsStates):
 
         self._states_predict = None
@@ -167,7 +169,9 @@ class DataAssimilation:
 
 
 class DataAssimilation_monthly(DataAssimilation):
-
+    """
+    update each day of previous month with equal value. Full covariance matrix is considered
+    """
     def __init__(self, DA_setting: config_DA, model: model_run_daily, obs: GRACE_obs, sv: EnsStates):
         super().__init__(DA_setting, model, obs, sv)
         pass
@@ -323,6 +327,9 @@ class DataAssimilation_monthly(DataAssimilation):
 
 
 class DataAssimilation_monthly_diag(DataAssimilation_monthly):
+    """
+    The same as previous strategy but the diagonal covariance matrix of GRACE is considered.
+    """
     def __init__(self, DA_setting: config_DA, model: model_run_daily, obs: GRACE_obs, sv: EnsStates):
         super().__init__(DA_setting, model, obs, sv)
         pass

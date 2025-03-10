@@ -401,7 +401,6 @@ class RDA:
         height = 4.6
 
         keys = list(GRACE['ens_mean'].keys())
-        keys
 
         for j in range(len(keys)):
             i += 1

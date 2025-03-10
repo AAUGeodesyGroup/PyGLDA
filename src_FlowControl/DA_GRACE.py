@@ -307,7 +307,7 @@ class DA_GRACE(OpenLoop):
 
         '''DA experiment'''
         # da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
-        # da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)+9
+        # da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da = DataAssimilation_monthly_diag(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da.configure_design_matrix(DM=dm)

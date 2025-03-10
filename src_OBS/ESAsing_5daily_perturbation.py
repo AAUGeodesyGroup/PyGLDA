@@ -8,26 +8,20 @@ from src_GHM.GeoMathKit import GeoMathKit
 import os
 from pathlib import Path
 from datetime import datetime
+from src_OBS.GRACE_perturbation import GRACE_perturbed_obs
+from src_OBS.obs_auxiliary import aux_ESAsing_5daily, obs_auxiliary
 
 
-class GRACE_perturbed_obs:
+class ESAsing_5daily_perturbed_obs(GRACE_perturbed_obs):
 
     def __init__(self, ens=30, basin_name='MDB'):
-        self.ens = ens
-        self.basin_name = basin_name
-        self.TWS = None
+        super().__init__(ens=ens, basin_name=basin_name)
+        self.obs_aux = None
         pass
 
-    def configure_dir(self, input_dir='/media/user/My Book/Fan/src_OBS/output',
-                      obs_dir='/media/user/My Book/Fan/src_OBS/obs'):
-
-        self._input_dir = Path(input_dir)
-        self._obs_dir = Path(obs_dir)
-        return self
-
-    def configure_time(self, month_begin='2002-04', month_end='2002-04'):
-        self.__monthlist = GeoMathKit.monthListByMonth(begin=month_begin, end=month_end)
-
+    def configure_obs_aux(self, obs_aux: aux_ESAsing_5daily):
+        '''get a complete time list for all ESA simulation dataset'''
+        self.obs_aux = obs_aux
         return self
 
     def perturb_TWS(self):
@@ -45,7 +39,7 @@ class GRACE_perturbed_obs:
         basin_num = len(list(S_h5fn.keys())) - 1
         self.TWS = {}
 
-        time_epochs = list(S_h5fn['time_epoch'][:].astype('str'))
+        time_epochs_1 = list(S_h5fn['time_epoch'][:].astype('str'))
         time_epochs_2 = list(C_h5fn['time_epoch'][:].astype('str'))
 
         TWS = []
@@ -54,29 +48,19 @@ class GRACE_perturbed_obs:
         new_time = []
         print('')
         print('Start to perturb GRACE to obtain appropriate observations...')
-        for month in self.__monthlist:
 
-            '''to confirm this month exists in the list'''
-            index = -1
-            for tt in time_epochs:
-                if month.strftime('%Y-%m') in tt:
-                    print(month.strftime('%Y-%m'))
-                    index = time_epochs.index(tt)
-            if index < 0:
-                continue
+        Time_list = self.obs_aux.getTimeReference()['time_epoch']
 
-            '''to confirm if cov is consistent with signal. '''
-            assert month.strftime('%Y-%m') in time_epochs_2[
-                index], 'src_OBS signal is likely incompatible with its cov!'
+        '''get covariance matrix: this is static for ESA simulation data'''
+        cov = C_h5fn['data']
 
-            '''obtain the cov of this month'''
-            cov = C_h5fn['data'][index]
-
+        for count, time in enumerate(Time_list):
+            '''confirm data consistency'''
+            assert time == time_epochs_1[count] and time == time_epochs_2[count]
             '''obtain the TWS of each basin'''
             a = []
             for id in range(1, basin_num + 1):
-                a.append(S_h5fn['sub_basin_%d' % id][index])
-
+                a.append(S_h5fn['sub_basin_%d' % id][count])
             a = np.array(a)
 
             '''perturb the signal'''
@@ -86,7 +70,7 @@ class GRACE_perturbed_obs:
             else:
                 perturbed_TWS = np.random.multivariate_normal(a, cov, self.ens)
 
-            new_time.append(time_epochs[index])
+            new_time.append(time)
             COV.append(cov)
             un_TWS.append(a)
             TWS.append(perturbed_TWS)
@@ -101,54 +85,18 @@ class GRACE_perturbed_obs:
         print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         return self
 
-    def remove_temporal_mean(self):
 
-        meanTWs = np.mean(self.TWS['unperturbation'], 0)
-
-        self.TWS['ens'] -= meanTWs
-        self.TWS['unperturbation'] -= meanTWs
-        return self
-
-    def add_temporal_mean(self, fn: str):
-
-        hh = h5py.File(Path(fn), 'r')
-        mean = hh['mean_ensemble'][:]
-
-        self.TWS['ens'] += mean
-        self.TWS['unperturbation'] += mean
-        return self
-
-    def save(self):
-        """
-        Save the data
-        """
-
-        fn = self._obs_dir / ('%s_obs_GRACE.hdf5' % self.basin_name)
-
-        obs = h5py.File(fn, 'w')
-
-        obs.create_dataset(name='cov', data=self.TWS['cov'])
-
-        dt = h5py.special_dtype(vlen=str)
-        obs.create_dataset('time_epoch', data=self.TWS['time'], dtype=dt)
-
-        for i in np.arange(self.ens + 1):
-            if i == 0:
-                obs.create_dataset(name='ens_%s' % i, data=self.TWS['unperturbation'])
-            else:
-                obs.create_dataset(name='ens_%s' % i, data=self.TWS['ens'][:, i - 1, :])
-                pass
-
-        obs.close()
-        pass
-
-
-def demo2():
+def demo3():
     # ob = GRACE_obs(ens=30, basin_name='MDB')
-    ob = GRACE_perturbed_obs(ens=30, basin_name='Brahmaputra')
-    ob.configure_dir(input_dir='/home/user/test/output', obs_dir='/home/user/test/obs'). \
-        configure_time(month_begin='2002-04', month_end='2023-09')
-
+    ob = ESAsing_5daily_perturbed_obs(ens=30, basin_name='Brahmaputra_ExpZero')
+    ob.configure_dir(input_dir='/media/user/My Book/Fan/ESA_SING/TestRes',
+                     obs_dir='/media/user/My Book/Fan/ESA_SING/TestRes/obs')
+    day_begin = '2003-09-01'
+    day_end = '2006-12-31'
+    obs_aux = aux_ESAsing_5daily().setTimeReference(day_begin=day_begin, day_end=day_end,
+                                                    dir_in='/media/user/My Book/Fan/ESA_SING/ESA_5daily')
+    ob.configure_obs_aux(obs_aux=obs_aux)
+    # ob.perturb_TWS().save()
     ob.perturb_TWS().save()
     pass
 
@@ -156,7 +104,7 @@ def demo2():
 def visualization():
     import pygmt
     from datetime import datetime
-    fn = '/home/user/test/obs/MDB_obs_GRACE.hdf5'
+    fn = '/media/user/My Book/Fan/ESA_SING/TestRes/obs/Brahmaputra_ExpZero_obs_GRACE.hdf5'
     # fn = '/home/user/test/obs/Brahmaputra_obs_GRACE.hdf5'
 
     ens_all = 30
@@ -214,5 +162,5 @@ def visualization():
 
 
 if __name__ == '__main__':
-    # demo2()
+    # demo3()
     visualization()
