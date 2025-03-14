@@ -75,7 +75,7 @@ class OpenLoop(SingleModel):
         # pp.perturbe_coherent_forcing(percentage=0.3)
         pp.perturb_par_spatial_coherence()
         pp.perturb_forcing_spatial_coherence()
-        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
 
@@ -103,7 +103,7 @@ class OpenLoop(SingleModel):
         ext = ext_adapter(par=par, settings=settings)
         model_instance = model_run(settings=settings, par=par, model_init=model_init, ext=ext)
         model_instance.execute()
-        print('\nFinished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('\nFinished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def extract_signal(self, postfix=None):
@@ -137,7 +137,7 @@ class OpenLoop(SingleModel):
             for file_name in files:
                 if (str(file_name).split('_')[0] == self.basin) and file_name.endswith('.shp') and (
                         'subbasins' in file_name):
-                # if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
+                    # if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
                     target.append(os.path.join(root, file_name))
         assert len(target) == 1
 
@@ -175,10 +175,10 @@ class OpenLoop(SingleModel):
         hf = h5py.File(Path(save_dir) / ('monthly_mean_%s_%s.h5' % (state, postfix)), 'w')
         for key, vv in mm.items():
             hf.create_dataset(name=key, data=vv[:])
-        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
-    def post_processing(self, file_postfix=None, save_dir = '../temp', isGRACE= False):
+    def post_processing(self, file_postfix=None, save_dir='../temp', isGRACE=False):
         import h5py
         from src_GHM.GeoMathKit import GeoMathKit
         from src_DA.Analysis import Postprocessing_basin, Postprocessing_grid_second
@@ -236,7 +236,7 @@ class OpenLoop(SingleModel):
 
         '''plot figure'''
         fig = pygmt.Figure()
-        statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'TWS']
+        statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow', 'TWS']
         i = 0
         for state in statesnn:
             i += 1
@@ -251,7 +251,7 @@ class OpenLoop(SingleModel):
                 sp_1 = 0.5
             sp_2 = sp_1 * 2
 
-            if i == 4:
+            if i == 4 or i == 7:
                 fig.shift_origin(yshift='12c', xshift='14c')
                 pass
 

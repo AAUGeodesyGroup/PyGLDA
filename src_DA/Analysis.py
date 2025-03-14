@@ -131,7 +131,7 @@ class BasinSignalAnalysis:
         '''initialize the dict'''
         map_average = {}
         lat_basin = {}
-        statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf']
+        statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
         for basin, bm in mask_1D.items():
             map_average[basin] = {}
             lat_basin[basin] = np.cos(np.deg2rad(lat[mask_2D[basin]]))
@@ -151,7 +151,7 @@ class BasinSignalAnalysis:
             pass
 
         '''start recording data'''
-        statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf']
+        statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
         for day in daylist:
             # print(day.strftime('%Y-%m-%d'))
             fn = self.__state_dir / ('state.%s.h5' % day.strftime('%Y%m%d'))

@@ -235,11 +235,13 @@ class RDA:
         demo.model_run()
 
         '''Analysis the model output/states'''
+        print('Postprocessing and gathering open loop results ......')
         demo.extract_signal(postfix='OL')
 
         comm.barrier()
 
         if rank == 0:
+
             demo.post_processing(file_postfix='OL', save_dir=RDA.res_output)
 
             '''change the time to get prepared for DA experiment'''
@@ -256,7 +258,7 @@ class RDA:
             demo.get_states_sample_for_mask()
 
         '''Job finished'''
-        # sys.stdout = temp
+        sys.stdout = temp
         print('job finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
@@ -308,6 +310,7 @@ class RDA:
         demo.run_DA(rank=rank)
 
         '''Analysis the model output/states'''
+        print('\nPostprocessing and gathering data assimilation results ......')
         demo.extract_signal(postfix='DA')
 
         comm.barrier()
@@ -316,7 +319,7 @@ class RDA:
             demo.post_processing(file_postfix='DA', save_dir=RDA.res_output, isGRACE=True)
 
         '''Job finished'''
-        # sys.stdout = temp
+        sys.stdout = temp
         print('\njob finished: %s, %s' % (RDA.case, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
         pass
