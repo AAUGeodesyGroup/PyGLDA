@@ -132,6 +132,9 @@ class GRACE_perturbed_obs:
         dt = h5py.special_dtype(vlen=str)
         obs.create_dataset('time_epoch', data=self.TWS['time'], dtype=dt)
 
+        if 'duration' in self.TWS.keys():  # TODO: to be removed oneday
+            obs.create_dataset('duration', data=self.TWS['duration'], dtype=dt)
+
         for i in np.arange(self.ens + 1):
             if i == 0:
                 obs.create_dataset(name='ens_%s' % i, data=self.TWS['unperturbation'])

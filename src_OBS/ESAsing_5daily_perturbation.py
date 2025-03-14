@@ -46,21 +46,28 @@ class ESAsing_5daily_perturbed_obs(GRACE_perturbed_obs):
         un_TWS = []
         COV = []
         new_time = []
+        time_duration = []
         print('')
         print('Start to perturb GRACE to obtain appropriate observations...')
 
         Time_list = self.obs_aux.getTimeReference()['time_epoch']
+        Time_duration_list = self.obs_aux.getTimeReference()['duration']
 
         '''get covariance matrix: this is static for ESA simulation data'''
         cov = C_h5fn['data']
 
         for count, time in enumerate(Time_list):
+            '''check if this time exists'''
+            if time not in time_epochs_1:
+                continue
             '''confirm data consistency'''
-            assert time == time_epochs_1[count] and time == time_epochs_2[count]
+            index = time_epochs_1.index(time)
+            assert time_epochs_1[index] == time_epochs_2[index] == time
+
             '''obtain the TWS of each basin'''
             a = []
             for id in range(1, basin_num + 1):
-                a.append(S_h5fn['sub_basin_%d' % id][count])
+                a.append(S_h5fn['sub_basin_%d' % id][index])
             a = np.array(a)
 
             '''perturb the signal'''
@@ -74,13 +81,15 @@ class ESAsing_5daily_perturbed_obs(GRACE_perturbed_obs):
             COV.append(cov)
             un_TWS.append(a)
             TWS.append(perturbed_TWS)
-
+            time_duration.append(Time_duration_list[count])
+            # print(Time_duration_list[count])
             pass
 
         self.TWS['time'] = new_time
         self.TWS['cov'] = COV
         self.TWS['unperturbation'] = np.array(un_TWS)
         self.TWS['ens'] = np.array(TWS)
+        self.TWS['duration'] = time_duration
 
         print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         return self
@@ -89,7 +98,7 @@ class ESAsing_5daily_perturbed_obs(GRACE_perturbed_obs):
 def demo3():
     from src_OBS.obs_auxiliary import aux_ESAsing_5daily
     # ob = GRACE_obs(ens=30, basin_name='MDB')
-    ob = ESAsing_5daily_perturbed_obs(ens=30, basin_name='Brahmaputra_ExpZero')
+    ob = ESAsing_5daily_perturbed_obs(ens=30, basin_name='Brahmaputra3subbasins')
     ob.configure_dir(input_dir='/media/user/My Book/Fan/ESA_SING/TestRes',
                      obs_dir='/media/user/My Book/Fan/ESA_SING/TestRes/obs')
     day_begin = '2003-09-01'
@@ -111,7 +120,7 @@ def demo4():
     day_begin = '2003-09-01'
     day_end = '2006-12-31'
     obs_aux12 = aux_ESAsing_5daily().setTimeReference(day_begin=day_begin, day_end=day_end,
-                                                    dir_in='/media/user/My Book/Fan/ESA_SING/ESA_5daily')
+                                                      dir_in='/media/user/My Book/Fan/ESA_SING/ESA_5daily')
 
     '''configure time period'''
     daylist = GeoMathKit.dayListByDay(begin='2004-01-01',
@@ -189,10 +198,11 @@ def demo4():
             'AssimilationRecord': AssimilationRecord,
             'AssimilationInfo': AssimilationInfo}
 
+
 def visualization():
     import pygmt
     from datetime import datetime
-    fn = '/media/user/My Book/Fan/ESA_SING/TestRes/obs/Brahmaputra_ExpZero_obs_GRACE.hdf5'
+    fn = '/media/user/My Book/Fan/ESA_SING/TestRes/obs/Brahmaputra3subbasins_obs_GRACE.hdf5'
     # fn = '/home/user/test/obs/Brahmaputra_obs_GRACE.hdf5'
 
     ens_all = 30
@@ -250,5 +260,5 @@ def visualization():
 
 
 if __name__ == '__main__':
-    demo4()
-    # visualization()
+    # demo3()
+    visualization()

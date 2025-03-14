@@ -80,7 +80,7 @@ class GRACE_preparation:
 
         TWS = {}
         print()
-        print('Start to pre-process GRACE to obtain signal over places of interest...')
+        print('Start to pre-process GRACE to obtain basin-wise TWS over places of interest...')
         for i in range(1, basins_num + 1):
             TWS['sub_basin_%d' % i] = []
             pass
@@ -244,7 +244,7 @@ class GRACE_preparation:
 
         TWS = []
         print()
-        print('Start to pre-process GRACE to obtain signal over places of interest...')
+        print('Start to pre-process GRACE to obtain gridded TWS over places of interest...')
 
         time_epoch = []
         for month in monthlist:

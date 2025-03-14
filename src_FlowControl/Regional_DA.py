@@ -4,6 +4,8 @@ sys.path.append('../')
 
 from pathlib import Path
 from datetime import datetime, timedelta
+# from src_FlowControl.DA_GRACE import DA_GRACE as DA_GRACE
+from src_FlowControl.DA_GRACE import DA_ESA_SING_5daily as DA_GRACE
 
 res_output = '/work/data_for_w3/w3ra/res'
 # figure_output = '/media/user/My Book/Fan/W3RA_data/figure'
@@ -143,7 +145,7 @@ class RDA:
         pass
 
     @staticmethod
-    def single_run():
+    def single_run(skip_croping_data=True, skip_signal_extraction=True):
         from src_FlowControl.SingleModel import SingleModel
         from src_GHM.EnumType import init_mode
 
@@ -157,16 +159,18 @@ class RDA:
         demo.generate_settings(mode=init_mode.cold)
 
         '''crop the data (forcing field, climatologies, parameters and land mask) at regions of interest'''
-        # demo.preprocess()
+        if not skip_croping_data:
+            demo.preprocess()
 
-        # '''run the model'''
+        '''run the model'''
         demo.model_run()
 
         '''create ini states?'''
         modifydate = (datetime.strptime(RDA.warm_begin_time, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y%m%d')
         demo.create_ini_states(mode=init_mode.cold, modifydate=modifydate)
 
-        # demo.extract_signal()
+        if not skip_signal_extraction:
+            demo.extract_signal()
 
         pass
 
@@ -193,8 +197,8 @@ class RDA:
         pass
 
     @staticmethod
-    def OL_run(prepare=True):
-        from src_FlowControl.DA_GRACE import DA_GRACE
+    def OL_run(skip=True):
+        # from src_FlowControl.DA_GRACE import DA_GRACE
         from src_GHM.EnumType import init_mode
         from mpi4py import MPI
         import sys
@@ -222,7 +226,7 @@ class RDA:
             # demo.preprocess()
 
             '''generate the perturbation for the data'''
-            if prepare:
+            if not skip:
                 demo.perturbation()
 
         comm.barrier()
@@ -252,14 +256,14 @@ class RDA:
             demo.get_states_sample_for_mask()
 
         '''Job finished'''
-        sys.stdout = temp
+        # sys.stdout = temp
         print('job finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
 
     @staticmethod
-    def DA_run(prepare=True):
-        from src_FlowControl.DA_GRACE import DA_GRACE
+    def DA_run(skip=True):
+        # from src_FlowControl.DA_GRACE import DA_GRACE
         from src_GHM.EnumType import init_mode
         from mpi4py import MPI
         import sys
@@ -287,7 +291,7 @@ class RDA:
             # demo.preprocess()
 
             '''generate the perturbation for the data'''
-            if prepare:
+            if not skip:
                 '''prepare the GRACE observation over region of interest'''
                 '''Calculation of the COV is time-consuming, so we do not suggest to repeatedly execute this command '''
                 # demo.GRACE_obs_preprocess()
@@ -312,14 +316,14 @@ class RDA:
             demo.post_processing(file_postfix='DA', save_dir=RDA.res_output, isGRACE=True)
 
         '''Job finished'''
-        sys.stdout = temp
-        print('job finished: %s, %s' % (RDA.case, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        # sys.stdout = temp
+        print('\njob finished: %s, %s' % (RDA.case, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
         pass
 
     @staticmethod
     def DA_visualization_basin_ensemble():
-        from src_FlowControl.DA_GRACE import DA_GRACE
+        # from src_FlowControl.DA_GRACE import DA_GRACE
         from src_GHM.EnumType import init_mode
 
         RDA.set_box()
@@ -347,7 +351,7 @@ class RDA:
         from pathlib import Path
         import numpy as np
         from src_GHM.EnumType import init_mode
-        from src_FlowControl.DA_GRACE import DA_GRACE
+        # from src_FlowControl.DA_GRACE import DA_GRACE
 
         RDA.set_box()
 
@@ -728,12 +732,12 @@ def demo_global_run_complete(prepare=True):
     comm.barrier()
 
     '''open loop running to obtain ensemble of initializations, and more importantly to obtain temporal mean'''
-    RDA.OL_run(prepare=prepare)
+    RDA.OL_run(skip=prepare)
 
     comm.barrier()
 
     '''carry out data assimilation'''
-    RDA.DA_run(prepare=prepare)
+    RDA.DA_run(skip=prepare)
 
     pass
 
@@ -748,7 +752,7 @@ def demo_global_run_only_DA(prepare=False):
     RDA.set_box()
 
     '''carry out data assimilation'''
-    RDA.DA_run(prepare=prepare)
+    RDA.DA_run(skip=prepare)
 
     pass
 
@@ -763,7 +767,7 @@ def demo_DA_visualization():
 
 if __name__ == '__main__':
     '''single threads for preparing data'''
-    # RDA.prepare_Forcing()
+    RDA.prepare_Forcing()
     # RDA.single_run()
 
     '''multiple threads'''
@@ -771,4 +775,4 @@ if __name__ == '__main__':
     # demo_global_run_only_DA(prepare=True)
 
     '''single thread for plotting'''
-    demo_DA_visualization()
+    # demo_DA_visualization()

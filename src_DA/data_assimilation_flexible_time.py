@@ -27,7 +27,7 @@ class DataAssimilation:
         self._today = '2000-01-01'
 
         '''obtain info'''
-        self._obs_helper = self.helper_resolve_time(obs)
+        self._obs_helper = self.helper_resolve_time(obs.get_obs_aux())
 
         pass
 
@@ -143,6 +143,7 @@ class DataAssimilation:
                 continue
 
             '''====================start assimilation================================'''
+            print('====> GRACE data has been assimilated.')
             rr += 1
             '''get obs and cov'''
             info = self._obs_helper['AssimilationInfo'][rr]
@@ -220,7 +221,7 @@ class DataAssimilation:
 
         pass
 
-    def helper_resolve_time(self, obs: GRACE_obs):
+    def helper_resolve_time(self, obs_aux: dict):
         """
         It is assumed that the date increases at daily basis.
         This tool helps to decide when and how the update takes place
@@ -231,7 +232,6 @@ class DataAssimilation:
                                           end=self.DA_setting.basic.todate)
 
         '''configure observation reference'''
-        obs_aux = obs.obs_aux.getTimeReference().copy()
         duration = obs_aux['duration']
         data_first = []
         data_end = []
@@ -264,8 +264,18 @@ class DataAssimilation:
         assert data_index is not None
         current_index = data_index
 
+        Nlen = len(data_first)
+
         '''start loop'''
         for day in daylist:
+
+            if data_index == Nlen:
+                '''this means that no observation is available'''
+                NewRecord.append(False)
+                KeepRecord.append(False)
+                AssimilationRecord.append(False)
+                continue
+
             if day == data_first[data_index]:
                 newRecord = True
                 keepRecord = True
@@ -296,6 +306,8 @@ class DataAssimilation:
             NewRecord.append(newRecord)
             KeepRecord.append(keepRecord)
             AssimilationRecord.append(assimilation)
+
+            pass
 
         return {'NewRecord': NewRecord,
                 'KeepRecord': KeepRecord,

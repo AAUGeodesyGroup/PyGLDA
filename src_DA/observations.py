@@ -16,6 +16,9 @@ class GRACE_obs:
 
         self.__time_list = list(obs_h5['time_epoch'][:].astype('str'))
 
+        if 'duration' in obs_h5.keys():
+            self.__duration_list = list(obs_h5['duration'][:].astype('str'))
+
         self.__obs = obs_h5['ens_%s' % ens_id][:]
 
         self.__cov = obs_h5['cov'][:]
@@ -67,9 +70,12 @@ class GRACE_obs:
         else:
             return self.__cov[self.__date_index]
 
-    def set_aux(self, aux: obs_auxiliary):
-        self.obs_aux = aux
-        return self
+    def get_obs_aux(self):
+        obs_aux = {
+            'time_epoch': self.__time_list.copy(),
+            'duration': self.__duration_list.copy()
+        }
+        return obs_aux
 
 def demo1():
     gr = GRACE_obs()

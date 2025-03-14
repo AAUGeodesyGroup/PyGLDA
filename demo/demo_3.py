@@ -2,7 +2,7 @@ import sys
 sys.path.append('../')
 from pathlib import Path
 from datetime import datetime, timedelta
-from src_FlowControl.Regional_DA import RDA, res_output
+from src_FlowControl.Regional_DA import RDA, res_output, figure_output
 
 
 '''This is a demo to show the complete process of DA. In this demo, we select three examples as below: 1. Regional 
@@ -16,13 +16,14 @@ We make use of MPI to do the parallelization, so please type the command to exec
 '''mpiexec -n 31 python demo_3.py'''
 
 '''Define where to store the key results of DA'''
-res_output='/work/data_for_w3/w3ra/res'
+res_output='../../../External Data/w3ra/res'
+figure_output='../../../External Data/w3ra/figure'
 
 '''Define where to load the necessary setting files'''
-RDA.setting_dir = '../settings/Ucloud_DA'
+RDA.setting_dir = '../settings/demo_3'
 
 '''Define the size of ensemble to run for DA'''
-RDA.ens = 30
+RDA.ens = 2
 
 '''Define the name of your case study'''
 RDA.case = 'case_study_demo3'
@@ -87,11 +88,16 @@ def demo_global_run_complete(prepare=True):
 
     '''open loop running to obtain ensemble of initializations, and more importantly to obtain temporal mean to be 
     removed from the GRACE observations'''
-    RDA.OL_run(prepare=prepare)
+    RDA.OL_run(skip=prepare)
 
     comm.barrier()
 
     '''carry out data assimilation'''
-    RDA.DA_run(prepare=prepare)
+    RDA.DA_run(skip=prepare)
 
     pass
+
+
+if __name__ == '__main__':
+    '''multiple threads'''
+    demo_global_run_complete(prepare=True)

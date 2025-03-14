@@ -11,6 +11,9 @@ from src_GHM.GeoMathKit import GeoMathKit
 
 
 class BasinSignalAnalysis:
+    """
+    This script is for real time analysis to extract basin time series signal for each ensemble member
+    """
 
     def __init__(self, basin_mask: basin_shp_process, state_dir='', par_dir=''):
         self.__bm = basin_mask
@@ -189,6 +192,11 @@ class BasinSignalAnalysis:
 
 
 class Postprocessing_basin:
+    """
+    This is also for the basin signal analysis. However, it is different from the above one at:
+    1. this is a post-processing step to collect all the ensemble results together for further analysis
+    2. in addition to the states, this script also deals with GRACE data for a collective analysis.
+    """
 
     def __init__(self, ens, case: str, basin: str, date_begin='2002-04-01', date_end='2002-04-02'):
         self.ens = ens
@@ -262,7 +270,12 @@ class Postprocessing_basin:
 
         a = gr['ens_1'][:]
 
-        ens_num = len(list(gr.keys())) - 3
+        '''calculate how many ensemble member it has'''
+        ens_num = -1 # because ens= 0 is included
+        for dd in gr.keys():
+            if 'ens_' in dd:
+                ens_num += 1
+        print(ens_num)
         try:
             basin_num = np.shape(gr['cov'][0])[0]
         except Exception:
@@ -324,6 +337,10 @@ class Postprocessing_basin:
         pass
 
     def load_states(self, load_dir='../temp', prefix='1'):
+        """
+        This is simply for loading states from pre-saved results. No calculation has been done.
+        It is mostly used for plotting a figure
+        """
         ff = {}
 
         hf = h5py.File(Path(load_dir) / ('Res_%s.h5df' % prefix), 'r')
@@ -343,7 +360,10 @@ class Postprocessing_basin:
         return ff
 
     def load_GRACE(self, load_dir='../temp', prefix='1'):
-
+        """
+        This is simply for loading GRACE from pre-saved results. No calculation has been done.
+        It is mostly used for plotting a figure
+        """
         ff = {}
 
         hf = h5py.File(Path(load_dir) / ('GRACE_%s.h5df' % prefix), 'r')
@@ -362,6 +382,12 @@ class Postprocessing_basin:
 
 
 class Postprocessing_grid_first:
+    """
+    This is also a post-processing script. Unlike the previous one, this one targets the spatial 2D map (state) instead
+    of the basin average.
+    And for the sake of data storage, the spatial data of state has been monthly averaged.
+
+    """
 
     def __init__(self, state_dir='', par_dir=''):
         self.__state_dir = Path(state_dir)

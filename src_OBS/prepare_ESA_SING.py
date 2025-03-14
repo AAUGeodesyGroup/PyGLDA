@@ -46,6 +46,9 @@ class ESA_SING_5daily(GRACE_preparation):
         The mask: lon: -180-->180, lat: 90--->-90
         """
 
+        print()
+        print('Start to pre-process GRACE to obtain basin-wise TWS over places of interest...')
+
         '''load basin mask'''
         res = 0.5
         mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
@@ -81,13 +84,15 @@ class ESA_SING_5daily(GRACE_preparation):
 
     def basin_COV(self, day_begin='2002-04-01', day_end='2002-05-09',
                   dir_in='/media/user/My Book/Fan/ESA_SING/Brahmaputra',
-                  dir_out='/media/user/My Book/Fan/ESA_SING/TestRes'):
+                  dir_out='/media/user/My Book/Fan/ESA_SING/TestRes', isDiagonal=False):
         """
         This is unique for our dataset; Users must change for their own purpose.
 
         The data: -89.75--->89.75, -179.75--->179.75
         The mask: lon: -180-->180, lat: 90--->-90
         """
+        print()
+        print('Start to pre-process GRACE to obtain covariance over places of interest...')
 
         '''load basin mask'''
         res = 0.5
@@ -106,6 +111,10 @@ class ESA_SING_5daily(GRACE_preparation):
 
         """m ==> mm"""
         COV = COV*1e6
+
+        '''Optional: remove off-diagonal matrix'''
+        if isDiagonal:
+            COV = np.diag(np.diag(COV))
 
         '''save it into h5'''
         out_dir = Path(dir_out)
@@ -140,13 +149,12 @@ class ESA_SING_5daily(GRACE_preparation):
 
         aux, a, b = self._aux.selectSubTimePeriod(day_begin=day_begin, day_end=day_end)
         assert len(hh['time'][0, :]) == len(self._aux.getTimeReference()['duration'])
-        TWS = np.flipud(hh['global_EWH'][self._mission][a:b, :])[:, mask.astype(bool)]
-
+        TWS = np.flip(hh['global_EWH'][self._mission][a:b, :], axis=-2)[:, mask.astype(bool)]
         """m ==> mm"""
         TWS = TWS*1000
 
         print()
-        print('Start to pre-process GRACE to obtain signal over places of interest...')
+        print('Start to pre-process GRACE to obtain gridded TWS over places of interest...')
 
         '''save it into h5'''
         out_dir = Path(dir_out)

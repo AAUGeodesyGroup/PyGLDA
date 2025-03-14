@@ -257,7 +257,7 @@ class DA_GRACE(OpenLoop):
             f = open('../log/OL/log_%s.txt' % rank, 'w')
             sys.stdout = f
 
-        print('Configure DA experiments: %s'%datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Configure DA experiments: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         '''configure DA'''
         dp_dir = self.setting_dir / 'DA_setting.json'
@@ -272,7 +272,7 @@ class DA_GRACE(OpenLoop):
         ext = ext_adapter(par=par, settings=settings)
         model_instance = model_run_daily(settings=settings, par=par, model_init=model_init, ext=ext)
 
-        print('Configure shapefile: %s'%datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Configure shapefile: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         '''define the basin-shp file and derive the corresponding mask'''
         basin = configDA.basic.basin
         shp_path = configDA.basic.basin_shp
@@ -286,7 +286,7 @@ class DA_GRACE(OpenLoop):
         state_sample = Path(configDA.basic.NaNmaskStatesDir) / ('%s_state.h5' % self.case)
         bs.mask_nan(sample=state_sample)
 
-        print('Configure OBS and its design matrix: %s'%datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Configure OBS and its design matrix: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         '''obtain the design matrix from pre-saved data'''
         layer = {}
         for key, vv in configDA.basic.layer.items():
@@ -309,6 +309,113 @@ class DA_GRACE(OpenLoop):
         # da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da = DataAssimilation_monthly_diag(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da.configure_design_matrix(DM=dm)
+
+        '''running with MPI parallelization'''
+        print('User case: %s' % self.case)
+        print()
+        da.run_mpi()
+
+        pass
+
+
+class DA_ESA_SING_5daily(DA_GRACE):
+    def __init__(self, case='test', setting_dir='../settings/DA_local', ens=3):
+        super().__init__(case, setting_dir, ens)
+
+        pass
+
+    def generate_perturbed_GRACE_obs(self):
+        from src_OBS.obs_auxiliary import aux_ESAsing_5daily
+        from src_OBS.ESAsing_5daily_perturbation import ESAsing_5daily_perturbed_obs
+
+        dp_dir = self.setting_dir / 'DA_setting.json'
+        configDA = config_DA.loadjson(dp_dir).process()
+
+        begin_day = configDA.basic.fromdate
+        end_day = configDA.basic.todate
+
+        ob = ESAsing_5daily_perturbed_obs(ens=configDA.basic.ensemble, basin_name=configDA.basic.basin)
+        ob.configure_dir(input_dir=configDA.obs.GRACE['preprocess_res'], obs_dir=configDA.obs.dir)
+        obs_aux = aux_ESAsing_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
+                                                        dir_in='/work/data_for_w3/GRACE/aux/ESA_5daily')
+        ob.configure_obs_aux(obs_aux=obs_aux)
+        ob.perturb_TWS().remove_temporal_mean()
+        fn = Path(configDA.obs.GRACE['OL_mean']) / ('%s_%s.hdf5' % (self.case, self.basin))
+        ob.add_temporal_mean(fn=str(fn))
+        ob.save()
+
+        pass
+
+    def run_DA(self, rank: int):
+        """The main entrance to the data assimilation experiment"""
+        from src_GHM.config_settings import config_settings
+        from src_GHM.config_parameters import config_parameters
+        from src_GHM.model_initialise import model_initialise
+        from src_GHM.ext_adapter import ext_adapter
+        from src_GHM.hotrun import model_run_daily
+        import json
+        from src_DA.observations import GRACE_obs
+        from src_DA.ExtracStates import EnsStates
+        from src_DA.data_assimilation_flexible_time import DataAssimilation
+
+        if rank != 0:
+            f = open('../log/OL/log_%s.txt' % rank, 'w')
+            sys.stdout = f
+
+        print('Configure DA experiments: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+        '''configure DA'''
+        dp_dir = self.setting_dir / 'DA_setting.json'
+        configDA = config_DA.loadjson(dp_dir).process()
+
+        '''configure model'''
+        dp = self.setting_dir / 'setting.json'
+        dp1 = json.load(open(dp, 'r'))
+        settings = config_settings.loadjson(dp).process(Parallel_ID=rank)
+        par = config_parameters(settings)
+        model_init = model_initialise(settings=settings, par=par).configure_InitialStates()
+        ext = ext_adapter(par=par, settings=settings)
+        model_instance = model_run_daily(settings=settings, par=par, model_init=model_init, ext=ext)
+
+        print('Configure shapefile: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        '''define the basin-shp file and derive the corresponding mask'''
+        basin = configDA.basic.basin
+        shp_path = configDA.basic.basin_shp
+        bs = basin_shp_process(res=0.1, basin_name=basin).shp_to_mask(shp_path=shp_path)
+
+        dp_dir = self.setting_dir / 'pre_process.json'
+        dp2 = json.load(open(dp_dir, 'r'))
+        lm = dp2['out_dir']
+        land_mask = str(Path(lm) / self.case / 'mask' / 'mask_global.h5')
+        bs.mask_to_vec(model_mask_global=land_mask)
+        state_sample = Path(configDA.basic.NaNmaskStatesDir) / ('%s_state.h5' % self.case)
+        bs.mask_nan(sample=state_sample)
+
+        print('Configure OBS and its design matrix: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        '''obtain the design matrix from pre-saved data'''
+        layer = {}
+        for key, vv in configDA.basic.layer.items():
+            layer[states_var[key]] = vv
+        dm_save_dir = '../temp'
+        dm = DM_basin_average(shp=bs, layer=layer, LoadfromDisk=True, dir=dm_save_dir)
+        # par_dir = str(Path(lm) / self.case / 'par')
+        # dm_save_dir = '../temp'
+        # dm = DM_basin_average(shp=bs, layer=layer, par_dir=par_dir)
+        # dm.vertical_aggregation(isVec=True).basin_average()
+
+        '''obtain the GRACE observation'''
+        gr = GRACE_obs(basin=self.basin, dir_obs=configDA.obs.dir, ens_id=rank)
+
+        '''states extract operator'''
+        sv = EnsStates(DM=dm, Ens=configDA.basic.ensemble)
+        sv.configure_dir(states_dir=str(Path(dp1['output']['dir']) / ('state_%s_ensemble_%s' % (self.case, rank))))
+
+        '''DA experiment'''
+        # da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da.configure_design_matrix(DM=dm)
 

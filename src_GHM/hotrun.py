@@ -111,7 +111,7 @@ class model_run_daily:
             states = previous_states
 
         '''prepare external forcing'''
-        print(day.strftime('%Y-%m-%d'))
+        print('\n'+day.strftime('%Y-%m-%d'), end='')
         ext_adapter.update(date=day)
 
         '''main entrance to the W3 update'''
