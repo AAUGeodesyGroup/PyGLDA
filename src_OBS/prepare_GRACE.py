@@ -9,6 +9,7 @@ from src_GHM.GeoMathKit import GeoMathKit
 import os
 from pathlib import Path
 from datetime import datetime
+import geopandas as gpd
 
 
 class GRACE_preparation:
@@ -32,6 +33,8 @@ class GRACE_preparation:
         bs2 = basin_shp_process(res=1, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
             shp_path=self.__shp_path, issave=True)
 
+        '''get the area information of each subbasin''' ##TODO: a raw estimation of the area
+        self._sub_basin_area = gpd.read_file(self.__shp_path).area.values
         pass
 
     def configure_global_land_ocean_mask(self, fn='../data/GRACE/GlobalLandMaskForGRACE.hdf5'):
@@ -129,7 +132,7 @@ class GRACE_preparation:
 
         dt = h5py.special_dtype(vlen=str)
         hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
-
+        hm.create_dataset('sub_basin_area', data=self._sub_basin_area)
         hm.close()
         print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
         pass
@@ -407,6 +410,7 @@ class GRACE_global_preparation:
 
             dt = h5py.special_dtype(vlen=str)
             hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
+
             hm.close()
 
         print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))

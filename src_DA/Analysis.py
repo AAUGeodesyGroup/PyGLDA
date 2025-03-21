@@ -271,7 +271,7 @@ class Postprocessing_basin:
         a = gr['ens_1'][:]
 
         '''calculate how many ensemble member it has'''
-        ens_num = -1 # because ens= 0 is included
+        ens_num = -1  # because ens= 0 is included
         for dd in gr.keys():
             if 'ens_' in dd:
                 ens_num += 1
@@ -291,8 +291,13 @@ class Postprocessing_basin:
             kk['original']['basin_%s' % basin] = original[:, basin - 1]
             kk['ens_mean']['basin_%s' % basin] = ens_mean[:, basin - 1]
 
-        kk['original']['basin_0'] = np.mean(original, axis=1)
-        kk['ens_mean']['basin_0'] = np.mean(ens_mean, axis=1)
+        # kk['original']['basin_0'] = np.mean(original, axis=1)
+        # kk['ens_mean']['basin_0'] = np.mean(ens_mean, axis=1)
+
+        '''Area-weighted'''
+        sub_basin_area = gr['sub_basin_area'][:]
+        kk['original']['basin_0'] = np.sum(original * sub_basin_area[None, :], axis=1) / np.sum(sub_basin_area)
+        kk['ens_mean']['basin_0'] = np.sum(ens_mean * sub_basin_area[None, :], axis=1) / np.sum(sub_basin_area)
 
         self.__GRACE = kk
 

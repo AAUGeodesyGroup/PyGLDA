@@ -135,6 +135,12 @@ class GRACE_perturbed_obs:
         if 'duration' in self.TWS.keys():  # TODO: to be removed oneday
             obs.create_dataset('duration', data=self.TWS['duration'], dtype=dt)
 
+        '''record sub-basin area information'''
+        signal_fn = self._input_dir / ('%s_signal.hdf5' % self.basin_name)
+        S_h5fn = h5py.File(signal_fn, 'r')
+        obs.create_dataset('sub_basin_area', data=S_h5fn['sub_basin_area'][:])
+        S_h5fn.close()
+
         for i in np.arange(self.ens + 1):
             if i == 0:
                 obs.create_dataset(name='ens_%s' % i, data=self.TWS['unperturbation'])

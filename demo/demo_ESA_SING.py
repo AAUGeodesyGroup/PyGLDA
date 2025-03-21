@@ -20,22 +20,45 @@ res_output = '/work/data_for_w3/w3ra/res'
 figure_output = '/work/data_for_w3/w3ra/figure'
 
 '''Define where to load the necessary setting files'''
-RDA.setting_dir = '../settings/Ucloud_DA'
+# RDA.setting_dir = '../settings/Ucloud_DA'
+# RDA.setting_dir = '../settings/MAGIC'
+RDA.setting_dir = '../settings/GRACEC'
 
 '''Define the size of ensemble to run for DA'''
 RDA.ens = 30
 
 '''Define the name of your case study'''
-RDA.case = 'NGGM1E16'
+# RDA.case = 'NGGM1E16'
 # RDA.case = 'NGGM1E16_1degree'
+# RDA.case = 'NGGM1E16_2degree'
+# RDA.case = 'NGGM1E16_3degree'
+# RDA.case = 'NGGM1E16_4degree'
+
+# RDA.case = 'MAGIC1E16'
+RDA.case = 'MAGIC1E16_1degree'
+# RDA.case = 'MAGIC1E16_2degree'
+# RDA.case = 'MAGIC1E16_3degree'
+# RDA.case = 'MAGIC1E16_4degree'
+
+# RDA.case = 'GRACEC1E16'
+# RDA.case = 'GRACEC1E16_1degree'
+# RDA.case = 'GRACEC1E16_2degree'
+# RDA.case = 'GRACEC1E16_3degree'
+# RDA.case = 'GRACEC1E16_4degree'
 
 '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
 
-RDA.basin = 'Brahmaputra3subbasins'
-# RDA.basin = 'Brahmaputra1degree'
+# RDA.basin = 'Brahmaputra3subbasins'
+RDA.basin = 'Brahmaputra1degree'
+# RDA.basin = 'Brahmaputra2degree'
+# RDA.basin = 'Brahmaputra3degree'
+# RDA.basin = 'Brahmaputra4degree'
 
-RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra3subbasins_3_subbasins.shp'
-# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_1/Brahmaputra1degree_subbasins.shp'
+# RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra3subbasins_3_subbasins.shp'
+RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_1/Brahmaputra1degree_subbasins.shp'
+# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_2/Brahmaputra2degree_subbasins.shp'
+# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_3/Brahmaputra3degree_subbasins.shp'
+# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_4/Brahmaputra4degree_subbasins.shp'
 
 '''this is useless, as the area will be automatically calculated from the shape file'''
 RDA.box = [50.5, 42, 8.5, 29.5]
@@ -58,7 +81,7 @@ RDA.isSet = False
 
 
 def demo_complete_DA(skip=False, skipSR=False):
-    """,
+    """
     This is a complete processing chain to deal with global data assimilation for each tile.
     """
     from mpi4py import MPI
@@ -119,8 +142,24 @@ def demo_prepare_ESA_SING_5daily(isDiagonal= False):
 
     # es.set_extra_info(filter='1e+16', mission='GRACE-C-like')
     # es.set_extra_info(filter='1e+16', mission='MAGIC')
+
     # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='Grid_1')
-    es.set_extra_info(filter='1e+16', mission='NGGM')
+    # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='Grid_2')
+    # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='Grid_3')
+    # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='Grid_4')
+    # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='subbasins_3')
+
+    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='Grid_1')
+    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='Grid_2')
+    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='Grid_3')
+    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='Grid_4')
+    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='subbasins_3')
+
+    es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='Grid_1')
+    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='Grid_2')
+    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='Grid_3')
+    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='Grid_4')
+    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='subbasins_3')
 
     es.generate_mask()
     t1 = RDA.warm_begin_time
@@ -134,16 +173,49 @@ def demo_prepare_ESA_SING_5daily(isDiagonal= False):
 
 
 def demo_DA_visualization():
-    # RDA.DA_visualization_basin_ensemble()
+    RDA.DA_visualization_basin_ensemble()
     # RDA.DA_visualization_basin_DA()
-    RDA.DA_visulization_2Dmap(signal='trend')
-    RDA.DA_visulization_2Dmap(signal='annual')
+    # RDA.DA_visulization_2Dmap(signal='trend')
+    # RDA.DA_visulization_2Dmap(signal='annual')
     pass
 
 
+def save_data():
+    from src_postprocessing.DataManager import dataManager_ensemble_statistic, dataManager_ensemble_member, data_var, data_dim
+    from src_DA.shp2mask import basin_shp_process
+
+    basin = RDA.basin
+    shp_path = RDA.shp_path
+    settings = Path(RDA.setting_dir)/'setting.json'
+    global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir='../data/basin/mask').shp_to_mask(
+        shp_path=shp_path).mask[0]
+
+    '''DA results'''
+    dsr = dataManager_ensemble_statistic().configure(setting_fn=str(settings),
+                                                     out_dir_mean='/work/data_for_w3/w3ra/save_data/DA_mean',
+                                                     out_dir_std='/work/data_for_w3/w3ra/save_data/DA_std',
+                                                     variable=data_var.TotalWater, dims=data_dim.one_dimension)
+    dsr.reduce_datasize(global_basin_mask=global_basin_mask, save_mask='/work/data_for_w3/w3ra/save_data/Mask')
+
+    '''====================================================================='''
+    dsr.aggregation_daily(date_begin=RDA.resume_begin_time, date_end=RDA.resume_end_time)
+
+
+
+    '''OpenLoop results'''
+    dsr = dataManager_ensemble_member(ens=0).configure(setting_fn=str(settings),
+                                                  out_dir='/work/data_for_w3/w3ra/save_data/OL_mean',
+                                                  variable=data_var.TotalWater, dims=data_dim.one_dimension)
+    dsr.reduce_datasize(global_basin_mask=global_basin_mask)
+
+    '''====================================================================='''
+    dsr.aggregation_daily(date_begin=RDA.resume_begin_time, date_end=RDA.resume_end_time)
+
+    pass
+
 if __name__ == '__main__':
     '''single threads for preparing data'''
-    # demo_prepare_ESA_SING_5daily(isDiagonal=False)
+    demo_prepare_ESA_SING_5daily(isDiagonal=True)
     # RDA.prepare_Forcing()
     # RDA.single_run(skip_croping_data=True, skip_signal_extraction=True) # only SR
 
@@ -152,4 +224,6 @@ if __name__ == '__main__':
     # demo_only_DA(skip=False)  # only DA
 
     '''single thread for plotting'''
-    demo_DA_visualization()
+    # demo_DA_visualization()
+    # save_data()
+

@@ -13,7 +13,7 @@ import shutil
 
 
 class dataManager_single_run:
-    """to store the necessary data and remove all temporal data to save space for the hard drive """
+    """to store the necessary data and remove all temporary data to save space for the hard drive """
 
     def __init__(self):
         self._outputOtherVariables_dir = None
@@ -280,7 +280,7 @@ class dataManager_single_run:
 
 class dataManager_ensemble_member(dataManager_single_run):
     """
-    Instead of the sing run mode, this class targets to extracting data from each ensemble member
+    Instead of the single run mode, this class targets to extracting data from each ensemble member
     """
 
     def __init__(self, ens=2):
@@ -333,7 +333,7 @@ class dataManager_ensemble_statistic(dataManager_single_run):
                 YY = day.year
                 fn_w = self._out_dir / ('%s.%s.h5' % (self._variable.name, day.strftime('%Y')))
                 fn_std_w = self._out_dir_std / ('%s.%s.h5' % (self._variable.name, day.strftime('%Y')))
-                print(day.strftime('%Y%m'))
+                print(day.strftime('%Y'))
                 h5_w = h5py.File(fn_w, 'w')
                 h5_std_w = h5py.File(fn_std_w, 'w')
 
@@ -447,7 +447,7 @@ class dataManager_ensemble_statistic(dataManager_single_run):
 
         pass
 
-    def aggregation_others(self, date_begin='2002-04-01', date_end='2002-04-02', variable='tws'):
+    def aggregation_other(self, date_begin='2002-04-01', date_end='2002-04-02', variable='tws'):
 
         daylist = GeoMathKit.dayListByDay(begin=date_begin, end=date_end)
 

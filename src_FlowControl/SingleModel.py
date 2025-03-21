@@ -13,7 +13,7 @@ class SingleModel:
         self.case = case
         self.setting_dir = Path(setting_dir)
 
-        print('Welcome to PyW3RA, the user case is: %s' % case)
+        print('Welcome to PyGLDA, the user case is: %s' % case)
         pass
 
     def configure_time(self, begin_time='2000-01-01', end_time='2000-01-31'):

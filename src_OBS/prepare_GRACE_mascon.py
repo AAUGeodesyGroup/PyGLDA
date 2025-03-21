@@ -192,7 +192,7 @@ class GRACE_CSR_mascon(GRACE_preparation):
 
         dt = h5py.special_dtype(vlen=str)
         hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
-
+        hm.create_dataset('sub_basin_area', data=self._sub_basin_area)
         hm.close()
         print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
 
