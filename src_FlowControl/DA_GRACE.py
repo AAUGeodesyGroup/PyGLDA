@@ -128,6 +128,7 @@ class DA_GRACE(OpenLoop):
 
     def gather_OLmean(self, post_fix='OL'):
         """gather the OL mean to be reduced from GRACE to acquire the TWS anomaly"""
+        #TODO: this is obs-specific and one should take care how to compute the mean. from DA or OL?
         dp_dir = self.setting_dir / 'DA_setting.json'
         configDA = config_DA.loadjson(dp_dir).process()
 

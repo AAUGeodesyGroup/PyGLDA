@@ -48,7 +48,7 @@ class load_forcing:
             key_word = 'ens_%s'%settings.parallel_id
 
         dict_group_load = ff[key_word]
-        ext['dswrf'] = dict_group_load['ssrd'][int(date.day)-1]/86400  #(J -> W)
+        ext['dswrf'] = dict_group_load['ssrd'][int(date.day)-1]/86400  #(Jm^-2 -> Wm^-2)
         ext['prcp'] = dict_group_load['tp'][int(date.day)-1]*1000/86400    #(m/day -> mm/s)
         ext['tmax'] = dict_group_load['2t'][int(date.day)-1]
         ext['tmin'] = dict_group_load['2t'][int(date.day)-1]

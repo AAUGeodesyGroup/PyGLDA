@@ -44,7 +44,8 @@ class ext_adapter:
         fday = np.fmin(np.fmax(0.02, np.arccos(1 - np.fmin(np.fmax(0, m), 2)) / np.pi), 1)
 
         '''Assign forcing and estimate effective meteorological variables'''
-        Pg = forcing['prcp'] * (24 * 60 * 60)  # % from kg m-2 s-1 to mm d-1
+        Pg = forcing['prcp'] * (24 * 60 * 60)  # % from mm s-1 to mm d-1
+        Pg = np.fmax(Pg, 0) # set minimum of 0 to avoid potential negative value
         Rg = np.fmax(forcing['dswrf'], 0.01)  # %  already in W m-2 s-1; set minimum of 0.01 to avoid numerical problems
         TMIN, TMAX = forcing['tmin'], forcing['tmax']
         Ta = (TMIN + 0.75 * (TMAX - TMIN)) - 273.15  # from K to degC

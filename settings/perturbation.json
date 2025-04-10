@@ -1,30 +1,41 @@
 {
     "ensemble": 30,
     "dir": {
-        "in": "/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test",
-        "out": "/media/user/My Book/Fan/W3RA_data/crop_input/ens"
+        "in": "/media/user/My Book/Fan/W3RA_data/crop_input/OL_test",
+        "out": "/media/user/My Book/Fan/W3RA_data/crop_input/OL_test"
+    },
+    "correlation": {
+        "forcing": {
+            "isSpatialCorrelated": true,
+            "isTemporalCorrelated": false,
+            "customize": false
+        },
+        "par": {
+            "isSpatialCorrelated": true,
+            "customize": false
+        }
     },
     "forcing": {
         "2t": {
-            "is_perturbed": false,
-            "perturbe_method": "multiplicative",
+            "is_perturbed": true,
+            "perturbe_method": "additive",
             "error_distribution": "triangle",
             "coefficients": [
-                0.3
+                2
             ]
         },
         "ssrd": {
-            "is_perturbed": false,
-            "perturbe_method": "multiplicative",
+            "is_perturbed": true,
+            "perturbe_method": "additive",
             "error_distribution": "triangle",
             "coefficients": [
-                0.3
+                4320000
             ]
         },
         "tp": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
-            "error_distribution": "triangle",
+            "error_distribution": "gaussian",
             "coefficients": [
                 0.3
             ]
@@ -192,7 +203,7 @@
             ]
         },
         "S0FC": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -216,7 +227,7 @@
             ]
         },
         "SdFC": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -248,7 +259,7 @@
             ]
         },
         "SsFC": {
-            "is_perturbed": false,
+            "is_perturbed": true,
             "perturbe_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [

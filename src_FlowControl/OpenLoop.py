@@ -73,8 +73,10 @@ class OpenLoop(SingleModel):
         # pp.perturbe_forcing()
         # pp.perturbe_coherent_par(percentage=0.4)
         # pp.perturbe_coherent_forcing(percentage=0.3)
-        pp.perturb_par_spatial_coherence()
-        pp.perturb_forcing_spatial_coherence()
+        # pp.perturb_par_spatial_coherence()
+        # pp.perturb_forcing_spatial_coherence()
+        pp.perturb_par()
+        pp.perturb_forcing()
         print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
