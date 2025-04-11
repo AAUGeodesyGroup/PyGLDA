@@ -1,8 +1,8 @@
 {
     "ensemble": 30,
     "dir": {
-        "in": "/work/data_for_w3/w3ra/crop_input/Africa",
-        "out": "/work/data_for_w3/w3ra/crop_input/Africa"
+        "in": "/work/data_for_w3/w3ra/crop_input/NGGM1E16_4degree",
+        "out": "/work/data_for_w3/w3ra/crop_input/NGGM1E16_4degree"
     },
     "forcing": {
         "2t": {

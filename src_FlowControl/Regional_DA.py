@@ -197,7 +197,7 @@ class RDA:
         pass
 
     @staticmethod
-    def OL_run(skip=True):
+    def OL_run(skip_perturbation=True):
         # from src_FlowControl.DA_GRACE import DA_GRACE
         from src_GHM.EnumType import init_mode
         from mpi4py import MPI
@@ -226,7 +226,7 @@ class RDA:
             # demo.preprocess()
 
             '''generate the perturbation for the data'''
-            if not skip:
+            if not skip_perturbation:
                 demo.perturbation()
 
         comm.barrier()
@@ -264,7 +264,7 @@ class RDA:
         pass
 
     @staticmethod
-    def DA_run(skip=True):
+    def DA_run(skip_obs_perturbation=True):
         # from src_FlowControl.DA_GRACE import DA_GRACE
         from src_GHM.EnumType import init_mode
         from mpi4py import MPI
@@ -293,7 +293,7 @@ class RDA:
             # demo.preprocess()
 
             '''generate the perturbation for the data'''
-            if not skip:
+            if not skip_obs_perturbation:
                 '''prepare the GRACE observation over region of interest'''
                 '''Calculation of the COV is time-consuming, so we do not suggest to repeatedly execute this command '''
                 # demo.GRACE_obs_preprocess()
@@ -328,7 +328,9 @@ class RDA:
     def DA_visualization_basin_ensemble():
         # from src_FlowControl.DA_GRACE import DA_GRACE
         from src_GHM.EnumType import init_mode
-
+        """
+        this is to visualize assimilated spread for each vertical compartment
+        """
         RDA.set_box()
 
         '''configuration'''
@@ -341,6 +343,28 @@ class RDA:
         '''generate/save the figure'''
         fig_postfix = '0'
         demo.visualize_signal(fig_path=RDA.figure_output, fig_postfix=fig_postfix, file_postfix='DA',
+                              data_dir=RDA.res_output)
+        pass
+
+    @staticmethod
+    def OL_visualization_basin_ensemble():
+        # from src_FlowControl.DA_GRACE import DA_GRACE
+        from src_GHM.EnumType import init_mode
+        """
+        this is to visualize open loop model spread for each vertical compartment
+        """
+        RDA.set_box()
+
+        '''configuration'''
+        demo = DA_GRACE(case=RDA.case, setting_dir=RDA.setting_dir, ens=RDA.ens)
+
+        demo.configure_time(begin_time=RDA.resume_begin_time, end_time=RDA.resume_end_time)
+        demo.configure_area(box=RDA.box, basin=RDA.basin)
+        demo.generate_settings(mode=init_mode.resume)
+
+        '''generate/save the figure'''
+        fig_postfix = '0'
+        demo.visualize_signal(fig_path=RDA.figure_output, fig_postfix=fig_postfix, file_postfix='OL',
                               data_dir=RDA.res_output)
         pass
 
@@ -735,12 +759,12 @@ def demo_global_run_complete(prepare=True):
     comm.barrier()
 
     '''open loop running to obtain ensemble of initializations, and more importantly to obtain temporal mean'''
-    RDA.OL_run(skip=prepare)
+    RDA.OL_run(skip_perturbation=prepare)
 
     comm.barrier()
 
     '''carry out data assimilation'''
-    RDA.DA_run(skip=prepare)
+    RDA.DA_run(skip_obs_perturbation=prepare)
 
     pass
 
@@ -755,7 +779,7 @@ def demo_global_run_only_DA(prepare=False):
     RDA.set_box()
 
     '''carry out data assimilation'''
-    RDA.DA_run(skip=prepare)
+    RDA.DA_run(skip_obs_perturbation=prepare)
 
     pass
 

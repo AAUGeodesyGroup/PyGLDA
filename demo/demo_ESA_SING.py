@@ -106,12 +106,12 @@ def demo_complete_DA(skip=False, skipSR=False):
 
     '''open loop running to obtain ensemble of initializations, and more importantly to obtain temporal mean to be 
     removed from the GRACE observations'''
-    RDA.OL_run(skip=skip)
+    RDA.OL_run(skip_perturbation=skip)
 
     comm.barrier()
 
     '''carry out data assimilation'''
-    RDA.DA_run(skip=skip)
+    RDA.DA_run(skip_obs_perturbation=skip)
 
     pass
 
@@ -127,7 +127,7 @@ def demo_only_DA(skip=True):
     RDA.set_box()
 
     '''carry out data assimilation'''
-    RDA.DA_run(skip=skip)
+    RDA.DA_run(skip_obs_perturbation=skip)
 
     pass
 

@@ -32,6 +32,7 @@ class perturbation:
     def __init__(self, dp='../settings/perturbation.json'):
         self.setting = json.load(open(dp, 'r'))
         self.ens = self.setting['ensemble']
+        self._format_check()
         pass
 
     def setDate(self, month_begin='2002-04', month_end='2002-04'):
@@ -164,7 +165,7 @@ class perturbation:
         for key in forcing:
             if not forcing[key]['is_perturbed']:
                 continue
-            if forcing[key]['perturbe_method'] == perturbe_method.multiplicative.name:
+            if forcing[key]['perturb_method'] == perturbe_method.multiplicative.name:
                 samples_mul[key] = self.__generate_perturbation(config=forcing[key],
                                                                 mean=np.ones(1))
                 pass
@@ -205,7 +206,7 @@ class perturbation:
 
                 dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
 
-                if forcing[key]['perturbe_method'] == perturbe_method.multiplicative.name:
+                if forcing[key]['perturb_method'] == perturbe_method.multiplicative.name:
                     hh = samples_mul[key][:, :, None] * dd * dict_group_load[None, :, :]
                     outdata[key] = hh
                 else:
@@ -267,7 +268,7 @@ class perturbation:
 
                 dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
                 s_shape = tuple([np.shape(dict_group_load)[0]])
-                if forcing[key]['perturbe_method'] == perturbe_method.multiplicative.name:
+                if forcing[key]['perturb_method'] == perturbe_method.multiplicative.name:
                     samples = self.__generate_perturbation(config=forcing[key], mean=np.ones(s_shape))
                     hh = samples[:, :, None] * dd * dict_group_load[None, :, :]
                     outdata[key] = hh
@@ -332,7 +333,7 @@ class perturbation:
                     if not forcing[key]['is_perturbed']:
                         continue
                     s_shape = tuple([np.shape(ff_1['data'][key][:])[1]])
-                    if forcing[key]['perturbe_method'] == perturbe_method.multiplicative.name:
+                    if forcing[key]['perturb_method'] == perturbe_method.multiplicative.name:
                         samples_mul[key] = self.__generate_perturbation(config=forcing[key],
                                                                         mean=np.ones(s_shape))
                         pass
@@ -351,7 +352,7 @@ class perturbation:
 
                 dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
 
-                if forcing[key]['perturbe_method'] == perturbe_method.multiplicative.name:
+                if forcing[key]['perturb_method'] == perturbe_method.multiplicative.name:
                     hh = samples_mul[key][:, None, :] * dd * dict_group_load[None, :, :]
                     outdata[key] = hh
                 else:
@@ -466,7 +467,7 @@ class perturbation:
             ''''''
             dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
             s_shape = tuple([np.shape(dict_group_load)[0]])
-            if pars[key]['perturbe_method'] == perturbe_method.multiplicative.name:
+            if pars[key]['perturb_method'] == perturbe_method.multiplicative.name:
                 samples = self.__generate_perturbation(config=pars[key], mean=np.ones(s_shape))
                 hh = samples[:, :, None] * dd * dict_group_load[None, :, :]
                 outdata[key] = hh
@@ -500,7 +501,7 @@ class perturbation:
 
         dd = np.ones(tuple([self.ens] + list(np.shape(mean))))
 
-        if config['perturbe_method'] == perturbe_method.additive.name:
+        if config['perturb_method'] == perturbe_method.additive.name:
             if config['error_distribution'] == error_distribution.triangle.name:
                 """ co[0]: limit"""
                 pp = self.triangle_perturbation(mean=0 * dd, limit=dd * co[0])
@@ -533,6 +534,17 @@ class perturbation:
 
     def Gaussian_perturbation(self, mean, std, size=None):
         return np.random.normal(loc=mean, scale=std, size=size)
+
+    def _format_check(self):
+        forcing = self.setting['forcing']
+        par = self.setting['par']
+
+        for key, value in forcing.items():
+            assert error_distribution[value['error_distribution']] in error_distribution
+            assert perturbe_method[value['perturb_method']] in perturbe_method
+            pass
+
+        pass
 
     @staticmethod
     def save_default_json(sample_dir='/media/user/My Book/Fan/W3RA_data/perturbation_sample'):
@@ -567,7 +579,7 @@ class perturbation:
 
         template = {
             'is_perturbed': False,
-            'perturbe_method': perturbe_method.multiplicative.name,
+            'perturb_method': perturbe_method.multiplicative.name,
             'error_distribution': error_distribution.triangle.name,
             'coefficients': [0.3]
         }
@@ -991,7 +1003,7 @@ class perturbation_old:
 
         dd = np.ones(tuple([self.ens] + list(np.shape(mean))))
 
-        if config['perturbe_method'] == perturbe_method.additive:
+        if config['perturb_method'] == perturbe_method.additive:
             if config['error_distribution'] == error_distribution.triangle.name:
                 pp = self.triangle_perturbation(mean=co[0] * dd, error_percentage=co[1] * dd)
             else:
@@ -1075,8 +1087,9 @@ def demo1():
     # dp = perturbation.save_default_json()
     dp = '../settings/perturbation.json'
     pp = perturbation(dp=dp).setDate(month_begin='2000-01', month_end='2000-02')
-    # pp.perturb_forcing()
+    # pp.save_default_json()
     pp.perturb_par()
+    pp.perturb_forcing()
 
     pass
 
