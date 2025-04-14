@@ -112,11 +112,16 @@ class DataAssimilation:
         obs = None
         obs_cov = None
         rr = -1
+        previous_month = -1
 
+        print('=====================Data assimilation=========================')
         for count, day in enumerate(daylist):
-
+            "print information"
+            if day.month != previous_month:
+                previous_month = day.month
+                print('\nDoing year/month: %04d/%02d' % (day.year, day.month))
             today = day.strftime('%Y-%m-%d')
-
+            print('.', end='')
             '''==================kalman filter: prediction step=================================='''
             self.predict(today=today, states=self._states_predict, is_first_day=firstday, issave=True)
             firstday = False
@@ -143,7 +148,8 @@ class DataAssimilation:
                 continue
 
             '''====================start assimilation================================'''
-            print('====> GRACE data has been assimilated.')
+            # print('====> GRACE data has been assimilated.')
+            print('|', end='')
             rr += 1
             '''get obs and cov'''
             info = self._obs_helper['AssimilationInfo'][rr]

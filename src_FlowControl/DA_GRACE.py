@@ -201,7 +201,7 @@ class DA_GRACE(OpenLoop):
 
         bs = basin_shp_process(res=0.1, basin_name=basin).shp_to_mask(shp_path=shp_path)
 
-        print('Preparing OBS design matrix: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('\nPreparing OBS design matrix: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         land_mask = str(Path(self._outdir) / self.case / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
 
@@ -365,7 +365,7 @@ class DA_ESA_SING_5daily(DA_GRACE):
             f = open('../log/OL/log_%s.txt' % rank, 'w')
             sys.stdout = f
 
-        print('Configure DA experiments: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('\nConfigure DA experiments: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         '''configure DA'''
         dp_dir = self.setting_dir / 'DA_setting.json'

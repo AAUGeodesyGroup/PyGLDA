@@ -96,8 +96,8 @@ class OpenLoop(SingleModel):
             f = open('../log/OL/log_%s.txt' % rank, 'w')
             sys.stdout = f
 
-        print()
-        print('Model is going to start running...')
+        # print()
+        # print('Model is going to start running...')
         dp = self.setting_dir / 'setting.json'
         settings = config_settings.loadjson(dp).process(Parallel_ID=rank)
         par = config_parameters(settings)

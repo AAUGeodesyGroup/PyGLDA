@@ -257,9 +257,10 @@ class RDA:
             '''get states samples for creating NaN mask'''
             demo.get_states_sample_for_mask()
 
+            print('job finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
         '''Job finished'''
         sys.stdout = temp
-        print('job finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
 
@@ -318,9 +319,9 @@ class RDA:
         if rank == 0:
             demo.post_processing(file_postfix='DA', save_dir=RDA.res_output, isGRACE=True)
 
-        '''Job finished'''
-        sys.stdout = temp
-        print('\njob finished: %s, %s' % (RDA.case, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            '''Job finished'''
+            sys.stdout = temp
+            print('\njob finished: %s, %s' % (RDA.case, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
         pass
 

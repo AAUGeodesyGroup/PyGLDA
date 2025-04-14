@@ -175,7 +175,6 @@ class DM_basin_average:
         fn.create_dataset('data', data=self._A)
         fn.close()
 
-        print('')
         print('Successfully generate and save the design matrix...')
 
         pass

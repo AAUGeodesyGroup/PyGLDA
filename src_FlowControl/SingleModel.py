@@ -13,7 +13,7 @@ class SingleModel:
         self.case = case
         self.setting_dir = Path(setting_dir)
 
-        print('Welcome to PyGLDA, the user case is: %s' % case)
+        # print('Welcome to PyGLDA, the user case is: %s' % case)
         pass
 
     def configure_time(self, begin_time='2000-01-01', end_time='2000-01-31'):
@@ -82,8 +82,8 @@ class SingleModel:
         from src_GHM.ext_adapter import ext_adapter
         from src_GHM.hotrun import model_run
 
-        print()
-        print('Model is going to start running...')
+        # print()
+        # print('Model is going to start running...')
         dp = self.setting_dir / 'setting.json'
         settings = config_settings.loadjson(dp).process()
         par = config_parameters(settings)

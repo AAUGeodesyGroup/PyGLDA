@@ -38,7 +38,7 @@ class model_run:
 
         daylist = GeoMathKit.dayListByDay(settings.run.fromdate, settings.run.todate)
 
-        print('\n===== RUN for %s to %s =====' % (settings.run.fromdate, settings.run.todate))
+        print('\n===== RUN from %s to %s =====' % (settings.run.fromdate, settings.run.todate))
 
         for day in daylist:
 
@@ -111,7 +111,7 @@ class model_run_daily:
             states = previous_states
 
         '''prepare external forcing'''
-        print('\n'+day.strftime('%Y-%m-%d'), end='')
+        # print('\n'+day.strftime('%Y-%m-%d'), end='')
         ext_adapter.update(date=day)
 
         '''main entrance to the W3 update'''
