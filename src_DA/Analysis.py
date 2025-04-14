@@ -464,9 +464,10 @@ class Postprocessing_grid_second:
                     'monthly_mean_%s_%s.h5' % (state, postfix)), 'r')
             for time, vv in fn.items():
                 if ens == 0:
+                    '''error-free result'''
                     temp_dict[time] = vv[:]
                 else:
-
+                    '''ensemble result'''
                     if ens == 1:
                         temp_dict_2[time] = vv[:]
                     else:

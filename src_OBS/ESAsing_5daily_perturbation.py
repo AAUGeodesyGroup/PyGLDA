@@ -36,7 +36,9 @@ class ESAsing_5daily_perturbed_obs(GRACE_perturbed_obs):
         cov_fn = in_dir / ('%s_cov.hdf5' % self.basin_name)
         C_h5fn = h5py.File(cov_fn, 'r')
 
-        basin_num = len(list(S_h5fn.keys())) - 1
+        # basin_num = len(list(S_h5fn.keys())) - 1
+        basin_num = np.shape(S_h5fn['sub_basin_area'][:])[0]
+
         self.TWS = {}
 
         time_epochs_1 = list(S_h5fn['time_epoch'][:].astype('str'))
@@ -66,6 +68,7 @@ class ESAsing_5daily_perturbed_obs(GRACE_perturbed_obs):
 
             '''obtain the TWS of each basin'''
             a = []
+            # print(basin_num)
             for id in range(1, basin_num + 1):
                 a.append(S_h5fn['sub_basin_%d' % id][index])
             a = np.array(a)

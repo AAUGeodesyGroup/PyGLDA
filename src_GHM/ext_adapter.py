@@ -45,7 +45,7 @@ class ext_adapter:
 
         '''Assign forcing and estimate effective meteorological variables'''
         Pg = forcing['prcp'] * (24 * 60 * 60)  # % from mm s-1 to mm d-1
-        Pg = np.fmax(Pg, 0) # set minimum of 0 to avoid potential negative value
+        Pg[Pg < 0] = 0.0  # set minimum of 0 to avoid potential negative value # be careful of NaN values!!!
         Rg = np.fmax(forcing['dswrf'], 0.01)  # %  already in W m-2 s-1; set minimum of 0.01 to avoid numerical problems
         TMIN, TMAX = forcing['tmin'], forcing['tmax']
         Ta = (TMIN + 0.75 * (TMAX - TMIN)) - 273.15  # from K to degC

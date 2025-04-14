@@ -192,10 +192,11 @@ class OpenLoop(SingleModel):
         res1, res2 = pg.ensemble_mean(state=state, postfix=file_postfix, fdir=self._outdir2)
         '''save results'''
         # save_dir = '../temp'
+        '''error-free model run'''
         hf = h5py.File(Path(save_dir) / ('monthly_mean_%s_%s_uOL.h5' % (state, self.basin)), 'w')
         for key, vv in res1.items():
             hf.create_dataset(name=key, data=vv[:])
-
+        '''open-loop or assimilated ensemble result'''
         hf = h5py.File(Path(save_dir) / ('monthly_mean_%s_%s_%s.h5' % (state, self.basin, file_postfix)), 'w')
         for key, vv in res2.items():
             hf.create_dataset(name=key, data=vv[:])

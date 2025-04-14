@@ -144,12 +144,12 @@ class ESA_SING_5daily(GRACE_preparation):
         mask = mf['basin'][:] * self._05deg_mask
 
         '''load EWH'''
-        name = Path(dir_in) / ('Global_EWH_05_%s.hdf5' % self._filter)
+        name = Path(dir_in) / ('Global_EWH_05_%s_%s.hdf5' % (self._mission, self._filter))
         hh = h5py.File(name=name, mode='r')
 
         aux, a, b = self._aux.selectSubTimePeriod(day_begin=day_begin, day_end=day_end)
         assert len(hh['time'][0, :]) == len(self._aux.getTimeReference()['duration'])
-        TWS = np.flip(hh['global_EWH'][self._mission][a:b, :], axis=-2)[:, mask.astype(bool)]
+        TWS = np.flip(hh['EWHA'][a:b, :], axis=-2)[:, mask.astype(bool)]
         """m ==> mm"""
         TWS = TWS*1000
 
