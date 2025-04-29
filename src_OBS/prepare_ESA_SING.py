@@ -55,8 +55,10 @@ class ESA_SING_5daily(GRACE_preparation):
         basins_num = len(list(mf.keys())) - 1
 
         '''load EWH'''
-        name = Path(dir_in) / 'gravity_signal_cov' / ('%s_%s_Brahmaputra_v5.hdf5' % (
+        name = Path(dir_in) / 'gravity_signal_cov' / ('%s_%s_Danube_v5.hdf5' % (
             self._mission, self._filter))
+        # name = Path(dir_in) / 'gravity_signal_cov' / ('%s_%s_Brahmaputra_v5.hdf5' % (
+        #     self._mission, self._filter))
 
         hh = h5py.File(name=name, mode='r')
 
@@ -99,8 +101,10 @@ class ESA_SING_5daily(GRACE_preparation):
         mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
 
         '''load EWH'''
-        name = Path(dir_in) / 'gravity_signal_cov' / ('%s_%s_Brahmaputra_v5.hdf5' % (
+        name = Path(dir_in) / 'gravity_signal_cov' / ('%s_%s_Danube_v5.hdf5' % (
             self._mission, self._filter))
+        # name = Path(dir_in) / 'gravity_signal_cov' / ('%s_%s_Brahmaputra_v5.hdf5' % (
+        #     self._mission, self._filter))
 
         hh = h5py.File(name=name, mode='r')
 
