@@ -30,8 +30,8 @@ class upscaling:
         sample = np.full(np.shape(self.__gm), np.nan)
         sample[self.__gm] = model_state
         rows, cols = sample.shape
-        new = np.nanmin(sample.reshape(rows // n, n, cols // n, n), axis=(1, 3))
-
+        new = np.nanmean(sample.reshape(rows // n, n, cols // n, n), axis=(1, 3))
+        #TODO: A more advanced regrid stratey might be developed in future
         if self.__extra_mask is not None:
             new[self.__extra_mask == False] = np.nan
 
