@@ -10,11 +10,13 @@ import os
 from pathlib import Path
 from datetime import datetime
 import geopandas as gpd
+from src_OBS.obs_auxiliary import aux_GRACE_SH_monthly
 
 
 class GRACE_preparation:
 
-    def __init__(self, basin_name='MDB', shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp'):
+    def __init__(self, basin_name='MDB',
+                 shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp'):
         self.basin_name = basin_name
         self.__shp_path = shp_path
         self.configure_global_land_ocean_mask()
@@ -33,7 +35,7 @@ class GRACE_preparation:
         bs2 = basin_shp_process(res=1, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
             shp_path=self.__shp_path, issave=True)
 
-        '''get the area information of each subbasin''' ##TODO: a raw estimation of the area
+        '''get the area information of each subbasin'''  ##TODO: a raw estimation of the area
         self._sub_basin_area = gpd.read_file(self.__shp_path).area.values
         pass
 
@@ -55,6 +57,9 @@ class GRACE_preparation:
         mask: lon: -180-->180, lat: 90--->-90
         tws: lon: -180-->180, lat: -90--->90
         """
+        '''get a complete time list for all dataset'''
+        self._aux = aux_GRACE_SH_monthly().setTimeReference(month_begin=month_begin, month_end=month_end,
+                                                            dir_in=dir_in)
 
         '''load basin mask'''
         res = 0.5
@@ -66,7 +71,7 @@ class GRACE_preparation:
         for i in range(1, basins_num + 1):
             key = 'sub_basin_%d' % i
             '''flip upside down to be compatible with the TWS dataset'''
-            mask[key] = np.flipud(mf[key][:]*self._05deg_mask)
+            mask[key] = np.flipud(mf[key][:] * self._05deg_mask)
 
         '''load latitude'''
         err = res / 10
@@ -88,7 +93,7 @@ class GRACE_preparation:
             TWS['sub_basin_%d' % i] = []
             pass
 
-        time_epoch = []
+        # time_epoch = []
         for month in monthlist:
 
             '''search for the file'''
@@ -104,11 +109,12 @@ class GRACE_preparation:
             print(tn)
             fn = directory / tn
 
-            date = tn.split('.')[0]
-            if len(date.split('-')) == 2:
-                time_epoch.append(date + '-15')  #TODO: assumed to be the mid day of the month but should be checked later
-            else:
-                time_epoch.append(date)
+            # date = tn.split('.')[0]
+            # if len(date.split('-')) == 2:
+            #     time_epoch.append(
+            #         date + '-15')  # TODO: assumed to be the mid day of the month but should be checked later
+            # else:
+            #     time_epoch.append(date)
 
             tws_one_month = h5py.File(fn, 'r')['data'][:]
 
@@ -131,15 +137,18 @@ class GRACE_preparation:
             hm.create_dataset(key, data=np.array(TWS[key]))
 
         dt = h5py.special_dtype(vlen=str)
-        hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
+        ref = self._aux.getTimeReference()['time_epoch']
+        # assert len(time_epoch) == len(ref)  # make sure all information is consistent.
+        hm.create_dataset('time_epoch', data=ref, dtype=dt)
         hm.create_dataset('sub_basin_area', data=self._sub_basin_area)
         hm.close()
-        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
+        print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def basin_COV(self, month_begin='2002-04', month_end='2002-04',
                   dir_in='/media/user/My Book/Fan/GRACE/DDK3_timeseries',
-                  dir_out='/media/user/My Book/Fan/GRACE/output'):
+                  dir_out='/media/user/My Book/Fan/GRACE/output',
+                  is_diagonal=False):
         """
         COV of subbasins, monthly time-series.
         Be careful to deal with mask and TWS.
@@ -157,7 +166,7 @@ class GRACE_preparation:
         for i in range(1, basins_num + 1):
             key = 'sub_basin_%d' % i
             '''flip upside down to be compatible with the TWS dataset'''
-            mask[key] = np.flipud(mf[key][:]*self._1deg_mask)
+            mask[key] = np.flipud(mf[key][:] * self._1deg_mask)
 
         '''load latitude'''
         err = res / 10
@@ -173,10 +182,14 @@ class GRACE_preparation:
         monthlist = GeoMathKit.monthListByMonth(begin=month_begin, end=month_end)
 
         COV = []
-        time_epoch = []
+        # time_epoch = []
+
+        '''acquire time reference: cov must be consistent wih the time reference of EWH'''
+        time_epochs_ref = self._aux.getTimeReference()['time_epoch']
 
         print()
         print('Start to pre-process GRACE to obtain COV over places of interest...')
+        m_index = -1
         for month in monthlist:
 
             '''search for the file'''
@@ -187,10 +200,16 @@ class GRACE_preparation:
                     tn = filename
 
             if tn is None:
+                # print('Not found: %s' % fn)
                 continue
 
+            '''to ensure consistence with the EWH'''
+            m_index += 1
+            assert fn == datetime.strptime(time_epochs_ref[m_index], '%Y-%m-%d').strftime('%Y-%m'), '1: %s; 2: %s' % (
+                fn, datetime.strptime(time_epochs_ref[m_index], '%Y-%m-%d').strftime('%Y-%m'))
+
             print(tn)
-            time_epoch.append(fn)
+            # time_epoch.append(fn)
             fn = directory / tn
 
             tws_one_month = np.load(str(fn))
@@ -207,6 +226,8 @@ class GRACE_preparation:
 
             '''transform into mm'''
             cov = np.cov(np.array(vv) * 1000)
+            if is_diagonal:
+                cov = np.diag(np.diag(cov))
             COV.append(cov)
             pass
 
@@ -216,10 +237,10 @@ class GRACE_preparation:
         hm.create_dataset('data', data=np.array(COV))
 
         dt = h5py.special_dtype(vlen=str)
-        hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
+        hm.create_dataset('time_epoch', data=self._aux.getTimeReference()['time_epoch'], dtype=dt)
 
         hm.close()
-        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
+        print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
 
@@ -232,13 +253,17 @@ class GRACE_preparation:
         tws: lon: -180-->180, lat: -90--->90
         """
 
+        '''get a complete time list for all dataset'''
+        aux = aux_GRACE_SH_monthly().setTimeReference(month_begin=month_begin, month_end=month_end,
+                                                      dir_in=dir_in)
+
         '''load mask'''
         res = 0.5
         mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
 
         basins_num = len(list(mf.keys())) - 1
 
-        mask = mf['basin'][:]*self._05deg_mask
+        mask = mf['basin'][:] * self._05deg_mask
 
         '''calculate the basin averaged TWS, monthly'''
         directory = Path(dir_in)
@@ -249,7 +274,7 @@ class GRACE_preparation:
         print()
         print('Start to pre-process GRACE to obtain gridded TWS over places of interest...')
 
-        time_epoch = []
+        # time_epoch = []
         for month in monthlist:
 
             '''search for the file'''
@@ -264,7 +289,7 @@ class GRACE_preparation:
 
             print(tn)
             fn = directory / tn
-            time_epoch.append(tn.split('.')[0])
+            # time_epoch.append(tn.split('.')[0])
 
             tws_one_month = h5py.File(fn, 'r')['data'][:]
 
@@ -283,10 +308,10 @@ class GRACE_preparation:
         hm.create_dataset(name='tws', data=np.array(TWS))
 
         dt = h5py.special_dtype(vlen=str)
-        hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
+        hm.create_dataset('time_epoch', data=aux.getTimeReference()['time_epoch'], dtype=dt)
 
         hm.close()
-        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
+        print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
 
@@ -380,7 +405,8 @@ class GRACE_global_preparation:
             fn = directory / tn
             date = tn.split('.')[0]
             if len(date.split('-')) == 2:
-                time_epoch.append(date + '-15')  #TODO: assumed to be the mid day of the month but should be checked later
+                time_epoch.append(
+                    date + '-15')  # TODO: assumed to be the mid day of the month but should be checked later
             else:
                 time_epoch.append(date)
 
@@ -413,7 +439,7 @@ class GRACE_global_preparation:
 
             hm.close()
 
-        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def basin_COV(self, month_begin='2002-04', month_end='2002-04',
@@ -489,7 +515,7 @@ class GRACE_global_preparation:
             hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
             hm.close()
 
-        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def grid_TWS(self, month_begin='2002-04', month_end='2002-04',
@@ -566,7 +592,7 @@ class GRACE_global_preparation:
             hm.create_dataset('time_epoch', data=time_epoch, dtype=dt)
             hm.close()
 
-        print('Finished: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
 
@@ -600,7 +626,8 @@ def demo2():
 
     begin = '2002-04'
     end = '2023-05'
-    gr = GRACE_global_preparation().configure_global_mask(fn='/media/user/My Book/Fan/GRACE/basin_selection/GlobalLandMask.hdf5')
+    gr = GRACE_global_preparation().configure_global_mask(
+        fn='/media/user/My Book/Fan/GRACE/basin_selection/GlobalLandMask.hdf5')
     gr.configure_global_shp()
     gr.basin_TWS(month_begin=begin, month_end=end, dir_in='/media/user/My Book/Fan/GRACE/ewh',
                  dir_out='/media/user/My Book/Fan/GRACE/output')
@@ -625,8 +652,9 @@ def demo3():
     GR.basin_TWS(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/My Book/Fan/GRACE/ewh',
                  dir_out='/media/user/My Book/Fan/GRACE_spatial_resolution_study/DRB')
     # GR.grid_TWS(month_begin='2005-01', month_end='2023-05')
-    GR.basin_COV(month_begin='2002-04', month_end='2023-05', dir_in='/media/user/My Book/Fan/GRACE_spatial_resolution_study/degree_60/sample/DDK3/',
-                  dir_out='/media/user/My Book/Fan/GRACE_spatial_resolution_study/DRB')
+    GR.basin_COV(month_begin='2002-04', month_end='2023-05',
+                 dir_in='/media/user/My Book/Fan/GRACE_spatial_resolution_study/degree_60/sample/DDK3/',
+                 dir_out='/media/user/My Book/Fan/GRACE_spatial_resolution_study/DRB')
 
     pass
 

@@ -8,6 +8,7 @@ from src_GHM.GeoMathKit import GeoMathKit
 import os
 from pathlib import Path
 from datetime import datetime
+from src_OBS.obs_auxiliary import obs_auxiliary
 
 
 class GRACE_perturbed_obs:
@@ -16,6 +17,7 @@ class GRACE_perturbed_obs:
         self.ens = ens
         self.basin_name = basin_name
         self.TWS = None
+        self.obs_aux = None
         pass
 
     def configure_dir(self, input_dir='/media/user/My Book/Fan/src_OBS/output',
@@ -25,9 +27,9 @@ class GRACE_perturbed_obs:
         self._obs_dir = Path(obs_dir)
         return self
 
-    def configure_time(self, month_begin='2002-04', month_end='2002-04'):
-        self.__monthlist = GeoMathKit.monthListByMonth(begin=month_begin, end=month_end)
-
+    def configure_obs_aux(self, obs_aux: obs_auxiliary):
+        '''get a complete time list for all ESA simulation dataset'''
+        self.obs_aux = obs_aux
         return self
 
     def perturb_TWS(self):
@@ -42,61 +44,74 @@ class GRACE_perturbed_obs:
         cov_fn = in_dir / ('%s_cov.hdf5' % self.basin_name)
         C_h5fn = h5py.File(cov_fn, 'r')
 
-        basin_num = len(list(S_h5fn.keys())) - 1
+        # basin_num = len(list(S_h5fn.keys())) - 1
+        basin_num = np.shape(S_h5fn['sub_basin_area'][:])[0]
+
         self.TWS = {}
 
-        time_epochs = list(S_h5fn['time_epoch'][:].astype('str'))
+        time_epochs_1 = list(S_h5fn['time_epoch'][:].astype('str'))
         time_epochs_2 = list(C_h5fn['time_epoch'][:].astype('str'))
 
         TWS = []
         un_TWS = []
         COV = []
         new_time = []
+        time_duration = []
         print('')
         print('Start to perturb GRACE to obtain appropriate observations...')
-        for month in self.__monthlist:
 
-            '''to confirm this month exists in the list'''
-            index = -1
-            for tt in time_epochs:
-                if month.strftime('%Y-%m') in tt:
-                    print(month.strftime('%Y-%m'))
-                    index = time_epochs.index(tt)
-            if index < 0:
+        Time_list = self.obs_aux.getTimeReference()['time_epoch']
+        Time_duration_list = self.obs_aux.getTimeReference()['duration']
+
+        '''get covariance matrix: this is static for ESA simulation data'''
+        if len(np.shape(C_h5fn['data'])) == 2:
+            '''this indicates a static cov'''
+            cov = C_h5fn['data']
+            isStaticCov= True
+        else:
+            isStaticCov = False
+
+        for count, time in enumerate(Time_list):
+            '''check if this time exists'''
+            if time not in time_epochs_1:
                 continue
-
-            '''to confirm if cov is consistent with signal. '''
-            assert month.strftime('%Y-%m') in time_epochs_2[
-                index], 'src_OBS signal is likely incompatible with its cov!'
-
-            '''obtain the cov of this month'''
-            cov = C_h5fn['data'][index]
+            '''confirm data consistency'''
+            index = time_epochs_1.index(time)
+            assert time_epochs_1[index] == time_epochs_2[index] == time
 
             '''obtain the TWS of each basin'''
             a = []
+            # print(basin_num)
             for id in range(1, basin_num + 1):
                 a.append(S_h5fn['sub_basin_%d' % id][index])
-
             a = np.array(a)
+
+            '''obtain the COV'''
+            if isStaticCov:
+                mcov = cov
+            else:
+                mcov = C_h5fn['data'][index]
 
             '''perturb the signal'''
             if basin_num == 1:
                 '''in case there is only one subbasin'''
-                perturbed_TWS = np.random.normal(a, np.sqrt(cov), self.ens)[:, None]
+                perturbed_TWS = np.random.normal(a, np.sqrt(mcov), self.ens)[:, None]
             else:
-                perturbed_TWS = np.random.multivariate_normal(a, cov, self.ens)
+                perturbed_TWS = np.random.multivariate_normal(a, mcov, self.ens)
 
-            new_time.append(time_epochs[index])
-            COV.append(cov)
+            new_time.append(time)
+            COV.append(mcov)
             un_TWS.append(a)
             TWS.append(perturbed_TWS)
-
+            time_duration.append(Time_duration_list[count])
+            # print(Time_duration_list[count])
             pass
 
         self.TWS['time'] = new_time
         self.TWS['cov'] = COV
         self.TWS['unperturbation'] = np.array(un_TWS)
         self.TWS['ens'] = np.array(TWS)
+        self.TWS['duration'] = time_duration
 
         print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         return self
@@ -152,20 +167,114 @@ class GRACE_perturbed_obs:
         pass
 
 
-def demo2():
+def demo3():
+    from src_OBS.obs_auxiliary import aux_ESAsing_5daily
     # ob = GRACE_obs(ens=30, basin_name='MDB')
-    ob = GRACE_perturbed_obs(ens=30, basin_name='Brahmaputra')
-    ob.configure_dir(input_dir='/home/user/test/output', obs_dir='/home/user/test/obs'). \
-        configure_time(month_begin='2002-04', month_end='2023-09')
-
+    ob = GRACE_perturbed_obs(ens=30, basin_name='Brahmaputra3subbasins')
+    ob.configure_dir(input_dir='/media/user/My Book/Fan/ESA_SING/TestRes',
+                     obs_dir='/media/user/My Book/Fan/ESA_SING/TestRes/obs')
+    day_begin = '2003-09-01'
+    day_end = '2006-12-31'
+    obs_aux = aux_ESAsing_5daily().setTimeReference(day_begin=day_begin, day_end=day_end,
+                                                    dir_in='/media/user/My Book/Fan/ESA_SING/ESA_5daily')
+    ob.configure_obs_aux(obs_aux=obs_aux)
+    # ob.perturb_TWS().save()
     ob.perturb_TWS().save()
     pass
+
+
+def demo4():
+    from src_OBS.obs_auxiliary import aux_ESAsing_5daily
+    """
+    It is assumed that the date increases at daily basis.
+    This tool helps to decide when and how the update takes place
+    """
+    day_begin = '2003-09-01'
+    day_end = '2006-12-31'
+    obs_aux12 = aux_ESAsing_5daily().setTimeReference(day_begin=day_begin, day_end=day_end,
+                                                      dir_in='/media/user/My Book/Fan/ESA_SING/ESA_5daily')
+
+    '''configure time period'''
+    daylist = GeoMathKit.dayListByDay(begin='2004-01-01',
+                                      end='2005-01-01')
+
+    '''configure observation reference'''
+    obs_aux = obs_aux12.getTimeReference().copy()
+    duration = obs_aux['duration']
+    data_first = []
+    data_end = []
+    for data in duration:
+        a, b = data.split('_')
+        data_first.append(datetime.strptime(a, "%Y-%m-%d"))
+        data_end.append(datetime.strptime(b, "%Y-%m-%d"))
+        pass
+
+    ''''''
+    NewRecord = []
+    KeepRecord = []
+    AssimilationRecord = []
+    AssimilationInfo = []
+
+    newRecord = False
+    keepRecord = False
+    assimilation = False
+
+    nod = 0
+    dates_in_list = []
+
+    '''find the match of the first data set'''
+    data_index = None
+    for day in daylist:
+        if day in data_first:
+            data_index = data_first.index(day)
+            break
+
+    assert data_index is not None
+    current_index = data_index
+
+    '''start loop'''
+    for day in daylist:
+        if day == data_first[data_index]:
+            newRecord = True
+            keepRecord = True
+
+            current_index = data_index
+            data_index += 1
+            nod = 1
+            dates_in_list = [day]
+
+        else:
+            newRecord = False
+
+            if data_end[current_index] >= day > data_first[current_index]:
+                keepRecord = True
+                nod += 1
+                dates_in_list.append(day)
+            else:
+                keepRecord = False
+
+        if day == data_end[current_index]:
+            assimilation = True
+            time_epoch = obs_aux['time_epoch'][current_index]
+            number_of_days = nod
+            AssimilationInfo.append([time_epoch, dates_in_list, current_index])
+        else:
+            assimilation = False
+
+        NewRecord.append(newRecord)
+        KeepRecord.append(keepRecord)
+        AssimilationRecord.append(assimilation)
+
+    return {'NewRecord': NewRecord,
+            'KeepRecord': KeepRecord,
+            'AssimilationRecord': AssimilationRecord,
+            'AssimilationInfo': AssimilationInfo}
 
 
 def visualization():
     import pygmt
     from datetime import datetime
-    fn = '/home/user/test/obs/MDB_obs_GRACE.hdf5'
+    fn = '/media/user/My Book/Fan/ESA_SING/TestRes/obs/Brahmaputra3subbasins_obs_GRACE.hdf5'
     # fn = '/home/user/test/obs/Brahmaputra_obs_GRACE.hdf5'
 
     ens_all = 30
@@ -223,5 +332,5 @@ def visualization():
 
 
 if __name__ == '__main__':
-    # demo2()
+    # demo3()
     visualization()

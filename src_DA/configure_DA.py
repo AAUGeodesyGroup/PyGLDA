@@ -88,7 +88,9 @@ class config_DA:
                 'EWH_grid_dir': '/media/user/My Book/Fan/src_OBS/ewh',
                 'cov_dir': '/media/user/My Book/Fan/src_OBS/DDK3_timeseries',
                 'preprocess_res': '/media/user/My Book/Fan/src_OBS/output',
-                'OL_mean': '/media/user/My Book/Fan/src_OBS/OLmean'
+                'OL_mean': '/media/user/My Book/Fan/src_OBS/OLmean',
+                'aux_for_time_epochs':'/media/user/My Book/Fan/src_OBS/aux',
+                'kind': 'SH_monthly'
             }
 
     class config_method:

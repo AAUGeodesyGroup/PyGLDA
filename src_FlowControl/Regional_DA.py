@@ -5,7 +5,7 @@ sys.path.append('../')
 from pathlib import Path
 from datetime import datetime, timedelta
 # from src_FlowControl.DA_GRACE import DA_GRACE as DA_GRACE
-from src_FlowControl.DA_GRACE import DA_ESA_SING_5daily as DA_GRACE
+from src_FlowControl.DA_GRACE import DA_GRACE_flexibile as DA_GRACE
 
 res_output = '/work/data_for_w3/w3ra/res'
 # figure_output = '/media/user/My Book/Fan/W3RA_data/figure'
@@ -55,7 +55,9 @@ class RDA:
     isSet = False
 
     @staticmethod
-    def prepare_GRACE():
+    def prepare_GRACE(dir_in='/media/user/My Book/Fan/GRACE/ewh',
+                      cov_dir_in='/media/user/My Book/Fan/GRACE/ewh',
+                      dir_out='/media/user/My Book/Fan/GRACE/output', **kwargs):
 
         """preparation for GRACE and forcing fields for global tiles"""
         from src_OBS.prepare_GRACE import GRACE_preparation
@@ -65,9 +67,32 @@ class RDA:
 
         t1 = datetime.strptime(RDA.warm_begin_time, '%Y-%m-%d').strftime('%Y-%m')
         t2 = datetime.strptime(RDA.warm_end_time, '%Y-%m-%d').strftime('%Y-%m')
-        GR.basin_TWS(month_begin=t1, month_end=t2)
-        GR.grid_TWS(month_begin=t1, month_end=t2)
-        GR.basin_COV(month_begin=t1, month_end=t2)  # which spends much time.
+        GR.basin_TWS(month_begin=t1, month_end=t2, dir_in=dir_in, dir_out=dir_out)
+        GR.grid_TWS(month_begin=t1, month_end=t2, dir_in=dir_in, dir_out=dir_out)
+        GR.basin_COV(month_begin=t1, month_end=t2, dir_in=cov_dir_in, dir_out=dir_out,
+                     is_diagonal=kwargs['is_diagonal'])
+        # which spends much time.
+
+        pass
+
+    @staticmethod
+    def prepare_GRACE_Mascon(dir_in='/media/user/My Book/Fan/GRACE/ewh',
+                             cov_dir_in='/media/user/My Book/Fan/GRACE/ewh',
+                             dir_out='/media/user/My Book/Fan/GRACE/output', **kwargs):
+
+        """preparation for GRACE and forcing fields for global tiles"""
+        from src_OBS.prepare_GRACE_mascon import GRACE_CSR_mascon
+        GR = GRACE_CSR_mascon(basin_name=RDA.basin,
+                              shp_path=RDA.shp_path)
+        GR.generate_mask()
+
+        t1 = datetime.strptime(RDA.warm_begin_time, '%Y-%m-%d').strftime('%Y-%m')
+        t2 = datetime.strptime(RDA.warm_end_time, '%Y-%m-%d').strftime('%Y-%m')
+        GR.basin_TWS(month_begin=t1, month_end=t2, dir_in=dir_in, dir_out=dir_out)
+        GR.grid_TWS(month_begin=t1, month_end=t2, dir_in=dir_in, dir_out=dir_out)
+        GR.basin_COV(month_begin=t1, month_end=t2, dir_in=cov_dir_in, dir_out=dir_out,
+                     is_diagonal=kwargs['is_diagonal'])
+        # which spends much time.
 
         pass
 
@@ -241,7 +266,6 @@ class RDA:
         comm.barrier()
 
         if rank == 0:
-
             demo.post_processing(file_postfix='OL', save_dir=RDA.res_output)
 
             '''change the time to get prepared for DA experiment'''

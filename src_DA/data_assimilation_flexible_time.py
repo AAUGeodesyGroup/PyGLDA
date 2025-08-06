@@ -129,7 +129,7 @@ class DataAssimilation:
             newRecord = self._obs_helper['NewRecord'][count]
             keepRecord = self._obs_helper['KeepRecord'][count]
             assimilationRecord = self._obs_helper['AssimilationRecord'][count]
-
+            # print(newRecord, keepRecord, assimilationRecord)
             if newRecord:
                 """create a new vector to prepare for assimilation of next time"""
                 historic_mean_states = None
@@ -275,12 +275,16 @@ class DataAssimilation:
         '''start loop'''
         for day in daylist:
 
-            if data_index == Nlen:
+            if day > data_end[-1]:
                 '''this means that no observation is available'''
                 NewRecord.append(False)
                 KeepRecord.append(False)
                 AssimilationRecord.append(False)
                 continue
+
+            if data_index == Nlen:
+                '''this is to avoid the mistake of the last observation'''
+                data_first.append(-1)
 
             if day == data_first[data_index]:
                 newRecord = True

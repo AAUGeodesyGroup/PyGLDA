@@ -4,48 +4,32 @@ import sys
 sys.path.append('../')
 from pathlib import Path
 from datetime import datetime, timedelta
-from src_FlowControl.Regional_DA import RDA, res_output, figure_output
+from src_FlowControl.Regional_DA import RDA
+import src_FlowControl.Regional_DA as mm
 
-'''This is a demo to show the complete process of DA. In this demo, we select three examples as below: 1. Regional 
-basin-scale (three major sub-basins are defined) DA for Danube river basin. More configuration on this experiment 
-refers to our paper. 2. Regional grid-scale DA for Danube river basin. More configuration on this experiment refers 
-to our paper. 3. Global grid-scale DA, but only one box is shown here as example.'''
+'''This must be performed locally and ensure a successful installation on both windows and linux system.'''
+'''This is a DA exercise for Summer School, on 28th August, 2025, Aalborg, Denmark'''
 
-'''To run DA, a parallel call of this script has to be implemented, which is therefore meant to run on the cluster. 
+'''To run DA, a parallel call of this script has to be implemented, which is therefore originally meant to run on the cluster. 
 We make use of MPI to do the parallelization, so please type the command to execute the code in the terminal as below 
 (where the number 31= ensemble size+1)'''
 '''mpiexec -n 31 python -u demo_3.py'''
 
 '''Define where to store the key results of DA'''
-res_output = '/work/data_for_w3/w3ra/res'
-figure_output = '/work/data_for_w3/w3ra/figure'
+mm.res_output = '/media/user/My Book/Fan/SummerSchool/External Data/w3ra/res'
+mm.figure_output = '/media/user/My Book/Fan/SummerSchool/External Data/w3ra/figure'
+
+'''Define the main path of external data'''
+external_data_path = '/media/user/My Book/Fan/SummerSchool/External Data'
 
 '''Define where to load the necessary setting files'''
-# RDA.setting_dir = '../settings/MAGIC'
-# RDA.setting_dir = '../settings/GRACEC'
-RDA.setting_dir = '../settings/'
+RDA.setting_dir = '../settings/SummerSchool/Exp1'
 
 '''Define the size of ensemble to run for DA'''
-RDA.ens = 30
+RDA.ens = 10
 
 '''Define the name of your case study'''
-RDA.case = 'NGGM1E16_B'
-# RDA.case = 'NGGM1E16_1degree'
-# RDA.case = 'NGGM1E16_2degree'
-# RDA.case = 'NGGM1E16_3degree'
-# RDA.case = 'NGGM1E16_4degree'
-
-# RDA.case = 'MAGIC1E16'
-# RDA.case = 'MAGIC1E16_1degree'
-# RDA.case = 'MAGIC1E16_2degree'
-# RDA.case = 'MAGIC1E16_3degree'
-# RDA.case = 'MAGIC1E16_4degree'
-
-# RDA.case = 'GRACEC1E16'
-# RDA.case = 'GRACEC1E16_1degree'
-# RDA.case = 'GRACEC1E16_2degree'
-# RDA.case = 'GRACEC1E16_3degree'
-# RDA.case = 'GRACEC1E16_4degree'
+RDA.case = 'Exp1'
 
 '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
 
@@ -67,16 +51,16 @@ RDA.box = [50.5, 42, 8.5, 29.5]
 '''Because the size limit of repository, a limited sample data is available to allow only one-year DA'''
 
 '''for spin-up'''
-RDA.cold_begin_time = '2000-01-01'
-RDA.cold_end_time = '2002-08-31'
+RDA.cold_begin_time = '2005-01-01'
+RDA.cold_end_time = '2005-01-31'
 
 '''for open-loop'''
-RDA.warm_begin_time = '2002-09-01'
-RDA.warm_end_time = '2006-12-31'
+RDA.warm_begin_time = '2005-02-01'
+RDA.warm_end_time = '2005-12-31'
 
 '''for data assimilation'''
-RDA.resume_begin_time = '2003-09-01'
-RDA.resume_end_time = '2006-12-31'
+RDA.resume_begin_time = '2005-04-01'
+RDA.resume_end_time = '2005-12-31'
 
 RDA.isSet = False
 
@@ -120,6 +104,38 @@ def demo_complete_DA(skipModelPerturb=False, skipObsPerturb=False, skipSR=False)
     pass
 
 
+def demo_OL(skipModelPerturb=False, skipSR=False):
+    """
+    This is a complete processing chain to deal with global data assimilation for each tile.
+    """
+    from mpi4py import MPI
+
+    '''with MPI to parallelize the computation'''
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+
+    '''basic configuration of the tile of interest'''
+    comm.barrier()
+    if rank == 0:
+        RDA.set_box()  # to avoid conflict between threads
+    comm.barrier()
+    RDA.set_box()
+
+    '''single_run (cold, warmup) to obtain reliable initial states, 10 years running for assuring accuracy'''
+    if rank == 0:
+        if not skipSR:
+            RDA.single_run()
+            pass
+
+    comm.barrier()
+
+    '''open loop running to obtain ensemble of initializations, and more importantly to obtain temporal mean to be 
+    removed from the GRACE observations'''
+    RDA.OL_run(skip_perturbation=skipModelPerturb)
+
+    pass
+
+
 def demo_only_DA(skip_obs_perturbation=True):
     """
     Only DA is performed, which assumes that SR and OL have been done already.
@@ -136,59 +152,20 @@ def demo_only_DA(skip_obs_perturbation=True):
     pass
 
 
-def demo_prepare_ESA_SING_5daily(isDiagonal=False, **kwargs):
-    """preparation for GRACE and forcing fields for global tiles"""
-    from src_OBS.prepare_ESA_SING import ESA_SING_5daily
-    ''''''
+def demo_prepare_GRACE(isDiagonal=False):
+    dir_in = Path(external_data_path) / 'GRACE' / 'SaGEA' / 'signal_DDK3'
+    cov_dir_in = Path(external_data_path) / 'GRACE' / 'SaGEA' / 'sample_DDK3'
+    dir_out = Path(external_data_path) / 'GRACE' / 'output'
+    RDA.prepare_GRACE(dir_in=dir_in, dir_out=dir_out, cov_dir_in=cov_dir_in, is_diagonal=isDiagonal)
 
-    es = ESA_SING_5daily(basin_name=RDA.basin,
-                         shp_path=RDA.shp_path)
+    pass
 
-    # ['GRACE-C-like', 'NGGM', 'MAGIC']
-    # ['1e+14', '1e+15', '1e+16', '1e+17', '1e+18', '1e+19']
-    # ['Grid_1', 'Grid_2', 'Grid_3', 'Grid_4', 'subbasins_3']
 
-    filter, mission, grid = kwargs['filter'], kwargs['mission'], kwargs['grid']
-    es.set_extra_info(filter=filter, mission=mission, grid_def=grid)
-
-    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like')
-    # es.set_extra_info(filter='1e+16', mission='MAGIC')
-
-    # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='Grid_1')
-    # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='Grid_2')
-    # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='Grid_3')
-    # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='Grid_4')
-    # es.set_extra_info(filter='1e+16', mission='NGGM', grid_def='subbasins_3')
-
-    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='Grid_1')
-    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='Grid_2')
-    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='Grid_3')
-    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='Grid_4')
-    # es.set_extra_info(filter='1e+16', mission='MAGIC', grid_def='subbasins_3')
-
-    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='Grid_1')
-    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='Grid_2')
-    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='Grid_3')
-    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='Grid_4')
-    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like', grid_def='subbasins_3')
-
-    es.generate_mask()
-    t1 = RDA.warm_begin_time
-    t2 = RDA.warm_end_time
-
-    # es.basin_TWS(day_begin=t1, day_end=t2, dir_in='/media/user/My Book/Fan/ESA_SING/Brahmaputra',
-    #              dir_out='/media/user/My Book/Fan/ESA_SING/TestRes')
-    # es.basin_COV(day_begin=t1, day_end=t2, isDiagonal=isDiagonal, dir_in='/media/user/My Book/Fan/ESA_SING/Brahmaputra',
-    #              dir_out='/media/user/My Book/Fan/ESA_SING/TestRes')
-    # es.grid_TWS(day_begin=t1, day_end=t2, dir_in='/media/user/My Book/Fan/ESA_SING/globe/Global_EWHA_all',
-    #             dir_out='/media/user/My Book/Fan/ESA_SING/TestRes')
-
-    es.basin_TWS(day_begin=t1, day_end=t2, dir_in='/media/user/My Book/Fan/ESA_SING/Danube',
-                 dir_out='/media/user/My Book/Fan/ESA_SING/TestRes')
-    es.basin_COV(day_begin=t1, day_end=t2, isDiagonal=isDiagonal, dir_in='/media/user/My Book/Fan/ESA_SING/Danube',
-                 dir_out='/media/user/My Book/Fan/ESA_SING/TestRes')
-    es.grid_TWS(day_begin=t1, day_end=t2, dir_in='/media/user/My Book/Fan/ESA_SING/globe/Global_EWHA_all',
-                dir_out='/media/user/My Book/Fan/ESA_SING/TestRes')
+def demo_prepare_GRACE_Mascon(isDiagonal=False):
+    dir_in = Path(external_data_path) / 'GRACE' / 'SaGEA' / 'signal_Mascon'
+    cov_dir_in = Path(external_data_path) / 'GRACE' / 'SaGEA' / 'sample_DDK3'
+    dir_out = Path(external_data_path) / 'GRACE' / 'output'
+    RDA.prepare_GRACE_Mascon(dir_in=dir_in, dir_out=dir_out, cov_dir_in=cov_dir_in, is_diagonal=isDiagonal)
 
     pass
 
@@ -335,11 +312,11 @@ def demo_batch_run():
 
                 comm.barrier()
                 demo_complete_DA(skipModelPerturb=True, skipObsPerturb=False, skipSR=False)  # OL and DA
-                RDA.isSet = False # to make a new folder for the analysis results
+                RDA.isSet = False  # to make a new folder for the analysis results
     pass
 
-def demo_batch_visualization():
 
+def demo_batch_visualization():
     missions = ['GRACEC', 'NGGM', 'MAGIC']
     filters = ['1e14', '1e15', '1e16', '1e17', '1e18', '1e19']
     grids = ['3subbasins', '1degree', '2degree', '3degree', '4degree']
@@ -368,13 +345,67 @@ def demo_batch_visualization():
                 demo_DA_visualization()
                 save_data()
                 '''reset'''
-                RDA.isSet = False # to make a new folder for the analysis results
+                RDA.isSet = False  # to make a new folder for the analysis results
     pass
+
+
+def exp1():
+    '''Define where to load the necessary setting files'''
+    RDA.setting_dir = '../settings/SummerSchool/Exp1'
+
+    '''Define the size of ensemble to run for DA'''
+    RDA.ens = 10
+
+    '''Define the name of your case study'''
+    RDA.case = 'Exp1'
+
+    '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
+
+    RDA.basin = 'Brahmaputra3subbasins'
+    # RDA.basin = 'Brahmaputra1degree'
+    # RDA.basin = 'Brahmaputra2degree'
+    # RDA.basin = 'Brahmaputra3degree'
+    # RDA.basin = 'Brahmaputra4degree'
+
+    RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
+
+    demo_prepare_GRACE(isDiagonal=False)
+    # RDA.prepare_Forcing()
+    #
+    # RDA.single_run(skip_croping_data=True, skip_signal_extraction=True)  # only SR
+    # demo_OL(skipModelPerturb=False, skipSR=True)
+    # demo_only_DA(skip_obs_perturbation=False)
+
+    # demo_complete_DA(skipModelPerturb=True, skipObsPerturb=False, skipSR=False)
+
+
+def exp2():
+    '''Define where to load the necessary setting files'''
+    RDA.setting_dir = '../settings/SummerSchool/Exp2'
+
+    '''Define the size of ensemble to run for DA'''
+    RDA.ens = 10
+
+    '''Define the name of your case study'''
+    RDA.case = 'Exp2'
+
+    '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
+    RDA.basin = 'Brahmaputra3subbasins'
+    RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
+
+    # demo_prepare_GRACE_Mascon(isDiagonal=False)
+    # RDA.prepare_Forcing()
+    #
+    # RDA.single_run(skip_croping_data=True, skip_signal_extraction=True)  # only SR
+    # demo_OL(skipModelPerturb=False, skipSR=True)
+    # demo_only_DA(skip_obs_perturbation=False)
+    demo_DA_visualization()
+    # demo_complete_DA(skipModelPerturb=True, skipObsPerturb=False, skipSR=False)
 
 
 if __name__ == '__main__':
     '''single threads for preparing GRACE data: local'''
-    # demo_prepare_ESA_SING_5daily_loop()
+    # demo_prepare_GRACE(isDiagonal=False)
 
     '''single thread for preparing model data: cluster'''
     # customize(mission='MAGIC', filter='1e19', grid='3subbasins', region='Brahmaputra')
@@ -387,11 +418,16 @@ if __name__ == '__main__':
     # customize(mission='NGGM', filter='1e14', grid='2degree', region='Danube')
     # demo_complete_DA(skipModelPerturb=True, skipObsPerturb=False, skipSR=False)  # OL and DA
     # demo_only_DA(skip_obs_perturbation=False)  # only DA
+    # demo_OL(skipModelPerturb=False, skipSR=True)
 
     '''batch run'''
     # demo_batch_run()
-    demo_batch_visualization()
+    # demo_batch_visualization()
 
     '''single thread for plotting'''
     # demo_DA_visualization()
     # save_data()
+
+    # exp1()
+
+    exp2()

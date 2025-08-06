@@ -40,3 +40,14 @@ def get_hdf5_structure(filepath):
             break
 
     return '\n'.join(lines)
+
+def view_h5(filepath):
+    rr= h5py.File(name=filepath, mode='r')
+    pass
+
+
+if __name__ == '__main__':
+    filepath='/media/user/My Book/Fan/SummerSchool/External Data/GRACE/output/Brahmaputra3subbasins_signal.hdf5'
+    # a=view_h5(filepath=filepath)
+    print(get_hdf5_structure(filepath=filepath))
+    pass

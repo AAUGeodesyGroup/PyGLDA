@@ -164,7 +164,7 @@ class aux_GRACE_SH_monthly(obs_auxiliary):
             if tn is None:
                 continue
 
-            print(tn)
+            # print(tn)
             fn = directory / tn
 
             date = tn.split('.')[0]
@@ -225,8 +225,10 @@ class aux_ESAsing_5daily(obs_auxiliary):
 
 
 def demo1():
-    aux = aux_ESAsing_5daily()
-    aux.setTimeReference().setLayers().save_H5(basin_name='MDB')
+    # aux = aux_ESAsing_5daily()
+    # aux = aux_GRACE_SH_monthly()
+    aux = aux_GRACE_mascon_monthly()
+    aux.setTimeReference(dir_in='/media/user/My Book/Fan/SummerSchool/External Data/GRACE/SaGEA/signal_Mascon')
 
     pass
 

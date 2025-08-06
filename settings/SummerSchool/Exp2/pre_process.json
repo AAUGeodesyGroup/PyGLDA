@@ -1,0 +1,9 @@
+{
+    "date_begin": "2005-02",
+    "date_end": "2005-12",
+    "out_dir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input",
+    "mask_dir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/global/pyW3RA/mask",
+    "forcing_dir": "/media/user/My Book/Fan/SummerSchool/External Data/ERA5/Raw_W3",
+    "clim_dir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/global/pyW3RA/clim",
+    "par_dir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/global/pyW3RA/par"
+}

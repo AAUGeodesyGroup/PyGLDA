@@ -4,7 +4,7 @@ from pathlib import Path
 from src_FlowControl.OpenLoop import OpenLoop
 from src_OBS.prepare_GRACE import GRACE_preparation
 from src_DA.configure_DA import config_DA
-from src_OBS.GRACE_perturbation import GRACE_perturbed_obs
+from src_OBS.GRACE_perturbation_old import GRACE_perturbed_obs
 from src_GHM.EnumType import states_var, init_mode
 from src_DA.shp2mask import basin_shp_process
 from src_DA.ObsDesignMatrix import DM_basin_average
@@ -128,7 +128,7 @@ class DA_GRACE(OpenLoop):
 
     def gather_OLmean(self, post_fix='OL'):
         """gather the OL mean to be reduced from GRACE to acquire the TWS anomaly"""
-        #TODO: this is obs-specific and one should take care how to compute the mean. from DA or OL?
+        # TODO: this is obs-specific and one should take care how to compute the mean. from DA or OL?
         dp_dir = self.setting_dir / 'DA_setting.json'
         configDA = config_DA.loadjson(dp_dir).process()
 
@@ -321,15 +321,15 @@ class DA_GRACE(OpenLoop):
         pass
 
 
-class DA_ESA_SING_5daily(DA_GRACE):
+class DA_GRACE_flexibile(DA_GRACE):
     def __init__(self, case='test', setting_dir='../settings/DA_local', ens=3):
         super().__init__(case, setting_dir, ens)
 
         pass
 
     def generate_perturbed_GRACE_obs(self):
-        from src_OBS.obs_auxiliary import aux_ESAsing_5daily
-        from src_OBS.ESAsing_5daily_perturbation import ESAsing_5daily_perturbed_obs
+        from src_OBS.obs_auxiliary import aux_ESAsing_5daily, aux_GRACE_SH_monthly, aux_GRACE_mascon_monthly
+        from src_OBS.GRACE_perturbation import GRACE_perturbed_obs
 
         dp_dir = self.setting_dir / 'DA_setting.json'
         configDA = config_DA.loadjson(dp_dir).process()
@@ -337,10 +337,23 @@ class DA_ESA_SING_5daily(DA_GRACE):
         begin_day = configDA.basic.fromdate
         end_day = configDA.basic.todate
 
-        ob = ESAsing_5daily_perturbed_obs(ens=configDA.basic.ensemble, basin_name=configDA.basic.basin)
+        ob = GRACE_perturbed_obs(ens=configDA.basic.ensemble, basin_name=configDA.basic.basin)
         ob.configure_dir(input_dir=configDA.obs.GRACE['preprocess_res'], obs_dir=configDA.obs.dir)
-        obs_aux = aux_ESAsing_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
-                                                        dir_in='/work/data_for_w3/GRACE/aux/ESA_5daily')
+
+        if configDA.obs.GRACE['kind'] == 'SH_monthly':
+            t1 = datetime.strptime(begin_day, '%Y-%m-%d').strftime('%Y-%m')
+            t2 = datetime.strptime(end_day, '%Y-%m-%d').strftime('%Y-%m')
+            obs_aux = aux_GRACE_SH_monthly().setTimeReference(month_begin=t1, month_end=t2,
+                                                              dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+        elif configDA.obs.GRACE['kind'] == 'ESA_SING':
+            obs_aux = aux_ESAsing_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
+                                                            dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+        elif configDA.obs.GRACE['kind'] == 'Mascon_monthly':
+            t1 = datetime.strptime(begin_day, '%Y-%m-%d').strftime('%Y-%m')
+            t2 = datetime.strptime(end_day, '%Y-%m-%d').strftime('%Y-%m')
+            obs_aux = aux_GRACE_mascon_monthly().setTimeReference(month_begin=t1, month_end=t2,
+                                                                  dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+
         ob.configure_obs_aux(obs_aux=obs_aux)
         ob.perturb_TWS().remove_temporal_mean()
         fn = Path(configDA.obs.GRACE['OL_mean']) / ('%s_%s.hdf5' % (self.case, self.basin))
