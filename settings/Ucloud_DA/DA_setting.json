@@ -1,9 +1,9 @@
 {
     "basic": {
-        "fromdate": "2002-03-31",
-        "todate": "2023-03-31",
-        "basin": "Africa",
-        "basin_shp": "../data/basin/shp/Africa/Africa_subbasins.shp",
+        "fromdate": "2002-09-01",
+        "todate": "2006-12-31",
+        "basin": "Brahmaputra4degree",
+        "basin_shp": "../data/basin/shp/ESA_SING/Grid_4/Brahmaputra4degree_subbasins.shp",
         "NaNmaskStatesDir": "/work/data_for_w3/w3ra/states_sample",
         "ensemble": 30,
         "layer": {

@@ -30,8 +30,9 @@ class ts:
         """
 
         if signal is None:
-            signal = [decomposition.trend, decomposition.annual, decomposition.semi_annual,
-                      decomposition.quarter_annual]
+            # signal = [decomposition.trend, decomposition.annual, decomposition.semi_annual,
+            #           decomposition.quarter_annual]
+            signal = [decomposition.trend, decomposition.annual]
 
         self.__signal = signal
 

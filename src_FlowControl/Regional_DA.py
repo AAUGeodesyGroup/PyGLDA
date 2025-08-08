@@ -487,7 +487,8 @@ class RDA:
                                'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
 
             # fig.plot(x=OL_time, y=OL, pen="0.5p,blue,-", label='%s' % ('OL_unperturbed'), transparency=30)
-            fig.plot(x=OL_time, y=OL, pen="0.5p,grey,-", label='%s' % ('OL'), transparency=30)
+            fig.plot(x=OL_time, y=OL_ens_mean, pen="0.5p,blue,-", label='%s' % ('OL'), transparency=30)
+            # fig.plot(x=OL_time, y=OL, pen="0.5p,grey,-", label='%s' % ('OL'), transparency=30)
             # fig.plot(x=OL_time, y=OL_ens_mean, pen="0.5p,red", label='%s' % ('OL_ens_mean'), transparency=30)
             fig.plot(x=DA_time, y=DA_ens_mean, pen="0.5p,green", label='%s' % ('DA'), transparency=30)
             # fig.plot(x=GR_time, y=GRACE_ens_mean, pen="0.5p,black", label='%s' % ('GRACE_ens_mean'), transparency=30)

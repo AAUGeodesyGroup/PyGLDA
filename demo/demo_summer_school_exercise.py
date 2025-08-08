@@ -51,15 +51,15 @@ RDA.box = [50.5, 42, 8.5, 29.5]
 '''Because the size limit of repository, a limited sample data is available to allow only one-year DA'''
 
 '''for spin-up'''
-RDA.cold_begin_time = '2005-01-01'
-RDA.cold_end_time = '2005-01-31'
+RDA.cold_begin_time = '2004-10-01'
+RDA.cold_end_time = '2004-12-31'
 
 '''for open-loop'''
-RDA.warm_begin_time = '2005-02-01'
+RDA.warm_begin_time = '2005-01-01'
 RDA.warm_end_time = '2005-12-31'
 
 '''for data assimilation'''
-RDA.resume_begin_time = '2005-04-01'
+RDA.resume_begin_time = '2005-02-01'
 RDA.resume_end_time = '2005-12-31'
 
 RDA.isSet = False
@@ -400,7 +400,6 @@ def exp2():
     # demo_OL(skipModelPerturb=False, skipSR=True)
     # demo_only_DA(skip_obs_perturbation=False)
     demo_DA_visualization()
-    # demo_complete_DA(skipModelPerturb=True, skipObsPerturb=False, skipSR=False)
 
 
 if __name__ == '__main__':

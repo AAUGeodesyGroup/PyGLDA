@@ -1,28 +1,28 @@
 {
     "bounds": {
         "lat": [
-            37.54040707879831,
-            -35.02199796184608
+            31.2,
+            21.8
         ],
         "lon": [
-            -17.73278290048678,
-            51.2
+            87.8,
+            97.7
         ],
-        "prefix": "Africa"
+        "prefix": "NGGM1E16_4degree"
     },
     "init": {
-        "mode": "resume",
-        "date": "2002-03-30",
+        "mode": "warm",
+        "date": "2002-08-31",
         "spinup": [
             "2000-01-01",
-            "2001-12-31"
+            "2002-08-31"
         ],
         "dir": "/work/data_for_w3/w3ra/initial_states",
-        "spec": "Africa"
+        "spec": "NGGM1E16_4degree"
     },
     "run": {
-        "fromdate": "2002-03-31",
-        "todate": "2023-03-31",
+        "fromdate": "2002-09-01",
+        "todate": "2006-12-31",
         "res": 0.1,
         "exttype": "ERA5",
         "save_states_every_day": true,

@@ -1,6 +1,6 @@
 {
     "basic": {
-        "fromdate": "2005-02-01",
+        "fromdate": "2005-01-01",
         "todate": "2005-12-31",
         "basin": "Brahmaputra3subbasins",
         "basin_shp": "../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp",
