@@ -398,8 +398,8 @@ def exp2():
     #
     # RDA.single_run(skip_croping_data=True, skip_signal_extraction=True)  # only SR
     # demo_OL(skipModelPerturb=False, skipSR=True)
-    # demo_only_DA(skip_obs_perturbation=False)
-    demo_DA_visualization()
+    demo_only_DA(skip_obs_perturbation=False)
+    # demo_DA_visualization()
 
 
 if __name__ == '__main__':
