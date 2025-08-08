@@ -99,7 +99,7 @@ For visualization module (optional):
 > 
 > import pygmt
 > 
-> pygmt.show_version()
+> pygmt.show_versions()
 
 ## Troubleshooting
 In general, if an error message indicates that a certain package is missing or not functional, please try to type
