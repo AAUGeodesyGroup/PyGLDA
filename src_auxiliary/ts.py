@@ -76,7 +76,20 @@ class ts:
         obs is the time series of data to be analyzed.
         """
 
-        x = np.linalg.lstsq(a=self.__DM, b=obs, rcond=-1)[0]
+        '''preprocess obs to ensure a more robust inversion: potential instability may happen on Windows operating system'''
+        obs_m = np.array(obs)
+
+        obs_m_mask = ~np.isnan(np.sum(obs_m,axis=0))
+
+        obs_without_nan = obs_m[:, obs_m_mask]
+
+        x_without_nan = np.linalg.lstsq(a=self.__DM, b=obs_without_nan, rcond=-1)[0]
+
+        x = np.full(shape=(np.shape(x_without_nan)[0], len(obs_m_mask)), fill_value=np.nan)
+
+        x[:, obs_m_mask] = x_without_nan
+
+        # x = np.linalg.lstsq(a=self.__DM, b=obs, rcond=-1)[0]
 
         res = {'bias': x[0]}
         i = 1
