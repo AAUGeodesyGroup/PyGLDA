@@ -69,9 +69,7 @@ Whoever is interested in using PyGLDA in practice should go for the installation
 > conda activate pyglda
 > 
 > pip install h5py
-3. Now you can freely explore PyGLDA toolbox. The following is optional for visualization module (or you can use your own script to read the output in '../SummerSchool/External Data/w3ra/res/..'). Built-in scripts for visualization requires to have PyGMT installed. Please follow
-the official guideline to install PyGMT: https://www.pygmt.org/latest/install.html. Please make sure that PyGMT is installed in an 
-independent environment called 'pygmt'. Please also test PyGMT to see if it works correctly.
+3. Now you can freely explore PyGLDA toolbox. The following is optional for visualization module (or you can use your own script to read the output in '../SummerSchool/External Data/w3ra/res/..'). Built-in scripts for visualization requires to have PyGMT installed at an independent environment called 'pygmt':
 > conda create --name pygmt --file visualization-linux-spec-file.txt
 
 
