@@ -350,7 +350,7 @@ class RDA:
         pass
 
     @staticmethod
-    def DA_visualization_basin_ensemble():
+    def DA_visualization_basin_ensemble(allow_pop_up=False):
         # from src_FlowControl.DA_GRACE import DA_GRACE
         from src_GHM.EnumType import init_mode
         """
@@ -368,7 +368,7 @@ class RDA:
         '''generate/save the figure'''
         fig_postfix = '0'
         demo.visualize_signal(fig_path=RDA.figure_output, fig_postfix=fig_postfix, file_postfix='DA',
-                              data_dir=RDA.res_output)
+                              data_dir=RDA.res_output, allow_pop_up=allow_pop_up)
         pass
 
     @staticmethod
@@ -394,7 +394,7 @@ class RDA:
         pass
 
     @staticmethod
-    def DA_visualization_basin_DA(signal='TWS'):
+    def DA_visualization_basin_DA(signal='TWS', allow_pop_up= False):
         from src_DA.Analysis import Postprocessing_basin
         import pygmt
         import h5py
@@ -451,6 +451,8 @@ class RDA:
 
         '''plot figure'''
         fig = pygmt.Figure()
+        pygmt.config(FONT_TITLE="17p,5", MAP_TITLE_OFFSET="0p", MAP_FRAME_TYPE="plain", FONT_ANNOT_PRIMARY='10p,5',
+                     FONT_LABEL='10p,5', MAP_TICK_LENGTH='7p')
 
         i = 0
         offset = 12
@@ -476,25 +478,30 @@ class RDA:
 
             vmin, vmax = min(vvmin), min(vvmax)
             dmin = vmin - (vmax - vmin) * 0.1
-            dmax = vmax + (vmax - vmin) * 0.1
+            dmax = vmax + (vmax - vmin) * 0.15
             sp_1 = int(np.round((vmax - vmin) / 10))
             if sp_1 == 0:
                 sp_1 = 0.5
             sp_2 = sp_1 * 2
 
-            fig.basemap(region=[OL_time[0] - 0.2, OL_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
-                        frame=["WSne+t%s" % (basin + '_' + signal + '_' + basin_id), "xa2f1",
-                               'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
+            if len(OL_time)>365*4:
+                fig.basemap(region=[OL_time[0] - 0.2, OL_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
+                            frame=["WSne+t%s" % (basin + '_' + signal + '_' + basin_id), "xa2f1g",
+                                   'ya%df%dg+lwater [mm]' % (sp_2, sp_1)])
+            else:
+                fig.basemap(region=[OL_time[0] - 0.2, OL_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
+                            frame=["WSne+t%s" % (basin + '_' + signal + '_' + basin_id), "xa1f0.5g",
+                                   'ya%df%dg+lwater [mm]' % (sp_2, sp_1)])
 
             # fig.plot(x=OL_time, y=OL, pen="0.5p,blue,-", label='%s' % ('OL_unperturbed'), transparency=30)
-            fig.plot(x=OL_time, y=OL_ens_mean, pen="0.5p,blue,-", label='%s' % ('OL'), transparency=30)
+            fig.plot(x=OL_time, y=OL_ens_mean, pen="1.0p,blue,-", label='%s' % ('OL'), transparency=30)
             # fig.plot(x=OL_time, y=OL, pen="0.5p,grey,-", label='%s' % ('OL'), transparency=30)
             # fig.plot(x=OL_time, y=OL_ens_mean, pen="0.5p,red", label='%s' % ('OL_ens_mean'), transparency=30)
-            fig.plot(x=DA_time, y=DA_ens_mean, pen="0.5p,green", label='%s' % ('DA'), transparency=30)
+            fig.plot(x=DA_time, y=DA_ens_mean, pen="1.0p,green", label='%s' % ('DA'), transparency=30)
             # fig.plot(x=GR_time, y=GRACE_ens_mean, pen="0.5p,black", label='%s' % ('GRACE_ens_mean'), transparency=30)
             # fig.plot(x=GR_time, y=GRACE_original, pen="0.5p,purple,--.", label='%s' % ('GRACE_original'),
             #          transparency=30)
-            fig.plot(x=GR_time, y=GRACE_original, style="c.1c", fill="black", label='%s' % ('GRACE'), transparency=30)
+            fig.plot(x=GR_time, y=GRACE_original, style="c.2c", fill="black", label='%s' % ('GRACE'), transparency=30)
 
             # fig.legend(position='jTR', box='+gwhite+p0.5p')
             fig.legend(position='jBL')
@@ -511,11 +518,13 @@ class RDA:
         fig_postfix = '0'
         fig.savefig(str(Path(figure_output) / ('DA_%s_%s_%s.pdf' % (basin, signal, fig_postfix))))
         fig.savefig(str(Path(figure_output) / ('DA_%s_%s_%s.png' % (basin, signal, fig_postfix))))
-        # fig.show()
+
+        if allow_pop_up:
+            fig.show()
         pass
 
     @staticmethod
-    def DA_visulization_2Dmap(signal='trend'):
+    def DA_visulization_2Dmap(signal='trend',allow_pop_up=False):
         from src_auxiliary.ts import ts
         from src_auxiliary.upscaling import upscaling
         from datetime import datetime
@@ -612,8 +621,9 @@ class RDA:
 
         '''plot figure'''
         fig = pygmt.Figure()
-        pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
-        pygmt.config(FONT_ANNOT='12p', COLOR_NAN='white')
+        pygmt.config(COLOR_NAN='white')
+        pygmt.config(FONT_TITLE="19p,5", MAP_TITLE_OFFSET="-0.2p", MAP_FRAME_TYPE="plain", FONT_ANNOT_PRIMARY='13p,5',
+                     FONT_LABEL='17p,5', MAP_TICK_LENGTH='7p')
         #
         nan_mask = (1 - np.isnan(res_GRACE)).astype(bool)
         vmax = np.nanmax(res_DA[nan_mask]) * 0.8
@@ -642,7 +652,7 @@ class RDA:
 
         region = [RDA.box[2] - 2, RDA.box[3] + 2, RDA.box[1] - 2, RDA.box[0] + 2]
         ps = 'Q8c'
-        offset = '-8.5c'
+        offset = '-10c'
         fig.grdimage(
             grid=OL,
             cmap=True,
@@ -707,7 +717,7 @@ class RDA:
         fig.plot(data=gdf.boundary, pen="1p,black")
 
         if signal != 'trend':
-            fig.colorbar(frame='a20f10+l%s amplitude [mm]' % signal, position="JBC+w13c/0.45c+h+o10c/1.2c")
+            fig.colorbar(frame='af+l%s amplitude [mm]' % signal, position="JBC+w13c/0.45c+h+o10c/1.2c")
         else:
             fig.colorbar(frame='af+l%s [mm/yr]' % signal, position="JBC+w13c/0.45c+h+o10c/1.2c")
             pass
@@ -747,6 +757,9 @@ class RDA:
         figure_output = RDA.figure_output
         fig.savefig(str(Path(figure_output) / ('map2D_%s_%s_%s.pdf' % (RDA.basin, signal, fig_postfix))))
         fig.savefig(str(Path(figure_output) / ('map2D_%s_%s_%s.png' % (RDA.basin, signal, fig_postfix))))
+
+        if allow_pop_up:
+            fig.show()
 
         pass
 

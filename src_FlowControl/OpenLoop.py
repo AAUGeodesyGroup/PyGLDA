@@ -218,7 +218,7 @@ class OpenLoop(SingleModel):
 
         pass
 
-    def visualize_signal(self, fig_path: str, fig_postfix='0', file_postfix=None, data_dir=None):
+    def visualize_signal(self, fig_path: str, fig_postfix='0', file_postfix=None, data_dir=None, allow_pop_up=False):
         import pygmt
         import h5py
         from src_GHM.GeoMathKit import GeoMathKit
@@ -254,25 +254,39 @@ class OpenLoop(SingleModel):
                 sp_1 = 0.5
             sp_2 = sp_1 * 2
 
-            if i == 4 or i == 7:
-                fig.shift_origin(yshift='12c', xshift='14c')
+            if i == 6:
+                fig.shift_origin(yshift='22c', xshift='14c')
                 pass
+            pygmt.config(FONT_TITLE="19p,5", MAP_TITLE_OFFSET="-0.2p", MAP_FRAME_TYPE="plain", FONT_ANNOT_PRIMARY='11p,5',
+                         FONT_LABEL='11p,5', MAP_TICK_LENGTH='7p')
 
-            fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
-                        frame=["WSne", "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
+            if len(fan_time)>720:
+                fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
+                            frame=["WSne+t%s"%state, "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
+            else:
+                fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
+                            frame=["WSne+t%s" % state, "xa1f0.5", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
 
+            mean=None
             for ens in reversed(range(self.ens + 1)):
                 vv = states['basin_0'][state][ens]
 
                 if ens == 0:
-                    fig.plot(x=fan_time, y=vv, pen="1p,blue", label='%s' % (state), transparency=30)
+                    # fig.plot(x=fan_time, y=vv, pen="1p,blue", label='%s' % (state), transparency=30)
+                    pass
                 else:
-                    fig.plot(x=fan_time, y=vv, pen="0.3p,grey")
+                    fig.plot(x=fan_time, y=vv, pen="1p,grey")
+                    if mean is None:
+                        mean = vv
+                    else:
+                        mean += vv
 
+            fig.plot(x=fan_time, y=mean/self.ens, pen="1.5p,blue", label='Mean', transparency=30)
             fig.legend(position='jTR', box='+gwhite+p0.5p')
-            fig.shift_origin(yshift='-4c')
+            fig.shift_origin(yshift='-4.4c')
 
         fig.savefig(str(Path(fig_path) / ('Component_%s_%s.pdf' % (self.case, fig_postfix))))
         fig.savefig(str(Path(fig_path) / ('Component_%s_%s.png' % (self.case, fig_postfix))))
-        # fig.show()
+        if allow_pop_up:
+            fig.show()
         pass
