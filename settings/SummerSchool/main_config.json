@@ -1,0 +1,16 @@
+{
+    "basin": "Brahmaputra3subbasins",
+    "shp_path": "../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp",
+    "case": "Exp1",
+    "setting_dir": "../settings/SummerSchool/Exp1",
+    "ens": 10,
+    "cold_begin_time": "2004-10-01",
+    "cold_end_time": "2004-12-31",
+    "warm_begin_time": "2005-01-01",
+    "warm_end_time": "2005-12-31",
+    "resume_begin_time": "2005-02-01",
+    "resume_end_time": "2005-12-31",
+    "external_data_path": "/media/user/My Book/Fan/SummerSchool/External Data",
+    "res_output": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/res",
+    "figure_output": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/figure"
+}

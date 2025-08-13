@@ -20,7 +20,7 @@ mm.res_output = '/media/user/My Book/Fan/SummerSchool/External Data/w3ra/res'
 mm.figure_output = '/media/user/My Book/Fan/SummerSchool/External Data/w3ra/figure'
 
 '''Define the main path of external data'''
-external_data_path = '/media/user/My Book/Fan/SummerSchool/External Data'
+RDA.external_data_path = '/media/user/My Book/Fan/SummerSchool/External Data'
 
 '''Define where to load the necessary setting files'''
 RDA.setting_dir = '../settings/SummerSchool/Exp1'
@@ -153,18 +153,18 @@ def demo_only_DA(skip_obs_perturbation=True):
 
 
 def demo_prepare_GRACE(isDiagonal=False):
-    dir_in = Path(external_data_path) / 'GRACE' / 'SaGEA' / 'signal_DDK3'
-    cov_dir_in = Path(external_data_path) / 'GRACE' / 'SaGEA' / 'sample_DDK3'
-    dir_out = Path(external_data_path) / 'GRACE' / 'output'
+    dir_in = Path(RDA.external_data_path) / 'GRACE' / 'SaGEA' / 'signal_DDK3'
+    cov_dir_in = Path(RDA.external_data_path) / 'GRACE' / 'SaGEA' / 'sample_DDK3'
+    dir_out = Path(RDA.external_data_path) / 'GRACE' / 'output'
     RDA.prepare_GRACE(dir_in=dir_in, dir_out=dir_out, cov_dir_in=cov_dir_in, is_diagonal=isDiagonal)
 
     pass
 
 
 def demo_prepare_GRACE_Mascon(isDiagonal=False):
-    dir_in = Path(external_data_path) / 'GRACE' / 'SaGEA' / 'signal_Mascon'
-    cov_dir_in = Path(external_data_path) / 'GRACE' / 'SaGEA' / 'sample_DDK3'
-    dir_out = Path(external_data_path) / 'GRACE' / 'output'
+    dir_in = Path(RDA.external_data_path) / 'GRACE' / 'SaGEA' / 'signal_Mascon'
+    cov_dir_in = Path(RDA.external_data_path) / 'GRACE' / 'SaGEA' / 'sample_DDK3'
+    dir_out = Path(RDA.external_data_path) / 'GRACE' / 'output'
     RDA.prepare_GRACE_Mascon(dir_in=dir_in, dir_out=dir_out, cov_dir_in=cov_dir_in, is_diagonal=isDiagonal)
 
     pass
@@ -349,6 +349,53 @@ def demo_batch_visualization():
     pass
 
 
+def save_main_configuration_parameters():
+    import json
+    keys = ['basin', 'shp_path', 'case', 'setting_dir', 'ens', 'cold_begin_time', 'cold_end_time', 'warm_begin_time',
+            'warm_end_time', 'resume_begin_time', 'resume_end_time', 'external_data_path']
+
+    new_config = {}
+    for key in keys:
+        new_config[key] = RDA.__dict__[key]
+
+    new_config['res_output'] = mm.res_output
+    new_config['figure_output'] = mm.figure_output
+
+    default_path = '../settings/SummerSchool/main_config.json'
+    with open(default_path, 'w') as f:
+        json.dump(new_config, f, indent=4)
+    return new_config
+
+
+def load_main_configuration_parameters():
+    import json
+    keys = ['basin', 'shp_path', 'case', 'setting_dir', 'ens', 'cold_begin_time', 'cold_end_time', 'warm_begin_time',
+            'warm_end_time', 'resume_begin_time', 'resume_end_time', 'external_data_path']
+
+    default_path = '../settings/SummerSchool/main_config.json'
+    new_config = json.load(open(default_path, 'r'))
+    #
+    # for key in keys:
+    #     RDA.__dict__[key] = new_config[key]
+    #
+    RDA.basin=new_config['basin']
+    RDA.shp_path=new_config['shp_path']
+    RDA.case=new_config['case']
+    RDA.setting_dir=new_config['setting_dir']
+    RDA.ens=new_config['ens']
+    RDA.cold_begin_time=new_config['cold_begin_time']
+    RDA.cold_end_time=new_config['cold_end_time']
+    RDA.warm_begin_time=new_config['warm_begin_time']
+    RDA.warm_end_time=new_config['warm_end_time']
+    RDA.resume_begin_time= new_config['resume_begin_time']
+    RDA.resume_end_time=new_config['resume_end_time']
+    RDA.external_data_path=new_config['external_data_path']
+    mm.res_output = new_config['res_output']
+    mm.figure_output = new_config['figure_output']
+
+    return new_config
+
+
 def exp1():
     '''Define where to load the necessary setting files'''
     RDA.setting_dir = '../settings/SummerSchool/Exp1'
@@ -381,29 +428,33 @@ def exp1():
 
 def exp2(param=None):
     '''Define where to load the necessary setting files'''
-    RDA.setting_dir = '../settings/SummerSchool/Exp2'
-
-    '''Define the size of ensemble to run for DA'''
-    RDA.ens = 10
-
-    '''Define the name of your case study'''
-    RDA.case = 'Exp2'
-
-    '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
-    RDA.basin = 'Brahmaputra3subbasins'
-    RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
+    # RDA.setting_dir = '../settings/SummerSchool/Exp2'
+    #
+    # '''Define the size of ensemble to run for DA'''
+    # RDA.ens = 10
+    #
+    # '''Define the name of your case study'''
+    # RDA.case = 'Exp2'
+    #
+    # '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
+    # RDA.basin = 'Brahmaputra3subbasins'
+    # RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
 
     # demo_prepare_GRACE_Mascon(isDiagonal=False)
     # RDA.prepare_Forcing()
     #
     # RDA.single_run(skip_croping_data=True, skip_signal_extraction=True)  # only SR
-    # if param == 'OL':
-    #     demo_OL(skipModelPerturb=False, skipSR=True)
-    # elif param == 'DA':
-    #     demo_only_DA(skip_obs_perturbation=False)
-    # else:
-    #     print('Argument is wrong: must be OL or DA.')
-    demo_DA_visualization()
+
+    load_main_configuration_parameters()
+
+    if param == 'OL':
+        demo_OL(skipModelPerturb=False, skipSR=True)
+    elif param == 'DA':
+        demo_only_DA(skip_obs_perturbation=False)
+    else:
+        print('Argument is wrong: must be OL or DA.')
+
+    # demo_DA_visualization()
 
 
 if __name__ == '__main__':
@@ -432,7 +483,9 @@ if __name__ == '__main__':
     # save_data()
 
     # exp1()
-    if len(sys.argv)>1:
+    # save_main_configuration_parameters()
+
+    if len(sys.argv) > 1:
         param_1 = sys.argv[1]
         exp2(param_1)
     else:

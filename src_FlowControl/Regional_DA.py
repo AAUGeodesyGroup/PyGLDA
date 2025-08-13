@@ -19,6 +19,7 @@ class RDA:
     setting_dir = '../settings/Ucloud_DA'
     ens = 30
 
+    external_data_path = '/media/user/My Book/Fan/SummerSchool/External Data'
     # case = 'RDA_DRB_BasinScale'
     # basin = 'DRB'
     # shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
