@@ -1,0 +1,38 @@
+{
+    "basic": {
+        "fromdate": "2005-01-01",
+        "todate": "2005-12-31",
+        "basin": "Brahmaputra3subbasins",
+        "basin_shp": "../data/basin/shp/Brahmaputra/Brahmaputra3subbasins_subbasins.shp",
+        "NaNmaskStatesDir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/states_sample",
+        "ensemble": 5,
+        "layer": {
+            "S0": true,
+            "Ss": true,
+            "Sd": true,
+            "Sr": true,
+            "Sg": true,
+            "Mleaf": true,
+            "FreeWater": true,
+            "DrySnow": true
+        }
+    },
+    "obs": {
+        "name": "GRACE",
+        "dir": "/media/user/My Book/Fan/SummerSchool/External Data/GRACE/obs",
+        "GRACE": {
+            "EWH_grid_dir": "/media/user/My Book/Fan/SummerSchool/External Data/GRACE/SaGEA/signal_Mascon",
+            "cov_dir": "/media/user/My Book/Fan/SummerSchool/External Data/GRACE/SaGEA/sample_DDK3",
+            "preprocess_res": "/media/user/My Book/Fan/SummerSchool/External Data/GRACE/output/",
+            "OL_mean": "/media/user/My Book/Fan/SummerSchool/External Data/GRACE/OLmean",
+            "aux_for_time_epochs": "/media/user/My Book/Fan/SummerSchool/External Data/GRACE/SaGEA/signal_Mascon",
+            "kind": "Mascon_monthly"
+        }
+    },
+    "model": {
+        "name": "w3ra_v0"
+    },
+    "method": {
+        "fusion_method": "EnKF_v0"
+    }
+}

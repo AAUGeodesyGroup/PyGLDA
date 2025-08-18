@@ -1,0 +1,66 @@
+{
+    "bounds": {
+        "lat": [
+            31.2,
+            21.8
+        ],
+        "lon": [
+            87.8,
+            97.7
+        ],
+        "prefix": "Exercise_2"
+    },
+    "init": {
+        "mode": "warm",
+        "date": "2004-12-31",
+        "spinup": [
+            "2004-10-01",
+            "2004-12-31"
+        ],
+        "dir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/initial_states",
+        "spec": "Exercise_2"
+    },
+    "run": {
+        "fromdate": "2005-01-01",
+        "todate": "2005-12-31",
+        "res": 0.1,
+        "exttype": "ERA5",
+        "save_states_every_day": true,
+        "save_output_every_day": false
+    },
+    "input": {
+        "meteo": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input",
+        "clim": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input",
+        "pars": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input",
+        "mask_fn": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input"
+    },
+    "output": {
+        "dir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/output",
+        "var": {
+            "Stot": false,
+            "ETtot": false,
+            "Qtot": false,
+            "Qnet": false,
+            "E0": false,
+            "Ei": false,
+            "Et": false,
+            "Es": false,
+            "Er": false,
+            "RSn": false,
+            "RLn": false,
+            "LE": false,
+            "H": false,
+            "albedo": false,
+            "LAI": false,
+            "Ssnow": false,
+            "z_g": false,
+            "S0": false,
+            "Sroot": false,
+            "Ssoil": false,
+            "Sg": false,
+            "Ts": false,
+            "fsnow": false,
+            "Sr": false
+        }
+    }
+}

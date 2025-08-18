@@ -1,8 +1,8 @@
 {
     "ensemble": 10,
     "dir": {
-        "in": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input/Exp1",
-        "out": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input/Exp1"
+        "in": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input/Exercise_1",
+        "out": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input/Exercise_1"
     },
     "correlation": {
         "forcing": {
@@ -17,7 +17,7 @@
     },
     "forcing": {
         "2t": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "additive",
             "error_distribution": "gaussian",
             "coefficients": [
@@ -25,7 +25,7 @@
             ]
         },
         "ssrd": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "additive",
             "error_distribution": "triangle",
             "coefficients": [
@@ -33,7 +33,7 @@
             ]
         },
         "tp": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "gaussian",
             "coefficients": [
@@ -43,7 +43,7 @@
     },
     "par": {
         "ER_frac_ref": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -91,7 +91,7 @@
             ]
         },
         "FsoilEmax": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -115,7 +115,7 @@
             ]
         },
         "InitLoss": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -195,7 +195,7 @@
             ]
         },
         "PrefR": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -203,7 +203,7 @@
             ]
         },
         "S0FC": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -219,7 +219,7 @@
             ]
         },
         "S_sls": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -227,7 +227,7 @@
             ]
         },
         "SdFC": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -259,7 +259,7 @@
             ]
         },
         "SsFC": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [
@@ -323,7 +323,7 @@
             ]
         },
         "beta": {
-            "is_perturbed": true,
+            "is_perturbed": false,
             "perturb_method": "multiplicative",
             "error_distribution": "triangle",
             "coefficients": [

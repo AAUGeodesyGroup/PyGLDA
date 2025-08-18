@@ -381,17 +381,17 @@ def exp1():
 
 def exp2():
     '''Define where to load the necessary setting files'''
-    RDA.setting_dir = '../settings/SummerSchool/Exp2'
+    RDA.setting_dir = '../settings/SummerSchool/Installation_guide'
 
     '''Define the size of ensemble to run for DA'''
     RDA.ens = 10
 
     '''Define the name of your case study'''
-    RDA.case = 'Exp2'
+    RDA.case = 'Guide'
 
     '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
     RDA.basin = 'Brahmaputra3subbasins'
-    RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
+    RDA.shp_path = '../data/basin/shp/Brahmaputra/Brahmaputra3subbasins_subbasins.shp'
 
     # demo_prepare_GRACE_Mascon(isDiagonal=False)
     # RDA.prepare_Forcing()

@@ -2,8 +2,8 @@
     "basic": {
         "fromdate": "2005-01-01",
         "todate": "2005-12-31",
-        "basin": "Brahmaputra3subbasins",
-        "basin_shp": "../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp",
+        "basin": "Rhine-Meuse",
+        "basin_shp": "../data/basin/shp/Rhine-Meuse/Rhine-Meuse_subbasins.shp",
         "NaNmaskStatesDir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/states_sample",
         "ensemble": 10,
         "layer": {

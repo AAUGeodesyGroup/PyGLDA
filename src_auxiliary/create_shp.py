@@ -62,6 +62,29 @@ def shp_change_Danube():
     pass
 
 
+def shp_revision_multipolygon():
+    """This is to eliminate the multipolygon issue of the basin shapefile"""
+    # bp = gpd.read_file('../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
+    bp = gpd.read_file('../data/basin/shp/Rhine-Meuse/Rhine-Meuse_subbasin_old.shp')
+    ID = []
+    polys = []
+    for sub in bp.ID:
+        ID.append(sub)
+        mm = bp[bp.ID == sub]
+        if mm.unary_union.geom_type != 'MultiPolygon':
+            polys.append(mm.unary_union)
+            continue
+        poly = max(mm.unary_union.geoms, key=lambda a: a.area)
+        polys.append(poly)
+
+    d = {'ID': ID, 'geometry': polys}
+
+    # new_shp = gpd.GeoDataFrame(d, crs='epsg:4326')
+    new_shp = gpd.GeoDataFrame(d)
+    new_shp.to_file('../data/basin/shp/Rhine-Meuse/Rhine-Meuse_subbasins.shp')
+
+    pass
+
 class global_box_shp:
     def __init__(self):
         self.basin = None
@@ -640,10 +663,11 @@ def demo_basin_grid():
 if __name__ == '__main__':
     # shp_change_Danube()
     # demo1()
-    demo2()
+    # demo2()
     # demo3()
     # demo4()
     # demo5()
     # showbox()
     # demo_basin_grid()
     # demo_show_basin_grid()
+    shp_revision_multipolygon()
