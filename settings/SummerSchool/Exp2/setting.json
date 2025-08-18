@@ -8,7 +8,7 @@
             87.8,
             97.7
         ],
-        "prefix": "Exp2"
+        "prefix": "Guide"
     },
     "init": {
         "mode": "warm",
@@ -18,7 +18,7 @@
             "2004-12-31"
         ],
         "dir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/initial_states",
-        "spec": "Exp2"
+        "spec": "Guide"
     },
     "run": {
         "fromdate": "2005-01-01",

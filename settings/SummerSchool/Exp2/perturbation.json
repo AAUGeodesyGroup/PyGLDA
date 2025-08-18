@@ -1,8 +1,8 @@
 {
     "ensemble": 10,
     "dir": {
-        "in": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input/Exp2",
-        "out": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input/Exp2"
+        "in": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input/Guide",
+        "out": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/crop_input/Guide"
     },
     "correlation": {
         "forcing": {

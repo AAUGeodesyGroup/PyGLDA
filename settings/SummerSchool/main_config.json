@@ -1,8 +1,8 @@
 {
     "basin": "Brahmaputra3subbasins",
     "shp_path": "../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp",
-    "case": "Exp1",
-    "setting_dir": "../settings/SummerSchool/Exp1",
+    "case": "Guide",
+    "setting_dir": "../settings/SummerSchool/Exp2",
     "ens": 10,
     "cold_begin_time": "2004-10-01",
     "cold_end_time": "2004-12-31",
