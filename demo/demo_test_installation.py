@@ -384,7 +384,7 @@ def exp2():
     RDA.setting_dir = '../settings/SummerSchool/Installation'
 
     '''Define the size of ensemble to run for DA'''
-    RDA.ens = 10
+    RDA.ens = 3
 
     '''Define the name of your case study'''
     RDA.case = 'Guide'
