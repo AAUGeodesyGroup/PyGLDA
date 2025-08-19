@@ -25,7 +25,7 @@ This work is supported by the Danmarks Frie Forskningsfond [10.46540/2035-00247B
 
 ## Important information
 
-- Please download the code and auxiliary data from XX, which is a version specified for demonstration and lecture in our summer school.
+- Please download the code and auxiliary data from https://drive.google.com/drive/folders/1ZDU9oUnpUaTC9H9Bv4spZa8-_z9d-9Ib, which is a version specified for demonstration and lecture in our summer school.
 - One can get the actively developing version in our Github repository (https://github.com/AAUGeodesyGroup/PyGLDA), but
 there would be no guarantee that the installation guideline can still work for the latest github version.
 
@@ -82,7 +82,7 @@ To test if the environment is properly installed, please open a terminal and typ
 Then, navigate to the folder, '../PyGLDA/demo/', open a terminal and type
 > conda activate pyglda
 > 
-> mpiexec -n 11 python -u demo_test_installation.py 
+> mpiexec -n 4 python -u demo_test_installation.py 
 
 For Linux, additional test includes 
 > metview -slog 

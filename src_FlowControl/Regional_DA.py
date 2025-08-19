@@ -56,6 +56,40 @@ class RDA:
     isSet = False
 
     @staticmethod
+    def config_external_data():
+        import json
+
+        def reformulate(st: str):
+            new = None
+            for keyword in ['/w3ra/', '/GRACE/', '/ERA5/']:
+                if keyword in st:
+                    new = RDA.external_data_path + keyword + st.split(keyword)[1]
+                    break
+            return new
+
+        def func(dict_data):
+            for key, vv in dict_data.items():
+                if type(vv) == str:
+                    new = reformulate(vv)
+                    if new is not None:
+                        dict_data[key] = new
+                    pass
+
+                elif type(vv) == dict:
+                    func(vv)
+                else:
+                    continue
+
+        for file_name in ['setting.json', 'DA_setting.json', 'pre_process.json']:
+            config = json.load(open(Path(RDA.setting_dir) / file_name, 'r'))
+            # print(Path(RDA.setting_dir) / file_name)
+            func(config)
+            with open(Path(RDA.setting_dir) / file_name, 'w') as f:
+                json.dump(config, f, indent=4)
+
+        pass
+
+    @staticmethod
     def prepare_GRACE(dir_in='/media/user/My Book/Fan/GRACE/ewh',
                       cov_dir_in='/media/user/My Book/Fan/GRACE/ewh',
                       dir_out='/media/user/My Book/Fan/GRACE/output', **kwargs):

@@ -381,7 +381,7 @@ def exp1():
 
 def exp2():
     '''Define where to load the necessary setting files'''
-    RDA.setting_dir = '../settings/SummerSchool/Installation_guide'
+    RDA.setting_dir = '../settings/SummerSchool/Installation'
 
     '''Define the size of ensemble to run for DA'''
     RDA.ens = 10
@@ -392,12 +392,15 @@ def exp2():
     '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
     RDA.basin = 'Brahmaputra3subbasins'
     RDA.shp_path = '../data/basin/shp/Brahmaputra/Brahmaputra3subbasins_subbasins.shp'
+    RDA.external_data_path = '/media/user/My Book/Fan/SummerSchool/External Data'
+    # RDA.external_data_path = '../../External Data'
+    # RDA.config_external_data()
 
     # demo_prepare_GRACE_Mascon(isDiagonal=False)
     # RDA.prepare_Forcing()
     #
     # RDA.single_run(skip_croping_data=True, skip_signal_extraction=True)  # only SR
-    # demo_OL(skipModelPerturb=False, skipSR=True)
+    demo_OL(skipModelPerturb=False, skipSR=False)
     demo_only_DA(skip_obs_perturbation=False)
     # demo_DA_visualization()
 

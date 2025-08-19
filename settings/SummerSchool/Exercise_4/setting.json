@@ -11,8 +11,8 @@
         "prefix": "Exercise_4"
     },
     "init": {
-        "mode": "warm",
-        "date": "2004-12-31",
+        "mode": "resume",
+        "date": "2005-01-31",
         "spinup": [
             "2004-10-01",
             "2004-12-31"
@@ -21,7 +21,7 @@
         "spec": "Exercise_4"
     },
     "run": {
-        "fromdate": "2005-01-01",
+        "fromdate": "2005-02-01",
         "todate": "2005-12-31",
         "res": 0.1,
         "exttype": "ERA5",
