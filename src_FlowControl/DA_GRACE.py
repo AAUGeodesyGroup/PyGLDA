@@ -250,7 +250,7 @@ class DA_GRACE(OpenLoop):
         from src_GHM.hotrun import model_run_daily
         import json
         from src_DA.observations import GRACE_obs
-        from src_DA.ExtracStates import EnsStates
+        from src_DA.ExtractStates import EnsStates
         from src_DA.data_assimilaton import DataAssimilation, DataAssimilation_monthly, \
             DataAssimilation_monthlymean_dailyupdate, DataAssimilation_monthly_diag
 
@@ -371,7 +371,7 @@ class DA_GRACE_flexibile(DA_GRACE):
         from src_GHM.hotrun import model_run_daily
         import json
         from src_DA.observations import GRACE_obs
-        from src_DA.ExtracStates import EnsStates
+        from src_DA.ExtractStates import EnsStates
         from src_DA.data_assimilation_flexible_time import DataAssimilation
 
         if rank != 0:

@@ -130,12 +130,12 @@ def mat2h5_global_2D():
 
     '''load land mask'''
     par = scipy.io.loadmat(
-        '/media/user/My Book/Fan/W3RA_data/global/landmask_10k.mat')
+        '/media/user/My Book/Fan/W3RA_data/global/matlab/landmask_10k.mat')
     name = list(par.keys())[-1]
     mask = par[name].astype(bool)
 
     '''parameter'''
-    par = scipy.io.loadmat('/media/user/My Book/Fan/W3RA_data/global/par_10k.mat')
+    par = scipy.io.loadmat('/media/user/My Book/Fan/W3RA_data/global/matlab/par_10k.mat')
     name = list(par.keys())[-1]
 
     par_dict = {}
@@ -168,17 +168,17 @@ def mat2h5_global_2D():
     '''climatlogies'''
     clim = {}
     par = scipy.io.loadmat(
-        '/media/user/My Book/Fan/W3RA_data/global/climatologies/albedo_clim_10k.mat')
+        '/media/user/My Book/Fan/W3RA_data/global/matlab/climatologies/albedo_clim_10k.mat')
     name = list(par.keys())[-1]
     clim['albedo'] = par[name]
 
     par = scipy.io.loadmat(
-        '/media/user/My Book/Fan/W3RA_data/global/climatologies/Prin_pres_CLIM_20002008_10k.mat')
+        '/media/user/My Book/Fan/W3RA_data/global/matlab/climatologies/Prin_pres_CLIM_20002008_10k.mat')
     name = list(par.keys())[-1]
     clim['pres'] = par[name]
 
     par = scipy.io.loadmat(
-        '/media/user/My Book/Fan/W3RA_data/global/climatologies/Windspeed50m_clim_10k.mat')
+        '/media/user/My Book/Fan/W3RA_data/global/matlab/climatologies/Windspeed50m_clim_10k.mat')
     name = list(par.keys())[-1]
     clim['windspeed'] = par[name]
 

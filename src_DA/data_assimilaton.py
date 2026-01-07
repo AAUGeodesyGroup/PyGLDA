@@ -2,7 +2,7 @@ from src_GHM.hotrun import model_run_daily
 from src_DA.configure_DA import config_DA
 from src_GHM.GeoMathKit import GeoMathKit
 from src_DA.observations import GRACE_obs
-from src_DA.ExtracStates import EnsStates
+from src_DA.ExtractStates import EnsStates
 from src_DA.ObsDesignMatrix import DM_basin_average
 import numpy as np
 from mpi4py import MPI
