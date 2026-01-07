@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 
 
 def plot_glacier_study():
@@ -392,6 +392,159 @@ def Danube_grid_show(res=5):
     pass
 
 
+def plot_Europe():
+    import pygmt
+    import geopandas as gpd
+    import pandas as pd
+
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='10p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='wysiwyg', series=[0, 56], background='o')
+
+    # region = [-130, -65, 20, 55]
+    region = 'g'
+    pj = 'Q40/12c'
+    fig.basemap(region=region, projection=pj,
+                frame=['WSne', 'xa10f5+lLongitude (\\260 E)', 'ya5f5+lLatitude (\\260 N)'])
+
+    fig.coast(shorelines="1/0.2p", region=region, projection=pj, water="skyblue")
+
+    gdf = gpd.read_file('/media/user/My Book/Fan/EuropeDA/continent-poly/Europe.shp').to_crs(crs='epsg:4326')
+    # gdf['OBJECTID'] = gdf['OBJECTID'].astype(float)
+    # gdf['OB']
+    # gdf.replace('CE', 0.0, inplace=True)
+    # gdf.replace('CW', 1.0, inplace=True)
+    # gdf.replace('NE', 2.0, inplace=True)
+    # gdf.replace('NO', 3.0, inplace=True)
+    # gdf.replace('NW', 4.0, inplace=True)
+    # gdf.replace('SE', 5.0, inplace=True)
+    # gdf.replace('SW', 6.0, inplace=True)
+
+    # fig.plot(data=gdf, pen="0.2p,black", fill='+z', cmap=True, aspatial='Z=OBJECTID', projection=pj, close=True)
+
+    # fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.05p,black", projection=pj)
+
+    fig.plot(data=gdf.boundary, pen="0.5p,red", projection=pj)
+
+    # gdf = gpd.read_file('/media/user/Backup Plus/GRACE/shapefiles/USgrid').to_crs(crs='epsg:4326')
+    # for i in range(gdf.shape[0]):
+    #     nn = gdf.ID[i]
+    #     xy = gdf[gdf.ID == nn].centroid
+    #     fig.text(x=xy.x, y=xy.y, text="%s" % nn, font='5p,black')
+
+    fig.show()
+
+    pass
+
+
+def box2shp(box_area=[70.1, 33.9, -11.1, 45.1]):
+    """
+    Generate a shp file from a box boundary.
+
+    For example: box = [76.1, 33.9, -11.1, 45.1] ==> [up (lat), down (lat), left (lon), right (lon)]
+    """
+
+    import numpy as np
+    import geopandas as gpd
+    from shapely import box
+
+    poly = box(xmin=box_area[2], ymin=box_area[0], xmax=box_area[3], ymax=box_area[1])
+    d = {'ID': [0], 'geometry': [poly]}
+    gdf = gpd.GeoDataFrame(d, crs='epsg:4326')
+
+    # '''visualization'''
+    # import pygmt
+    # import geopandas as gpd
+    # fig = pygmt.Figure()
+    # pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    # pygmt.config(FONT_ANNOT='10p', COLOR_NAN='white')
+    # pygmt.makecpt(cmap='wysiwyg', series=[0, 56], background='o')
+    # region = 'g'
+    # pj = "Q30/-20/12c"
+    # fig.basemap(region=region, projection=pj,
+    #             frame=['WSne', 'xa10f5+lLongitude (\\260 E)', 'ya5f5+lLatitude (\\260 N)'])
+    #
+    # fig.coast(shorelines="1/0.2p", region=region, projection=pj, water="skyblue")
+    # fig.plot(data=gdf.boundary, pen="0.5p,red", projection=pj)
+    # fig.show()
+
+    return gdf
+
+
+def EuropeContinent():
+    from src_auxiliary.create_shp import basin2grid_shp
+    import geopandas as gpd
+
+    box_area = [71.6, 36.1, -11.1, 42.1]
+    gdf = box2shp(box_area=box_area)
+    gdf.to_file('/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/E_box/E_box.shp')
+
+    b2s = basin2grid_shp(grid=(3, 3)).configure(new_basin_name='Europe_subbasins',
+                                                original_shp='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/E_box')
+    b2s.set_modify_func(func=basin2grid_shp.example_func1)
+    b2s.create_shp(out_dir='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe')
+
+    '''delete invalid subbasins'''
+    model_land_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/model_land_mask.h5'
+    GRACE_1deg_land_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/GlobalLandMaskForGRACE.hdf5'
+    Forcing_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/forcing_mask.npy'
+
+    import h5py
+    model = h5py.File(model_land_mask, 'r')['mask'][:-1, :]
+    # GRACE = np.flipud(h5py.File(GRACE_1deg_land_mask, 'r')['resolution_1']['mask'][:])
+    Forcing = np.load(Forcing_mask)
+    mask = model * Forcing
+    gdf = gpd.read_file(filename='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe')
+
+    invalids = []
+
+    for id in range(1, gdf.ID.size + 1):
+        tt = gdf[gdf.ID == id]
+        minx = int(float(tt.bounds.minx) / 0.1) + 1800
+        maxx = int(float(tt.bounds.maxx) / 0.1) + 1800
+        maxy = 900- int(float(tt.bounds.miny) / 0.1)
+        miny = 900- int(float(tt.bounds.maxy) / 0.1)
+        vv = np.sum(mask[miny:maxy + 1,minx:maxx + 1])
+        tg = mask[miny:maxy + 1,minx:maxx + 1].size
+
+        if vv/tg < 0.16:
+            invalids.append(False)
+        else:
+            invalids.append(True)
+
+        pass
+
+    n = gdf[invalids]
+    n.loc[:, 'ID'] = np.arange(np.sum(np.array(invalids))) + 1
+    gdf=n
+
+    gdf.to_file('/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe_valid/Europe.shp')
+    '''visualization'''
+    import pygmt
+
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='10p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='wysiwyg', series=[0, 56], background='o')
+
+    region = [box_area[2] - 5, box_area[3] + 5, box_area[1] - 5, box_area[0] + 5]
+    pj = "Q30/-20/12c"
+    fig.basemap(region=region, projection=pj,
+                frame=['WSne', 'xa10f5+lLongitude (\\260 E)', 'ya5f5+lLatitude (\\260 N)'])
+
+    fig.coast(shorelines="1/0.2p", region=region, projection=pj, water="skyblue")
+
+    for i in range(1, gdf.shape[0]+1):
+        xy = gdf[gdf.ID == i].centroid
+        fig.text(x=xy.x, y=xy.y, text="%s" % i, font='7p,black')
+
+    fig.plot(data=gdf.boundary, pen="0.5p,red", projection=pj)
+    fig.show()
+
+    pass
+
+
 if __name__ == '__main__':
     # plot_glacier_study()
     # plot_us()
@@ -403,4 +556,7 @@ if __name__ == '__main__':
     # Brahmaputra_subbasins_show()
     # Danube_grid(res=4)
     # Danube_subbasins_show()
-    Danube_grid_show(res=4)
+    # Danube_grid_show(res=4)
+    # plot_Europe()
+    # box2shp()
+    EuropeContinent()

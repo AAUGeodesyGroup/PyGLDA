@@ -63,7 +63,7 @@ class BasinSelection:
                     lon_01 <= lon_ru[m][:])
             a = np.sum(self.__model[x])
             b = np.sum(self.__Forcing[x])
-            if a / 900 < 0.1 or b / 900 < 0.1:
+            if a / 900 < 0.1 or b / 900 < 0.1: #todo: 900 equals 30*30, which is a special case when cell is defined as 3*3
                 print('Subbasin %s is invalid!' % id)
                 invalid_id_01_list.append(id)
             pass

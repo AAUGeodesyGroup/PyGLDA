@@ -590,8 +590,8 @@ def demo5():
         fig.plot(data=gpd.GeoSeries(gdf1.unary_union.boundary), pen="0.5p,red")
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q9c")
-    fig.savefig('/home/user/Documents/globalDA/GDA_grid.png')
-    fig.savefig('/home/user/Documents/globalDA/GDA_grid.pdf')
+    # fig.savefig('/home/user/Documents/globalDA/GDA_grid.png')
+    # fig.savefig('/home/user/Documents/globalDA/GDA_grid.pdf')
     fig.show()
 
     pass
@@ -666,8 +666,8 @@ if __name__ == '__main__':
     # demo2()
     # demo3()
     # demo4()
-    # demo5()
+    demo5()
     # showbox()
     # demo_basin_grid()
     # demo_show_basin_grid()
-    shp_revision_multipolygon()
+    # shp_revision_multipolygon()
