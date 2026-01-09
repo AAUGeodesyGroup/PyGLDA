@@ -167,6 +167,7 @@ class GRACE_preparation:
             key = 'sub_basin_%d' % i
             '''flip upside down to be compatible with the TWS dataset'''
             mask[key] = np.flipud(mf[key][:] * self._1deg_mask)
+            assert np.max(mask[key]) > 0.1, 'Basin shape file is incompatible with GRACE-1deg land mask, please revise!'
 
         '''load latitude'''
         err = res / 10

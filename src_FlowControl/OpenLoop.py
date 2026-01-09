@@ -117,13 +117,11 @@ class OpenLoop(SingleModel):
 
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
-        f = open('../log/OL/signal_log_%s.txt' % rank, 'w')
-        sys.stdout = f
-        sys.stdout.flush()
-
-        print()
-
-        print('Result analysis for %s' % self.basin)
+        #
+        # if rank > 0:
+        #     f = open('../log/OL/signal_log_%s.txt' % rank, 'w')
+        #     sys.stdout = f
+        #     sys.stdout.flush()
 
         dp_dir = self.setting_dir / 'pre_process.json'
         dp2 = json.load(open(dp_dir, 'r'))
@@ -151,16 +149,15 @@ class OpenLoop(SingleModel):
         bs.mask_to_vec(model_mask_global=str(outdir / self.case / 'mask' / 'mask_global.h5'))
 
         '''basin analysis'''
-
         statedir2 = str(statedir / ('state_%s_ensemble_%s' % (self.case, rank)))
-
-        print(statedir2)
+        # print(statedir2)
         save_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, rank)))
         an = BasinSignalAnalysis(basin_mask=bs, state_dir=statedir2,
                                  par_dir=str(outdir / self.case / 'par'))
 
         # an.configure_mask2D().get_2D_map(this_day=datetime.strptime('2001-01-07', '%Y-%m-%d'), save=True)
 
+        print('Basin-average analysis for %s:' % self.basin)
         an.get_basin_average(save=True, date_begin=self.period[0].strftime('%Y-%m-%d'),
                              date_end=self.period[1].strftime('%Y-%m-%d'),
                              save_dir=save_dir, post_fix=postfix)
@@ -169,6 +166,7 @@ class OpenLoop(SingleModel):
         pg = Postprocessing_grid_first(state_dir=statedir2,
                                        par_dir=str(outdir / self.case / 'par'))
 
+        print('\nMonthly-mean grid analysis for %s:' % self.basin)
         state = 'TWS'
         mm = pg.monthlymean(state=state, date_begin=self.period[0].strftime('%Y-%m-%d'),
                             date_end=self.period[1].strftime('%Y-%m-%d'))
@@ -177,7 +175,8 @@ class OpenLoop(SingleModel):
         hf = h5py.File(Path(save_dir) / ('monthly_mean_%s_%s.h5' % (state, postfix)), 'w')
         for key, vv in mm.items():
             hf.create_dataset(name=key, data=vv[:])
-        print('Finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+        print('\nAnalysis finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         pass
 
     def post_processing(self, file_postfix=None, save_dir='../temp', isGRACE=False):
@@ -257,17 +256,17 @@ class OpenLoop(SingleModel):
             if i == 6:
                 fig.shift_origin(yshift='22c', xshift='14c')
                 pass
-            pygmt.config(FONT_TITLE="19p,5", MAP_TITLE_OFFSET="-0.2p", MAP_FRAME_TYPE="plain", FONT_ANNOT_PRIMARY='11p,5',
-                         FONT_LABEL='11p,5', MAP_TICK_LENGTH='7p')
+            pygmt.config(FONT_TITLE="19p,5", MAP_TITLE_OFFSET="-0.2p", MAP_FRAME_TYPE="plain",
+                         FONT_ANNOT_PRIMARY='11p,5', FONT_LABEL='11p,5', MAP_TICK_LENGTH='7p')
 
-            if len(fan_time)>720:
+            if len(fan_time) > 720:
                 fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
-                            frame=["WSne+t%s"%state, "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
+                            frame=["WSne+t%s" % state, "xa2f1", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
             else:
                 fig.basemap(region=[fan_time[0] - 0.2, fan_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
                             frame=["WSne+t%s" % state, "xa1f0.5", 'ya%df%d+lwater [mm]' % (sp_2, sp_1)])
 
-            mean=None
+            mean = None
             for ens in reversed(range(self.ens + 1)):
                 vv = states['basin_0'][state][ens]
 
@@ -281,7 +280,7 @@ class OpenLoop(SingleModel):
                     else:
                         mean += vv
 
-            fig.plot(x=fan_time, y=mean/self.ens, pen="1.5p,blue", label='Mean', transparency=30)
+            fig.plot(x=fan_time, y=mean / self.ens, pen="1.5p,blue", label='Mean', transparency=30)
             fig.legend(position='jTR', box='+gwhite+p0.5p')
             fig.shift_origin(yshift='-4.4c')
 

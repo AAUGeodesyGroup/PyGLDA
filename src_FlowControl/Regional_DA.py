@@ -80,7 +80,7 @@ class RDA:
                 else:
                     continue
 
-        for file_name in ['setting.json', 'DA_setting.json', 'pre_process.json']:
+        for file_name in ['setting.json', 'DA_setting.json', 'pre_process.json', 'perturbation.json']:
             config = json.load(open(Path(RDA.setting_dir) / file_name, 'r'))
             # print(Path(RDA.setting_dir) / file_name)
             func(config)
@@ -295,12 +295,18 @@ class RDA:
         demo.model_run()
 
         '''Analysis the model output/states'''
-        print('Postprocessing and gathering open loop results ......')
+        if rank > 0:
+            f = open('../log/OL/signal_log_%s.txt' % rank, 'w')
+            sys.stdout = f
+            sys.stdout.flush()
+
+        print('\n==== Result analysis, post-processing, and collection =====')
         demo.extract_signal(postfix='OL')
 
         comm.barrier()
 
         if rank == 0:
+            print('\nPost-processing and collecting results ...')
             demo.post_processing(file_postfix='OL', save_dir=RDA.res_output)
 
             '''change the time to get prepared for DA experiment'''
@@ -316,9 +322,8 @@ class RDA:
             '''get states samples for creating NaN mask'''
             demo.get_states_sample_for_mask()
 
-            print('job finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-
         '''Job finished'''
+        print('\njob finished: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         sys.stdout = temp
 
         pass
@@ -370,17 +375,23 @@ class RDA:
         demo.run_DA(rank=rank)
 
         '''Analysis the model output/states'''
-        print('\nPostprocessing and gathering data assimilation results ......')
+        if rank > 0:
+            f = open('../log/OL/signal_log_%s.txt' % rank, 'w')
+            sys.stdout = f
+            sys.stdout.flush()
+
+        print('\n==== Result analysis, post-processing, and collection =====')
         demo.extract_signal(postfix='DA')
 
         comm.barrier()
 
         if rank == 0:
+            print('\nPost-processing and collecting results ...')
             demo.post_processing(file_postfix='DA', save_dir=RDA.res_output, isGRACE=True)
 
-            '''Job finished'''
-            sys.stdout = temp
-            print('\njob finished: %s, %s' % (RDA.case, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        '''Job finished'''
+        print('\njob finished: %s, %s' % (RDA.case, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        sys.stdout = temp
 
         pass
 

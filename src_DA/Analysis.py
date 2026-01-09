@@ -152,8 +152,12 @@ class BasinSignalAnalysis:
 
         '''start recording data'''
         statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
+        month = -1
         for day in daylist:
             # print(day.strftime('%Y-%m-%d'))
+            if day.month != month:
+                print('.', end='')
+                month = day.month
             fn = self.__state_dir / ('state.%s.h5' % day.strftime('%Y%m%d'))
             hf = h5py.File(str(fn), 'r')
             for key in statesnn:
@@ -439,7 +443,8 @@ class Postprocessing_grid_first:
 
             if this_day == last_day:
                 '''save monthly mean'''
-                print(last_day)
+                # print(last_day)
+                print('.', end='')
                 tws_monthly_mean[this_day.strftime('%Y-%m')] = np.mean(np.array(TWS), axis=0)
                 TWS = []
                 pass

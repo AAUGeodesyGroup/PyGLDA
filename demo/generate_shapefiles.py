@@ -392,52 +392,6 @@ def Danube_grid_show(res=5):
     pass
 
 
-def plot_Europe():
-    import pygmt
-    import geopandas as gpd
-    import pandas as pd
-
-    fig = pygmt.Figure()
-    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
-    pygmt.config(FONT_ANNOT='10p', COLOR_NAN='white')
-    pygmt.makecpt(cmap='wysiwyg', series=[0, 56], background='o')
-
-    # region = [-130, -65, 20, 55]
-    region = 'g'
-    pj = 'Q40/12c'
-    fig.basemap(region=region, projection=pj,
-                frame=['WSne', 'xa10f5+lLongitude (\\260 E)', 'ya5f5+lLatitude (\\260 N)'])
-
-    fig.coast(shorelines="1/0.2p", region=region, projection=pj, water="skyblue")
-
-    gdf = gpd.read_file('/media/user/My Book/Fan/EuropeDA/continent-poly/Europe.shp').to_crs(crs='epsg:4326')
-    # gdf['OBJECTID'] = gdf['OBJECTID'].astype(float)
-    # gdf['OB']
-    # gdf.replace('CE', 0.0, inplace=True)
-    # gdf.replace('CW', 1.0, inplace=True)
-    # gdf.replace('NE', 2.0, inplace=True)
-    # gdf.replace('NO', 3.0, inplace=True)
-    # gdf.replace('NW', 4.0, inplace=True)
-    # gdf.replace('SE', 5.0, inplace=True)
-    # gdf.replace('SW', 6.0, inplace=True)
-
-    # fig.plot(data=gdf, pen="0.2p,black", fill='+z', cmap=True, aspatial='Z=OBJECTID', projection=pj, close=True)
-
-    # fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.05p,black", projection=pj)
-
-    fig.plot(data=gdf.boundary, pen="0.5p,red", projection=pj)
-
-    # gdf = gpd.read_file('/media/user/Backup Plus/GRACE/shapefiles/USgrid').to_crs(crs='epsg:4326')
-    # for i in range(gdf.shape[0]):
-    #     nn = gdf.ID[i]
-    #     xy = gdf[gdf.ID == nn].centroid
-    #     fig.text(x=xy.x, y=xy.y, text="%s" % nn, font='5p,black')
-
-    fig.show()
-
-    pass
-
-
 def box2shp(box_area=[70.1, 33.9, -11.1, 45.1]):
     """
     Generate a shp file from a box boundary.
@@ -503,23 +457,31 @@ def EuropeContinent():
         tt = gdf[gdf.ID == id]
         minx = int(float(tt.bounds.minx) / 0.1) + 1800
         maxx = int(float(tt.bounds.maxx) / 0.1) + 1800
-        maxy = 900- int(float(tt.bounds.miny) / 0.1)
-        miny = 900- int(float(tt.bounds.maxy) / 0.1)
-        vv = np.sum(mask[miny:maxy + 1,minx:maxx + 1])
-        tg = mask[miny:maxy + 1,minx:maxx + 1].size
+        maxy = 900 - int(float(tt.bounds.miny) / 0.1)
+        miny = 900 - int(float(tt.bounds.maxy) / 0.1)
+        vv = np.sum(mask[miny:maxy + 1, minx:maxx + 1])
+        tg = mask[miny:maxy + 1, minx:maxx + 1].size
 
-        if vv/tg < 0.16:
-            invalids.append(False)
-        else:
-            invalids.append(True)
+        flag = True
+
+        '''in case the land area is too small'''
+        if vv / tg < 0.16:
+            flag = False
+
+        '''in case it is beyond the land mask of GRACE. to be checked manually'''
+        '''This only works for this shapefile'''
+        if id == 84:
+            flag = False
+
+        invalids.append(flag)
 
         pass
 
     n = gdf[invalids]
     n.loc[:, 'ID'] = np.arange(np.sum(np.array(invalids))) + 1
-    gdf=n
+    gdf = n
 
-    gdf.to_file('/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe_valid/Europe.shp')
+    gdf.to_file('/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe_valid/Europe_subbasins.shp')
     '''visualization'''
     import pygmt
 
@@ -535,12 +497,19 @@ def EuropeContinent():
 
     fig.coast(shorelines="1/0.2p", region=region, projection=pj, water="skyblue")
 
-    for i in range(1, gdf.shape[0]+1):
+    for i in range(1, gdf.shape[0] + 1):
         xy = gdf[gdf.ID == i].centroid
         fig.text(x=xy.x, y=xy.y, text="%s" % i, font='7p,black')
 
     fig.plot(data=gdf.boundary, pen="0.5p,red", projection=pj)
     fig.show()
+
+    pass
+
+
+def loadShp():
+    import geopandas as gpd
+    gdf = gpd.read_file('../data/basin/shp/Europe/Grid_3/Europe_subbasins.shp')
 
     pass
 
@@ -560,3 +529,4 @@ if __name__ == '__main__':
     # plot_Europe()
     # box2shp()
     EuropeContinent()
+    # loadShp()

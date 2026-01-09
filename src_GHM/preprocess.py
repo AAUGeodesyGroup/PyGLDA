@@ -97,7 +97,7 @@ class preprocess_base:
         months = GeoMathKit.monthListByMonth(begin=date_begin, end=date_end)
 
         for date in months:
-            print('%s'%date.strftime('%Y-%m'))
+            print('%s' % date.strftime('%Y-%m'))
             fn = Path(data_path) / ('W3_ERA5_daily_%04d%02d.grib' % (date.year, date.month))
             pars = ['ssrd', '2t', 'tp']
 
@@ -106,8 +106,8 @@ class preprocess_base:
             dict_group = file.create_group('data')
             for par in pars:
                 grib = mv.read(source=str(fn), area=[lat0, lon0, lat1, lon1], param=par)
-                '''A potential risk here for cropping the area'''
-                a = grib.values().reshape(  tuple([-1] + list(np.shape(self._local_mask)))  )[:, self._local_mask]
+                # todo: A potential risk here for cropping the area
+                a = grib.values().reshape(tuple([-1] + list(np.shape(self._local_mask))))[:, self._local_mask]
                 dict_group[par] = a
                 pass
             file.close()
@@ -115,7 +115,6 @@ class preprocess_base:
         pass
 
     def _crop_climatelogies(self, data_path: str):
-
 
         dl = self._RoI
 
@@ -145,7 +144,6 @@ class preprocess_base:
         pass
 
     def _crop_parameters(self, data_path: str):
-
 
         dl = self._RoI
 
