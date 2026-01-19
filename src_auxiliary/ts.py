@@ -85,7 +85,7 @@ class ts:
 
         x_without_nan = np.linalg.lstsq(a=self.__DM, b=obs_without_nan, rcond=-1)[0]
 
-        if type(obs_m_mask) != np.bool:
+        if type(obs_m_mask) != bool:
             ll = len(obs_m_mask)
             x = np.full(shape=(np.shape(x_without_nan)[0], ll), fill_value=np.nan)
             x[:, obs_m_mask] = x_without_nan

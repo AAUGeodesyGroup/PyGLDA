@@ -169,6 +169,19 @@ class DM_basin_average:
 
         return self.getDM()@states
 
+    def operator_reduce_running_memory(self, states):
+        """
+        it is found that for a large study region the design matrix can be huge. Holding this design matrix for each
+        ensemble member can produce the error of running out memory. Therefore, this operator is developed to avoid
+        the occupation of memory by this design matrix.
+
+        Not tested yet!!
+        """
+        self._A = h5py.File(Path('../temp') / 'DM.hdf5', 'r')['data'][:]
+        B = self.getDM()
+        self._A = None # release the memory
+        return B@states
+
     def saveDM(self, out_path: str):
 
         fn = h5py.File(Path(out_path) / 'DM.hdf5', 'w')

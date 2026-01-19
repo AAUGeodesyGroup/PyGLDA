@@ -32,13 +32,15 @@ RDA.external_data_path = '/work/data_for_w3'
 # RDA.external_data_path = '/work/data_for_w3'
 
 '''Define where to load the necessary setting files'''
-RDA.setting_dir = '../settings/Europe/GRACE_mascon_3deg'
+# RDA.setting_dir = '../settings/Europe/GRACE_mascon_3deg'
+RDA.setting_dir = '../settings/Europe/GRACE_C_3deg_5daily'
 
 '''Define the size of ensemble to run for DA'''
 RDA.ens = 30
 
 '''Define the name of your case study'''
-RDA.case = 'GRACEM3D'
+# RDA.case = 'GRACEM3D'
+RDA.case = 'GRACE_C_3deg_5daily'
 
 '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
 RDA.basin = 'Europe'
@@ -52,12 +54,18 @@ RDA.cold_begin_time = '2000-01-01'
 RDA.cold_end_time = '2001-12-31'
 
 '''for open-loop'''
+# RDA.warm_begin_time = '2002-01-01'
+# RDA.warm_end_time = '2017-12-31'
+
 RDA.warm_begin_time = '2002-01-01'
-RDA.warm_end_time = '2017-12-31'
+RDA.warm_end_time = '2006-12-31'
 
 '''for data assimilation'''
+# RDA.resume_begin_time = '2002-03-01'
+# RDA.resume_end_time = '2017-12-31'
+
 RDA.resume_begin_time = '2002-03-01'
-RDA.resume_end_time = '2017-12-31'
+RDA.resume_end_time = '2006-12-31'
 
 RDA.isSet = False
 
@@ -232,11 +240,11 @@ def demo_prepare_ESA_SING_5daily(isDiagonal=False, **kwargs):
     pass
 
 
-def demo_DA_visualization():
+def demo_DA_visualization(GRACE_res=0.5, upscale_res=0.5):
     RDA.DA_visualization_basin_ensemble()
     RDA.DA_visualization_basin_DA()
-    RDA.DA_visulization_2Dmap(signal='trend')
-    RDA.DA_visulization_2Dmap(signal='annual')
+    RDA.DA_visulization_2Dmap(signal='trend', GRACE_res=GRACE_res, upscale_res=upscale_res)
+    RDA.DA_visulization_2Dmap(signal='annual', GRACE_res=GRACE_res, upscale_res=upscale_res)
     pass
 
 
@@ -429,7 +437,7 @@ if __name__ == '__main__':
     '''multiple threads'''
     # demo_OL(skipModelPerturb=False, skipSR=True)
     # demo_OL(skipModelPerturb=True, skipSR=True)
-    demo_only_DA(skip_obs_perturbation=False)
+    demo_only_DA(skip_obs_perturbation=True)
 
     # demo_complete_DA(skipModelPerturb=True, skipObsPerturb=False, skipSR=True)  # OL and DA
     # demo_only_DA(skip_obs_perturbation=False)  # only DA
@@ -439,5 +447,5 @@ if __name__ == '__main__':
     # demo_batch_visualization()
 
     '''single thread for plotting'''
-    # demo_DA_visualization()
+    # demo_DA_visualization(GRACE_res=1, upscale_res=1)
     # save_data()

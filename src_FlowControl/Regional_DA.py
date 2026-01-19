@@ -300,7 +300,7 @@ class RDA:
             sys.stdout = f
             sys.stdout.flush()
 
-        print('\n==== Result analysis, post-processing, and collection =====')
+        print('\n\n==== Result analysis, post-processing, and collection =====')
         demo.extract_signal(postfix='OL')
 
         comm.barrier()
@@ -380,7 +380,7 @@ class RDA:
             sys.stdout = f
             sys.stdout.flush()
 
-        print('\n==== Result analysis, post-processing, and collection =====')
+        print('\n\n==== Result analysis, post-processing, and collection =====')
         demo.extract_signal(postfix='DA')
 
         comm.barrier()
@@ -440,7 +440,7 @@ class RDA:
         pass
 
     @staticmethod
-    def DA_visualization_basin_DA(signal='TWS', allow_pop_up= False):
+    def DA_visualization_basin_DA(signal='TWS', allow_pop_up=False):
         from src_DA.Analysis import Postprocessing_basin
         import pygmt
         import h5py
@@ -530,7 +530,7 @@ class RDA:
                 sp_1 = 0.5
             sp_2 = sp_1 * 2
 
-            if len(OL_time)>365*4:
+            if len(OL_time) > 365 * 4:
                 fig.basemap(region=[OL_time[0] - 0.2, OL_time[-1] + 0.2, dmin, dmax], projection='X12c/3c',
                             frame=["WSne+t%s" % (basin + '_' + signal + '_' + basin_id), "xa2f1g",
                                    'ya%df%dg+lwater [mm]' % (sp_2, sp_1)])
@@ -570,7 +570,7 @@ class RDA:
         pass
 
     @staticmethod
-    def DA_visulization_2Dmap(signal='trend',allow_pop_up=False):
+    def DA_visulization_2Dmap(signal='trend', allow_pop_up=False, GRACE_res=0.5, upscale_res=0.5):
         from src_auxiliary.ts import ts
         from src_auxiliary.upscaling import upscaling
         from datetime import datetime
@@ -646,8 +646,9 @@ class RDA:
         dp4 = json.load(open(dp_dir, 'r'))
         sh = dp4['input']['mask_fn']
         us = upscaling(basin=RDA.basin)
-        us.configure_model_state(globalmask_fn=Path(sh) / RDA.case / 'mask/mask_global.h5')
-        us.configure_GRACE()
+        us.configure_model_state(globalmask_fn=Path(sh) / RDA.case / 'mask/mask_global.h5', upscaled_res=upscale_res,
+                                 modelres=0.1)
+        us.configure_GRACE(res=GRACE_res)
         # us.downscale_model(model_state=1, GRACEres=0.5, modelres=0.1)
         res_GRACE = us.get2D_GRACE(GRACE_obs=xx)
 
@@ -680,7 +681,19 @@ class RDA:
         else:
             pygmt.makecpt(cmap='jet', series=[0, vmax], background='o')
 
-        res = 0.5
+        '''for GRACE visualization'''
+        res = GRACE_res
+        err = res / 10
+        lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
+        lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
+        region = [min(lon), max(lon), min(lat), max(lat)]
+        lon, lat = np.meshgrid(lon, lat)
+
+        GRACE = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=res_GRACE.flatten(),
+                              spacing=(res, res), region=region)
+
+        '''for OL and DA visualization'''
+        res = upscale_res
         err = res / 10
         lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
         lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
@@ -693,9 +706,7 @@ class RDA:
         OL = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=res_OL.flatten(),
                            spacing=(res, res), region=region)
 
-        GRACE = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=res_GRACE.flatten(),
-                              spacing=(res, res), region=region)
-
+        '''start drawing'''
         region = [RDA.box[2] - 2, RDA.box[3] + 2, RDA.box[1] - 2, RDA.box[0] + 2]
         ps = 'Q8c'
         offset = '-10c'

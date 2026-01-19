@@ -11,17 +11,17 @@ class upscaling:
         self.__extra_mask = None
         pass
 
-    def configure_model_state(self, GRACEres=0.5, modelres=0.1,
+    def configure_model_state(self, upscaled_res=0.5, modelres=0.1,
                               globalmask_fn='/media/user/My Book/Fan/W3RA_data/crop_input/case_study_SR/mask/mask_global.h5'):
         """
-        the input model state is 1-D array at a high resolution, the output is 2-D array at a coarse resolution in global scale
+        the input model state is 1-D array at a high resolution, the output is 2-D array at a coarse resolution
         notice: could be broadcast
         """
         gm = h5py.File(globalmask_fn, 'r')['mask'][:].astype(bool)
 
         assert np.shape(gm) == (int(180 / modelres), int(360 / modelres))
 
-        self.__scale_factor = int(GRACEres / modelres)
+        self.__scale_factor = int(upscaled_res / modelres)
         self.__gm = gm
         return self
 
@@ -31,7 +31,7 @@ class upscaling:
         sample[self.__gm] = model_state
         rows, cols = sample.shape
         new = np.nanmean(sample.reshape(rows // n, n, cols // n, n), axis=(1, 3))
-        #TODO: A more advanced regrid stratey might be developed in future
+        # TODO: A more advanced regrid stratey might be developed in future
         if self.__extra_mask is not None:
             new[self.__extra_mask == False] = np.nan
 
@@ -55,9 +55,11 @@ class upscaling:
         mf = basin_shp_process(res=res, basin_name=self.__basin).shp_to_mask(shp_path=str(target[0])).mask
 
         '''load land mask'''
-        GRACE_05deg_land_mask = '../data/GRACE/GlobalLandMaskForGRACE.hdf5'
-        lm = np.flipud(h5py.File(GRACE_05deg_land_mask, 'r')['resolution_05']['mask'][:])
-
+        GRACE_land_mask = '../data/GRACE/GlobalLandMaskForGRACE.hdf5'
+        if np.fabs(res - 0.5) < 0.01:
+            lm = np.flipud(h5py.File(GRACE_land_mask, 'r')['resolution_05']['mask'][:])
+        elif np.fabs(res - 1) < 0.01:
+            lm = np.flipud(h5py.File(GRACE_land_mask, 'r')['resolution_1']['mask'][:])
         self.bshp_mask = (mf[0] * lm).astype(bool)
 
         return self

@@ -22,18 +22,20 @@ class GRACE_preparation:
         self.configure_global_land_ocean_mask()
         pass
 
-    def generate_mask(self, box_mask=None):
+    def generate_mask(self, box_mask=None, res_05=True, res_10=True):
         """
         generate and save basin mask for later use
         """
 
         '''for signal: 0.5 degree'''
-        bs1 = basin_shp_process(res=0.5, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
-            shp_path=self.__shp_path, issave=True)
+        if res_05:
+            bs1 = basin_shp_process(res=0.5, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
+                shp_path=self.__shp_path, issave=True)
 
         '''for cov: 1 degree'''
-        bs2 = basin_shp_process(res=1, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
-            shp_path=self.__shp_path, issave=True)
+        if res_10:
+            bs2 = basin_shp_process(res=1, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
+                shp_path=self.__shp_path, issave=True)
 
         '''get the area information of each subbasin'''  ##TODO: a raw estimation of the area
         self._sub_basin_area = gpd.read_file(self.__shp_path).area.values
@@ -272,8 +274,7 @@ class GRACE_preparation:
         monthlist = GeoMathKit.monthListByMonth(begin=month_begin, end=month_end)
 
         TWS = []
-        print()
-        print('Start to pre-process GRACE to obtain gridded TWS over places of interest...')
+        print('\nStart to pre-process GRACE to obtain gridded TWS over places of interest...')
 
         # time_epoch = []
         for month in monthlist:
