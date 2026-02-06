@@ -12,7 +12,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from enum import Enum
 
-from src_OBS.obs_auxiliary import aux_ESAsing_5daily
+from src_OBS.obs_auxiliary import aux_ESAsing_5daily, aux_ESM3_5daily
 
 
 class ESA_SING_5daily(GRACE_preparation):
@@ -187,7 +187,7 @@ class ESA_SING_mission(Enum):
     MAGIC = 2
 
 
-class ESA_SING_flexible_version(GRACE_preparation):
+class ESA_SING_ESM2(GRACE_preparation):
     """
     loading L3b (filtered) gridded data (1-degree) from ESA-SING simulated 5-daily solutions or monthly solution.
     """
@@ -196,16 +196,16 @@ class ESA_SING_flexible_version(GRACE_preparation):
                  shp_path='../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp'):
         super().__init__(basin_name=basin_name, shp_path=shp_path)
         self._mission = None
-        self._res = None
         pass
 
-    def set_extra_info(self, mission=ESA_SING_mission.GRACE_C_Like, resolution=ESA_SING_temp_resolution.fivedays):
+    def set_extra_info(self, mission=ESA_SING_mission.GRACE_C_Like):
         self._mission = mission
-        self._res = resolution
 
         '''get a complete time list for all ESA simulation dataset'''
+        '''This specification is for ESM2 and 5daily solution'''
         self._aux = aux_ESAsing_5daily().setTimeReference(day_begin='1990-04-01', day_end='2020-05-01',
                                                           dir_in='/media/user/My Book/Fan/ESA_SING/ESA_5daily')
+        self._file_name = 'L3b_fivedaily_product_1995_2006_V2.4.nc'
 
         return self
 
@@ -226,10 +226,7 @@ class ESA_SING_flexible_version(GRACE_preparation):
         basins_num = len(list(mf.keys())) - 1
 
         '''load EWH'''
-        if self._res == ESA_SING_temp_resolution.fivedays:
-            name = Path(dir_in) / 'L3b_fivedaily_product_1995_2006_V2.4.nc'
-        else:
-            name = Path(dir_in) / 'L3b_monthly_product_1995_2006_V2.4.nc'
+        name = Path(dir_in) / self._file_name
 
         hh = nc.Dataset(name)
 
@@ -294,10 +291,7 @@ class ESA_SING_flexible_version(GRACE_preparation):
         basins_num = len(list(mf.keys())) - 1
 
         '''load EWH'''
-        if self._res == ESA_SING_temp_resolution.fivedays:
-            name = Path(dir_in) / 'L3b_fivedaily_product_1995_2006_V2.4.nc'
-        else:
-            name = Path(dir_in) / 'L3b_monthly_product_1995_2006_V2.4.nc'
+        name = Path(dir_in) / self._file_name
 
         hh = nc.Dataset(name)
 
@@ -364,10 +358,7 @@ class ESA_SING_flexible_version(GRACE_preparation):
         mask = mf['basin'][:] * self._1deg_mask
 
         '''load EWH'''
-        if self._res == ESA_SING_temp_resolution.fivedays:
-            name = Path(dir_in) / 'L3b_fivedaily_product_1995_2006_V2.4.nc'
-        else:
-            name = Path(dir_in) / 'L3b_monthly_product_1995_2006_V2.4.nc'
+        name = Path(dir_in) / self._file_name
 
         hh = nc.Dataset(name)
 
@@ -396,6 +387,30 @@ class ESA_SING_flexible_version(GRACE_preparation):
         pass
 
 
+class ESA_SING_ESM3(ESA_SING_ESM2):
+    """
+    loading L3b (filtered) gridded data (1-degree) from ESA-SING simulated 5-daily solutions or monthly solution.
+    """
+
+    def __init__(self, basin_name='Brahmaputra_ExpZero',
+                 shp_path='../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp'):
+        super().__init__(basin_name=basin_name, shp_path=shp_path)
+        pass
+
+    def set_extra_info(self, mission=ESA_SING_mission.GRACE_C_Like):
+
+        self._mission = mission
+
+        '''get a complete time list for all ESA simulation dataset'''
+        '''This specification is for ESM2 and 5daily solution'''
+        self._aux = aux_ESM3_5daily().setTimeReference(day_begin='1990-04-01', day_end='2030-05-01',
+                                                          dir_in='/media/user/My Book/Fan/ESA_SING/ESM3.0/5daily')
+
+        self._file_name = 'L3_5day_product_2007_2020_recommended.nc'
+
+        return self
+
+
 def demo1():
     es = ESA_SING_5daily(basin_name='Brahmaputra_ExpZero',
                          shp_path='../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp')
@@ -415,20 +430,20 @@ def demo1():
 
 
 def demo2():
-    es = ESA_SING_flexible_version(basin_name='Europe',
-                                   shp_path='../data/basin/shp/Europe/Grid_3/Europe_subbasins.shp')
+    es = ESA_SING_ESM3(basin_name='Europe',
+                       shp_path='../data/basin/shp/Europe/Grid_3/Europe_subbasins.shp')
 
-    # es.set_extra_info(filter='1e+16', mission='GRACE-C-like')
-    # es.set_extra_info(filter='1e+16', mission='MAGIC')
-    es.set_extra_info(mission=ESA_SING_mission.GRACE_C_Like, resolution=ESA_SING_temp_resolution.fivedays)
+    # es.set_extra_info(mission=ESA_SING_mission.GRACE_C_Like)
+    # es.set_extra_info(mission=ESA_SING_mission.NGGM)
+    es.set_extra_info(mission=ESA_SING_mission.MAGIC)
 
     es.generate_mask(res_05=False)
 
-    es.basin_TWS(day_begin='2002-03-01', day_end='2006-12-31')
+    es.basin_TWS(day_begin='2012-03-01', day_end='2018-12-31')
 
-    es.basin_COV(day_begin='2002-03-01', day_end='2006-12-31')
+    es.basin_COV(day_begin='2012-03-01', day_end='2018-12-31', isDiagonal=True)
 
-    es.grid_TWS(day_begin='2002-03-01', day_end='2006-12-31')
+    es.grid_TWS(day_begin='2012-03-01', day_end='2018-12-31')
     pass
 
 

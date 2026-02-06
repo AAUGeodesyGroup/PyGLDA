@@ -223,6 +223,44 @@ class aux_ESAsing_5daily(obs_auxiliary):
 
         return self
 
+class aux_ESM3_5daily(obs_auxiliary):
+
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def setTimeReference(self, day_begin='1990-04-01', day_end='2008-05-01',
+                         dir_in='/media/user/My Book/Fan/ESA_SING/ESM3.0/5daily'):
+
+        day_begin = datetime.strptime(day_begin, '%Y-%m-%d')
+        day_end = datetime.strptime(day_end, '%Y-%m-%d')
+        year_limit = np.arange(2007, 2021)
+        time_epoch = []
+        duration = []
+        for year in year_limit:
+            directory = Path(dir_in) / ('%s' % year)
+            fns = os.listdir(directory)
+            fns.sort()
+
+            for ff in fns:
+                x = ff.split('.')[0].split('_')
+                a, b = x[2], x[3]
+                ss1 = datetime.strptime(a, '%Y%m%d')
+                ss2 = datetime.strptime(b, '%Y%m%d')
+                ss2 = ss2 - timedelta(days=int(1))
+                ss3 = ss1 + timedelta(days=int(2))
+
+                if ss1 >= day_begin and ss2 <= day_end:
+                    duration.append(ss1.strftime('%Y-%m-%d') + '_' + ss2.strftime('%Y-%m-%d'))
+                    time_epoch.append(ss3.strftime('%Y-%m-%d'))
+
+            pass
+
+        self._TimeRef['duration'] = duration
+        self._TimeRef['time_epoch'] = time_epoch
+
+        return self
+
 
 def demo1():
     # aux = aux_ESAsing_5daily()

@@ -328,7 +328,7 @@ class DA_GRACE_flexibile(DA_GRACE):
         pass
 
     def generate_perturbed_GRACE_obs(self):
-        from src_OBS.obs_auxiliary import aux_ESAsing_5daily, aux_GRACE_SH_monthly, aux_GRACE_mascon_monthly
+        from src_OBS.obs_auxiliary import aux_ESAsing_5daily, aux_GRACE_SH_monthly, aux_GRACE_mascon_monthly,aux_ESM3_5daily
         from src_OBS.GRACE_perturbation import GRACE_perturbed_obs
 
         dp_dir = self.setting_dir / 'DA_setting.json'
@@ -348,6 +348,10 @@ class DA_GRACE_flexibile(DA_GRACE):
         elif configDA.obs.GRACE['kind'] == 'ESA_SING':
             obs_aux = aux_ESAsing_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
                                                             dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+        elif configDA.obs.GRACE['kind'] == 'ESA_SING_ESM3':
+            obs_aux = aux_ESM3_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
+                                                            dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+
         elif configDA.obs.GRACE['kind'] == 'Mascon_monthly':
             t1 = datetime.strptime(begin_day, '%Y-%m-%d').strftime('%Y-%m')
             t2 = datetime.strptime(end_day, '%Y-%m-%d').strftime('%Y-%m')

@@ -279,7 +279,7 @@ class Postprocessing_basin:
         for dd in gr.keys():
             if 'ens_' in dd:
                 ens_num += 1
-        print(ens_num)
+        # print(ens_num)
         try:
             basin_num = np.shape(gr['cov'][0])[0]
         except Exception:

@@ -483,6 +483,7 @@ def EuropeContinent():
 
     gdf.to_file('/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe_valid/Europe_subbasins.shp')
     '''visualization'''
+    gdf =gpd.read_file(filename='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe_valid/Europe_subbasins.shp')
     import pygmt
 
     fig = pygmt.Figure()
@@ -503,6 +504,8 @@ def EuropeContinent():
 
     fig.plot(data=gdf.boundary, pen="0.5p,red", projection=pj)
     fig.show()
+
+    # fig.savefig('/home/user/Documents/ESA_SING_EXP/Europe/shape.png')
 
     pass
 

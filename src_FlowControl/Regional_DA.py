@@ -766,7 +766,7 @@ class RDA:
             dpi=100,
             projection=ps,
             region=region,
-            # interpolation='n'
+            interpolation='l'
         )
 
         fig.coast(shorelines="1/0.2p", region=region, projection=ps)
@@ -787,7 +787,7 @@ class RDA:
             dpi=100,
             projection=ps,
             region=region,
-            # interpolation='n'
+            interpolation='l'
         )
 
         fig.coast(shorelines="1/0.2p", region=region, projection=ps)
@@ -803,7 +803,7 @@ class RDA:
             dpi=100,
             projection=ps,
             region=region,
-            # interpolation='n'
+            interpolation='l'
         )
 
         fig.coast(shorelines="1/0.2p", region=region, projection=ps)
