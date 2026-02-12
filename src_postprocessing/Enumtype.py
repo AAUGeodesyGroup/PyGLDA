@@ -8,6 +8,7 @@ class data_var(Enum):
     DeepSoilWater = 3
     SurfaceWater = 4
     Discharge = 5
+    TopSoil = 6
 
 
 class data_dim(Enum):

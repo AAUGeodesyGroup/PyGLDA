@@ -24,11 +24,13 @@ class dataManager_single_run:
         self._mask = None
         self._statesnn = None
         self._state_dir = None
+        self._basin_mask_1D = None
 
     def configure(self, setting_fn, out_dir, variable=data_var.TotalWater, dims=data_dim.one_dimension):
         setting = config_settings.loadjson(setting_fn).process()
         self._setting = setting
         self._mask = setting.mask
+        self._basin_mask_1D = self._mask[self._mask.astype(bool)].astype(bool)
         self._out_dir = Path(out_dir) / setting.bounds.prefix
         self._state_dir = Path(setting.statedir)
         self._outputOtherVariables_dir = Path(setting.outdir)
@@ -52,6 +54,8 @@ class dataManager_single_run:
             self._statesnn = ['Sr']
         elif variable == data_var.DeepSoilWater:
             self._statesnn = ['Sd']
+        elif variable == data_var.TopSoil:
+            self._statesnn = ['S0']
 
         self._dims = dims
 
@@ -61,14 +65,19 @@ class dataManager_single_run:
         return self
 
     def reduce_datasize(self, global_basin_mask, save_mask=None):
-        """this is to keep only points that participate in the data assimilation"""
+        """
+        this is to keep only points that participate in the data assimilation
+        Notice: this is optional, meaning that one can also preserve all points even some of which is not assimilated.
+        """
         basin_mask = global_basin_mask
+        gl_DA_mask = np.full_like(basin_mask, fill_value=False)
         ss = self._setting
         dl = ss.RoI[ss.run.res]
         basin_mask = basin_mask[dl[0]: dl[1], dl[2]: dl[3]]
         basin_mask_1D = basin_mask[self._mask.astype(bool)].astype(bool)
         self._mask *= basin_mask
         self._basin_mask_1D = basin_mask_1D
+        gl_DA_mask[dl[0]: dl[1], dl[2]: dl[3]] = self._mask
 
         if save_mask is not None:
             res = ss.run.res
@@ -81,6 +90,7 @@ class dataManager_single_run:
             fn_w = Path(save_mask) / ('%s.h5' % ss.bounds.prefix)
             h5_w = h5py.File(fn_w, 'w')
             h5_w.create_dataset(name='mask', data=self._mask.astype(int))
+            h5_w.create_dataset(name='mask_global', data=gl_DA_mask.astype(int))
             h5_w.create_dataset(name='lat', data=lats)
             h5_w.create_dataset(name='lon', data=lons)
             h5_w.close()

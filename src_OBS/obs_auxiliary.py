@@ -265,8 +265,11 @@ class aux_ESM3_5daily(obs_auxiliary):
 def demo1():
     # aux = aux_ESAsing_5daily()
     # aux = aux_GRACE_SH_monthly()
-    aux = aux_GRACE_mascon_monthly()
-    aux.setTimeReference(dir_in='/media/user/My Book/Fan/SummerSchool/External Data/GRACE/SaGEA/signal_Mascon')
+    # aux = aux_GRACE_mascon_monthly()
+    # aux.setTimeReference(dir_in='/media/user/My Book/Fan/SummerSchool/External Data/GRACE/SaGEA/signal_Mascon')
+
+    aux = aux_ESM3_5daily()
+    aux.setTimeReference(day_begin='1990-01-01', day_end='2030-01-01')
 
     pass
 

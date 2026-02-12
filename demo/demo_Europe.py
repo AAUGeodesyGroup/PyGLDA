@@ -33,14 +33,14 @@ RDA.external_data_path = '/work/data_for_w3'
 
 '''Define the name of your case study'''
 # RDA.case = 'GRACEM3D'
-RDA.case = 'GRACE_C_3deg_5daily'
-# RDA.case = 'NGGM_3deg_5daily'
+# RDA.case = 'GRACE_C_3deg_5daily'
+RDA.case = 'NGGM_3deg_5daily'
 # RDA.case = 'MAGIC_3deg_5daily'
 
 '''Define where to load the necessary setting files'''
 # RDA.setting_dir = '../settings/Europe/GRACE_mascon_3deg'
-RDA.setting_dir = '../settings/EuropeESM3/GRACE_C_3deg_5daily'
-# RDA.setting_dir = '../settings/EuropeESM3/NGGM_3deg_5daily'
+# RDA.setting_dir = '../settings/EuropeESM3/GRACE_C_3deg_5daily'
+RDA.setting_dir = '../settings/EuropeESM3/NGGM_3deg_5daily'
 # RDA.setting_dir = '../settings/EuropeESM3/MAGIC_3deg_5daily'
 
 '''Define the size of ensemble to run for DA'''
@@ -227,7 +227,7 @@ def save_data(data_type=data_var.TotalWater):
                                                      out_dir_mean='/work/data_for_w3/w3ra/save_data/DA_mean',
                                                      out_dir_std='/work/data_for_w3/w3ra/save_data/DA_std',
                                                      variable=data_type, dims=data_dim.one_dimension)
-    dsr.reduce_datasize(global_basin_mask=global_basin_mask, save_mask='/work/data_for_w3/w3ra/save_data/Mask')
+    # dsr.reduce_datasize(global_basin_mask=global_basin_mask, save_mask='/work/data_for_w3/w3ra/save_data/Mask')
 
     '''====================================================================='''
     dsr.aggregation_daily(date_begin=RDA.resume_begin_time, date_end=RDA.resume_end_time)
@@ -236,7 +236,7 @@ def save_data(data_type=data_var.TotalWater):
     dsr = dataManager_ensemble_member(ens=0).configure(setting_fn=str(settings),
                                                        out_dir='/work/data_for_w3/w3ra/save_data/OL_mean',
                                                        variable=data_type, dims=data_dim.one_dimension)
-    dsr.reduce_datasize(global_basin_mask=global_basin_mask)
+    # dsr.reduce_datasize(global_basin_mask=global_basin_mask)
 
     '''====================================================================='''
     dsr.aggregation_daily(date_begin=RDA.resume_begin_time, date_end=RDA.resume_end_time)
@@ -259,15 +259,16 @@ if __name__ == '__main__':
     '''multiple threads'''
     # demo_OL(skipModelPerturb=False, skipSR=True)
     # demo_OL(skipModelPerturb=True, skipSR=True)
-    demo_only_DA(skip_obs_perturbation=False)
+    # demo_only_DA(skip_obs_perturbation=False)
 
     # demo_complete_DA(skipModelPerturb=True, skipObsPerturb=False, skipSR=True)  # OL and DA
     # demo_only_DA(skip_obs_perturbation=False)  # only DA
 
     '''single thread for plotting'''
     # demo_DA_visualization(GRACE_res=1, upscale_res=1)
-    # save_data(data_type=data_var.TotalWater)
-    # save_data(data_type=data_var.SoilWater)
-    # save_data(data_type=data_var.GroundWater)
-    # save_data(data_type=data_var.SurfaceWater)
+    save_data(data_type=data_var.TotalWater)
+    save_data(data_type=data_var.SoilWater)
+    save_data(data_type=data_var.GroundWater)
+    save_data(data_type=data_var.SurfaceWater)
+    save_data(data_type=data_var.TopSoil)
 

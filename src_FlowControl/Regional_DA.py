@@ -279,6 +279,8 @@ class RDA:
         demo.configure_area(box=RDA.box, basin=RDA.basin)
 
         if rank == 0:
+            print('\n=================Welcome to the OL experiment for: %s====================' % RDA.case)
+
             '''change the sub-setting files according to the main setting'''
             demo.generate_settings(mode=init_mode.warm)
 
