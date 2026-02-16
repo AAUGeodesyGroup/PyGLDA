@@ -29,6 +29,8 @@ class DataAssimilation:
         '''obtain info'''
         self._obs_helper = self.helper_resolve_time(obs.get_obs_aux())
 
+        '''inflation factor'''
+        self._inflation = 1.0
         pass
 
     def configure_design_matrix(self, DM: DM_basin_average):
@@ -57,6 +59,9 @@ class DataAssimilation:
 
         '''calculate the deviation of ens_states'''
         A = ens_states - np.mean(ens_states, 1)[:, None]
+
+        '''Inflation to increase the model perturbation'''
+        A = A*self._inflation
 
         '''propagate it into obs-equivalent variable'''
         HX = self._DM(states=ens_states)
