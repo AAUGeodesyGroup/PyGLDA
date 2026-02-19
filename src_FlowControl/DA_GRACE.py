@@ -251,7 +251,7 @@ class DA_GRACE(OpenLoop):
         import json
         from src_DA.observations import GRACE_obs
         from src_DA.ExtractStates import EnsStates
-        from src_DA.data_assimilaton import DataAssimilation, DataAssimilation_monthly, \
+        from src_DA.EnKF_fixed_time_old import DataAssimilation, DataAssimilation_monthly, \
             DataAssimilation_monthlymean_dailyupdate, DataAssimilation_monthly_diag
 
         if rank != 0:
@@ -376,7 +376,8 @@ class DA_GRACE_flexibile(DA_GRACE):
         import json
         from src_DA.observations import GRACE_obs
         from src_DA.ExtractStates import EnsStates
-        from src_DA.data_assimilation_flexible_time import DataAssimilation
+        from src_DA.EnKF import EnKF
+        from src_DA.EnSQRA import EnSQRA, EnSQRA_V2
 
         if rank != 0:
             f = open('../log/OL/log_%s.txt' % rank, 'w')
@@ -433,7 +434,9 @@ class DA_GRACE_flexibile(DA_GRACE):
         '''DA experiment'''
         # da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
-        da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = EnKF(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = EnSQRA(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da = EnSQRA_V2(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da.configure_design_matrix(DM=dm)
 

@@ -9,7 +9,7 @@ from mpi4py import MPI
 from datetime import datetime
 
 
-class DataAssimilation:
+class EnKF:
     """
     Monthly mean update: each day has the same update;
     This is a version to allow one to set observation at any time interval.
@@ -30,7 +30,7 @@ class DataAssimilation:
         self._obs_helper = self.helper_resolve_time(obs.get_obs_aux())
 
         '''inflation factor'''
-        self._inflation = 1.0
+        self._inflation = 1.1
         pass
 
     def configure_design_matrix(self, DM: DM_basin_average):
@@ -39,6 +39,10 @@ class DataAssimilation:
         Here we pass the function (operator) instead of design matrix to gain flexibility in the future
         """
         self._DM = DM.operator
+        return self
+
+    def configure_inflation_factor(self, inflation=1.0):
+        self._inflation = inflation
         return self
 
     def predict(self, states, today='2002-01-01', is_first_day=False, issave=True):
@@ -62,9 +66,10 @@ class DataAssimilation:
 
         '''Inflation to increase the model perturbation'''
         A = A*self._inflation
+        ens_states_inf = np.mean(ens_states, 1)[:, None] + A
 
         '''propagate it into obs-equivalent variable'''
-        HX = self._DM(states=ens_states)
+        HX = self._DM(states=ens_states_inf)
 
         '''to calculate the deviation'''
         HA = HX - np.mean(HX, 1)[:, None]
@@ -81,7 +86,7 @@ class DataAssimilation:
         K = 1 / (N - 1) * A @ Bt.T
 
         '''update the states'''
-        states_update = ens_states + K @ (obs - HX)
+        states_update = ens_states_inf + K @ (obs - HX)
 
         return states_update
 

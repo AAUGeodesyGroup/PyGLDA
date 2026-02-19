@@ -78,15 +78,39 @@ class basin_shp_process:
         for id in np.arange(gdf.ID.size) + 1:
             # if id !=3: continue
             bd1 = gdf[gdf.ID == id]
-            mask1 = shapely.vectorized.touches(bd1.geometry.item(), lon, lat)
-            mask2 = shapely.vectorized.contains(bd1.geometry.item(), lon, lat)
+
+            """crop data"""
+            bb = bd1.total_bounds
+            crop_box = {
+                "lat": [
+                    bb[3],
+                    bb[1]
+                ],
+                "lon": [
+                    bb[0],
+                    bb[2]
+                ]}
+
+            sub_lat, sub_lon, box_mask_id = self._crop_box(crop_box=crop_box)
+
+            '''get local mask'''
+            mask1 = shapely.vectorized.touches(bd1.geometry.item(), sub_lon, sub_lat)
+            mask2 = shapely.vectorized.contains(bd1.geometry.item(), sub_lon, sub_lat)
             mask3 = mask1 + mask2
+
+            '''project to the global mask'''
+            mask_gl = np.full_like(lat, fill_value=0, dtype=bool)
+            mask_gl[box_mask_id[0]:box_mask_id[1], box_mask_id[2]:box_mask_id[3]] = mask3
+            mask3 = mask_gl
+
             # mask3=mask2
             # print('Mask for %s' % bd1.ID.values[0])
             if self.box_mask is not None:
                 mask3 = (mask3 * self.box_mask).astype(bool)
 
             mask_basin[bd1.ID.values[0]] = mask3
+
+            '''add up to get the mask for the entire basin'''
             mask_all += mask3
 
             if issave:
@@ -164,6 +188,30 @@ class basin_shp_process:
 
         return self
 
+    def _crop_box(self, crop_box: dir):
+        res = self._res
+        err = res / 10
+        lat = np.arange(90 - res / 2, -90 + res / 2 - err, -res)
+        lon = np.arange(-180 + res / 2, 180 - res / 2 + err, res)
+
+        lati = [np.argmin(np.fabs(lat - max(crop_box['lat']))),
+                np.argmin(np.fabs(lat - min(crop_box['lat'])))]
+        loni = [np.argmin(np.fabs(lon - min(crop_box['lon']))),
+                np.argmin(np.fabs(lon - max(crop_box['lon'])))]
+        box_mask_id = [lati[0], lati[1] + 1, loni[0], loni[1] + 1]
+
+        '''to extend the box a little bit to avoid potential missing point'''
+        box_mask_id = [lati[0]-2, lati[1] + 3, loni[0]-2, loni[1] + 3]
+
+        lon, lat = np.meshgrid(lon, lat)
+        # box_mask = np.zeros(np.shape(lon))
+        #
+        # box_mask[box_mask_id[0]:box_mask_id[1], box_mask_id[2]:box_mask_id[3]] = 1
+
+        lon = lon[box_mask_id[0]:box_mask_id[1], box_mask_id[2]:box_mask_id[3]]
+        lat = lat[box_mask_id[0]:box_mask_id[1], box_mask_id[2]:box_mask_id[3]]
+
+        return lat, lon, box_mask_id
 
 def demo1():
     bs = basin_shp_process(res=0.1, basin_name='MDB').shp_to_mask(
