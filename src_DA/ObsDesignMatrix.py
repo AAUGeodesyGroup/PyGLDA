@@ -4,6 +4,7 @@ import numpy as np
 from scipy.linalg import block_diag
 import h5py
 from pathlib import Path
+from datetime import datetime
 
 
 class DM_basin_average:
@@ -187,8 +188,7 @@ class DM_basin_average:
         fn = h5py.File(Path(out_path) / 'DM.hdf5', 'w')
         fn.create_dataset('data', data=self._A)
         fn.close()
-
-        print('Successfully generate and save the design matrix...')
+        print('Finished and save the design matrix: %s'% datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         pass
 

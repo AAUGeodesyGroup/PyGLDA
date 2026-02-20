@@ -8,6 +8,7 @@ import numpy as np
 from mpi4py import MPI
 from datetime import datetime
 from src_DA.EnKF import EnKF
+from src_DA.CovRegularization import CovRegu
 
 
 class EnSQRA(EnKF):
@@ -52,7 +53,7 @@ class EnSQRA(EnKF):
 
         '''check Eq. (4.12) of Maike's thesis, but with slight modification'''
         D =  HA.T @ Bt /(N-1)
-        Sigma, V = np.linalg.eig(D)
+        Sigma, V = np.linalg.eigh(D)
         rn = np.random.normal(size=N * N).reshape(N, N)
         mp = V @ (np.diag(np.sqrt(1 - Sigma))) @ rn
         update_perturbation = A @ mp / (np.sqrt(N - 1))
@@ -227,7 +228,7 @@ class EnSQRA_V2(EnSQRA):
         update is for all ensembles
         reference: WIKI and Maike's thesis
         """
-        R = obs_cov
+        R = obs_cov/50 # this is a test to see the effect of a full trust on observation.
 
         '''calculate the deviation of ens_states'''
         A = ens_states - np.mean(ens_states, 1)[:, None]
@@ -242,8 +243,17 @@ class EnSQRA_V2(EnSQRA):
         '''to calculate the deviation'''
         HA = HX - np.mean(HX, 1)[:, None]
 
+        '''calculate the model COV'''
+        CA = np.cov(HA)
+
+        '''regularization: solve the stability problem by adding a tiny diagonal matrix'''
+        # P += 1e-3 * np.eye(P.shape[0])
+        cc = CovRegu().set_COV(cov=CA)
+        cc.method_threshold_correlation_covariance(tau=0.3)
+        CA = cc.get_COV()
+
         '''calculate matrix P'''
-        P = np.cov(HA) + R
+        P = CA + R
 
         '''calculate the gain factor K'''
         N = self.DA_setting.basic.ensemble
@@ -254,7 +264,7 @@ class EnSQRA_V2(EnSQRA):
 
         '''check Eq. (4.12) of Maike's thesis, but with slight modification'''
         D =  HA.T @ Bt /(N-1)
-        Sigma, V = np.linalg.eig(D)
+        Sigma, V = np.linalg.eigh(D)
         # rn = np.random.normal(size=N * N).reshape(N, N)
         mp = V @ (np.diag(np.sqrt(1 - Sigma)))
         update_perturbation = A @ mp

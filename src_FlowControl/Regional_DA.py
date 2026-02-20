@@ -353,6 +353,7 @@ class RDA:
         demo.configure_area(box=RDA.box, basin=RDA.basin)
 
         if rank == 0:
+            print('\n\n======================Preparation===========================')
             '''change the sub-setting files according to the main setting'''
             demo.generate_settings(mode=init_mode.resume)
 

@@ -245,6 +245,10 @@ def save_data(data_type=data_var.TotalWater):
 
 
 if __name__ == '__main__':
+    '''banner first, always'''
+    from src_auxiliary.banner import print_pyglda_banner
+    print_pyglda_banner()
+
     '''single threads for preparing GRACE data: local'''
     # demo_prepare_ESA_SING_5daily_loop()
     # demo_prepare_GRACE_Mascon_locally(isDiagonal=True)

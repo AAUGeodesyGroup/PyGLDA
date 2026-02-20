@@ -201,7 +201,7 @@ class DA_GRACE(OpenLoop):
 
         bs = basin_shp_process(res=0.1, basin_name=basin).shp_to_mask(shp_path=shp_path)
 
-        print('\nPreparing OBS design matrix: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('\nPreparing the design matrix that projects the state to observation space...')
         land_mask = str(Path(self._outdir) / self.case / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
 
@@ -328,7 +328,8 @@ class DA_GRACE_flexibile(DA_GRACE):
         pass
 
     def generate_perturbed_GRACE_obs(self):
-        from src_OBS.obs_auxiliary import aux_ESAsing_5daily, aux_GRACE_SH_monthly, aux_GRACE_mascon_monthly,aux_ESM3_5daily
+        from src_OBS.obs_auxiliary import aux_ESAsing_5daily, aux_GRACE_SH_monthly, aux_GRACE_mascon_monthly, \
+            aux_ESM3_5daily
         from src_OBS.GRACE_perturbation import GRACE_perturbed_obs
 
         dp_dir = self.setting_dir / 'DA_setting.json'
@@ -350,7 +351,7 @@ class DA_GRACE_flexibile(DA_GRACE):
                                                             dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
         elif configDA.obs.GRACE['kind'] == 'ESA_SING_ESM3':
             obs_aux = aux_ESM3_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
-                                                            dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+                                                         dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
 
         elif configDA.obs.GRACE['kind'] == 'Mascon_monthly':
             t1 = datetime.strptime(begin_day, '%Y-%m-%d').strftime('%Y-%m')
@@ -383,7 +384,7 @@ class DA_GRACE_flexibile(DA_GRACE):
             f = open('../log/OL/log_%s.txt' % rank, 'w')
             sys.stdout = f
 
-        print('\nConfigure DA experiments: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('\n=================Configure DA experiment====================')
 
         '''configure DA'''
         dp_dir = self.setting_dir / 'DA_setting.json'
@@ -398,7 +399,7 @@ class DA_GRACE_flexibile(DA_GRACE):
         ext = ext_adapter(par=par, settings=settings)
         model_instance = model_run_daily(settings=settings, par=par, model_init=model_init, ext=ext)
 
-        print('Configure shapefile: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Configure shapefile: %s' % configDA.basic.basin)
         '''define the basin-shp file and derive the corresponding mask'''
         basin = configDA.basic.basin
         shp_path = configDA.basic.basin_shp
@@ -412,7 +413,7 @@ class DA_GRACE_flexibile(DA_GRACE):
         state_sample = Path(configDA.basic.NaNmaskStatesDir) / ('%s_state.h5' % self.case)
         bs.mask_nan(sample=state_sample)
 
-        print('Configure OBS and its design matrix: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        print('Configure OBS and its design matrix: %s' % (configDA.obs.GRACE['kind']))
         '''obtain the design matrix from pre-saved data'''
         layer = {}
         for key, vv in configDA.basic.layer.items():

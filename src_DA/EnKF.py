@@ -30,7 +30,7 @@ class EnKF:
         self._obs_helper = self.helper_resolve_time(obs.get_obs_aux())
 
         '''inflation factor'''
-        self._inflation = 1.1
+        self._inflation = 1.5
         pass
 
     def configure_design_matrix(self, DM: DM_basin_average):
@@ -65,7 +65,7 @@ class EnKF:
         A = ens_states - np.mean(ens_states, 1)[:, None]
 
         '''Inflation to increase the model perturbation'''
-        A = A*self._inflation
+        A = A * self._inflation
         ens_states_inf = np.mean(ens_states, 1)[:, None] + A
 
         '''propagate it into obs-equivalent variable'''
@@ -333,3 +333,56 @@ class EnKF:
                 'KeepRecord': KeepRecord,
                 'AssimilationRecord': AssimilationRecord,
                 'AssimilationInfo': AssimilationInfo}
+
+
+class EnKF_adaptive(EnKF):
+    """
+    In this approach, we wish to increase the weight of obs when the deviation between model and obs becomes big.
+    In another word, we trust obs more than model when they have big deviation. In this case, covariance of obs must be
+    diagonal.# todo: not finished yet
+    """
+
+    def __init__(self, DA_setting: config_DA, model: model_run_daily, obs: GRACE_obs, sv: EnsStates):
+        super().__init__(DA_setting, model, obs, sv)
+
+    def update(self, obs, obs_cov, ens_states):
+        """
+        update is for all ensembles
+        reference: WIKI
+        """
+        R = obs_cov
+
+        '''calculate the deviation of ens_states'''
+        A = ens_states - np.mean(ens_states, 1)[:, None]
+
+        '''Inflation to increase the model perturbation'''
+        A = A * self._inflation
+        ens_states_inf = np.mean(ens_states, 1)[:, None] + A
+
+        '''propagate it into obs-equivalent variable'''
+        HX = self._DM(states=ens_states_inf)
+
+        '''to calculate the deviation'''
+        HA = HX - np.mean(HX, 1)[:, None]
+
+        '''calculate the increment'''
+        increment = np.mean(obs - HX, 1)
+
+        '''adjust the cov according to the increment'''
+        cr = np.diag(np.diag(R) * np.abs(increment) / HX)
+
+        '''calculate matrix P'''
+        P = np.cov(HA) + R
+
+        '''calculate the gain factor K'''
+        N = self.DA_setting.basic.ensemble
+        '''method-1: straight-forward'''
+        # K = 1 / (N - 1) * A @ HA.T @ np.linalg.inv(P)
+        '''method-2: via linear solver'''
+        Bt = np.linalg.lstsq(P.T, HA, rcond=None)[0]
+        K = 1 / (N - 1) * A @ Bt.T
+
+        '''update the states'''
+        states_update = ens_states_inf + K @ (obs - HX)
+
+        return states_update
