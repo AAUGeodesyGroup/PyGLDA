@@ -441,7 +441,7 @@ def demo2():
 
     es.basin_TWS(day_begin='2012-03-01', day_end='2018-12-31')
 
-    es.basin_COV(day_begin='2012-03-01', day_end='2018-12-31', isDiagonal=True)
+    es.basin_COV(day_begin='2012-03-01', day_end='2018-12-31', isDiagonal=False)
 
     es.grid_TWS(day_begin='2012-03-01', day_end='2018-12-31')
     pass

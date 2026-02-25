@@ -11,7 +11,9 @@ and W3RA hydrologocal model (up to 0.1 degree and daily).
 <img src="structure.jpg" width="450">
 
 When referencing this work, please cite: 
-> Yang, F., Schumacher, M., Retegui-Schiettekatte, L., van Dijk, A. I. J. M., and Forootan, E.: PyGLDA: a fine-scale Python-based Global Land Data Assimilation system for integrating satellite gravity data into hydrological models, Geosci. Model Dev. Discuss. [preprint], https://doi.org/10.5194/gmd-2024-125, 2024.
+> Yang, F., Schumacher, M., Retegui-Schiettekatte, L., van Dijk, A. I. J. M., and Forootan, E.: PyGLDA: a fine-scale 
+python-based global land data assimilation system for integrating satellite gravity data into hydrological models, 
+Geosci. Model Dev., 18, 6195–6217, https://doi.org/10.5194/gmd-18-6195-2025, 2025
 
 ## Developer and contact
 - Fan Yang (fany@plan.aau.dk)

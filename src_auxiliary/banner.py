@@ -74,7 +74,7 @@ def print_pyglda_banner(version="1.0.0"):
     print()
     print(f"{c('Version', GREEN):14} : {version}")
     print(f"{c('Institution', GREEN):14} : Aalborg University – Geodesy Group")
-    print(f"{c('DOI', GREEN):14} : 10.5194/gmd-2024-125")
+    print(f"{c('DOI', GREEN):14} : https://doi.org/10.5194/gmd-18-6195-2025")
     print(f"{c('Repository', GREEN):14} : github.com/AAUGeodesyGroup/PyGLDA")
     # print()
     # print("Ensemble-based global land water data assimilation")

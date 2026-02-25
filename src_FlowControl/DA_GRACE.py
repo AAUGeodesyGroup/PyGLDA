@@ -377,7 +377,7 @@ class DA_GRACE_flexibile(DA_GRACE):
         import json
         from src_DA.observations import GRACE_obs
         from src_DA.ExtractStates import EnsStates
-        from src_DA.EnKF import EnKF
+        from src_DA.EnKF import EnKF, EnKF_localization_v1, EnKF_localization_v2, EnKF_domain_localization
         from src_DA.EnSQRA import EnSQRA, EnSQRA_V2
 
         if rank != 0:
@@ -399,7 +399,7 @@ class DA_GRACE_flexibile(DA_GRACE):
         ext = ext_adapter(par=par, settings=settings)
         model_instance = model_run_daily(settings=settings, par=par, model_init=model_init, ext=ext)
 
-        print('Configure shapefile: %s' % configDA.basic.basin)
+        print('Configure shapefile: %s ... (may take a while)' % configDA.basic.basin)
         '''define the basin-shp file and derive the corresponding mask'''
         basin = configDA.basic.basin
         shp_path = configDA.basic.basin_shp
@@ -437,7 +437,10 @@ class DA_GRACE_flexibile(DA_GRACE):
         # da = DataAssimilation_monthly(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = EnKF(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = EnSQRA(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
-        da = EnSQRA_V2(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = EnSQRA_V2(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = EnKF_localization_v1(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da = EnKF_domain_localization(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = EnKF_localization_v2(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da.configure_design_matrix(DM=dm)
 

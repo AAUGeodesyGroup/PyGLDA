@@ -1,4 +1,6 @@
 import numpy as np
+import geopandas as gpd
+
 
 class CovRegu:
 
@@ -38,7 +40,8 @@ class CovRegu:
         pass
 
     def method_shrinkage(self, alpha):
-        n = self._cov.shape[0]
+        """be careful, not choosing a big alpha. best within [0.05, 0.15]"""
+        # n = self._cov.shape[0]
         self._reguCOV = (1 - alpha) * self._cov + alpha * np.diag(np.diag(self._cov))
         pass
 
@@ -148,12 +151,15 @@ class CovRegu:
 
         # Project to nearest PD
         R_pd = self._nearest_positive_definite(A=R)
+        # R_pd = R
 
         # Convert back to covariance
         D = np.diag(d)
         Sigma_new = D @ R_pd @ D
 
-        return Sigma_new
+        self._reguCOV = Sigma_new
+
+        pass
 
     def method_domain_localization(self, radius):
 
@@ -162,3 +168,80 @@ class CovRegu:
         """
 
         pass
+
+
+class DomainLocalization:
+    """
+    Be aware that this method is primarily developed for the covariance localization in the observation space. Therefore,
+    the localization will be designed according to the shapefile that defines the network of the observation. Currently,
+    the distance between the geocenter of two basins will be used as the basis for domain localization.
+
+    if this is for a covariance of a small dimension, call the Pmatrix which was pre-saved for accelerating computation.
+    if the target covariance is huge, please call the Poperator instead which whill instantly localize the covariance each time.
+    """
+
+    def __init__(self, shapefile, radius):
+        self._sh = gpd.read_file(filename=shapefile)
+        self._radius = radius
+        self._Pmatrix = None
+
+        self._center_coordinate()
+        pass
+
+    def Pmatrix(self):
+        if self._Pmatrix is not None:
+            '''load the already-existing P matrix'''
+            return self._Pmatrix
+
+        '''calculate the Pmatrix and save it for next use'''
+        basin_num = len(self._sh.ID)
+        P = np.zeros(shape=(basin_num, basin_num))
+        distance = np.zeros_like(P)
+
+        for i in range(basin_num):
+            point1 = np.array([self._coordinate['lat'][i], self._coordinate['lon'][i]])
+            point2 = np.array([self._coordinate['lat'][i:], self._coordinate['lon'][i:]])
+            distance[i, i:] = self._distance_metric_1(point1=point1, point2=point2)
+
+        distance = distance + distance.T
+
+        P[distance < self._radius] = 1
+
+        self._Pmatrix = P
+
+        return self._Pmatrix
+
+    def Poperator(self):
+        pass
+
+    def _center_coordinate(self):
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning)
+            gdf = self._sh.to_crs(4326).centroid
+
+        coordinate_lat = gdf.y.values
+        coordinate_lon = gdf.x.values
+
+        self._coordinate = {
+            'lat': coordinate_lat,
+            'lon': coordinate_lon
+        }
+        pass
+
+    def _distance_metric_1(self, point1, point2):
+        dd = np.abs(np.array(point1[:,None] - point2))
+        return np.sqrt(dd[0] ** 2 + dd[1] ** 2)
+
+
+def demo1():
+    dl = DomainLocalization(shapefile='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe1deg'
+                                      '/Europe_subbasins.shp', radius=1.5)
+
+    P = dl.Pmatrix()
+    Q = dl.Pmatrix()
+    pass
+
+
+if __name__ == '__main__':
+    demo1()

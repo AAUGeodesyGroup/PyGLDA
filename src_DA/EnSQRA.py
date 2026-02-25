@@ -228,7 +228,8 @@ class EnSQRA_V2(EnSQRA):
         update is for all ensembles
         reference: WIKI and Maike's thesis
         """
-        R = obs_cov/50 # this is a test to see the effect of a full trust on observation.
+        # R = obs_cov/5 # this is a test to see the effect of a full trust on observation.
+        R = obs_cov
 
         '''calculate the deviation of ens_states'''
         A = ens_states - np.mean(ens_states, 1)[:, None]
@@ -247,10 +248,11 @@ class EnSQRA_V2(EnSQRA):
         CA = np.cov(HA)
 
         '''regularization: solve the stability problem by adding a tiny diagonal matrix'''
-        # P += 1e-3 * np.eye(P.shape[0])
-        cc = CovRegu().set_COV(cov=CA)
-        cc.method_threshold_correlation_covariance(tau=0.3)
-        CA = cc.get_COV()
+        # cc = CovRegu().set_COV(cov=CA)
+        # cc.method_shrinkage(alpha=0.5)
+        # CA = cc.get_COV()
+        '''Most regularization/localization method does not work for EnSQRA since the regularization would 
+        lead to inconsistency in computing the posterior covariance.'''
 
         '''calculate matrix P'''
         P = CA + R

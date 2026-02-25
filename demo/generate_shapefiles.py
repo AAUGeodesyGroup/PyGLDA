@@ -509,6 +509,87 @@ def EuropeContinent():
 
     pass
 
+def EuropeContinent_1deg():
+    from src_auxiliary.create_shp import basin2grid_shp
+    import geopandas as gpd
+
+    box_area = [71.6, 36.1, -11.1, 42.1]
+    gdf = box2shp(box_area=box_area)
+    gdf.to_file('/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/E_box/E_box.shp')
+
+    b2s = basin2grid_shp(grid=(1, 1)).configure(new_basin_name='Europe_subbasins',
+                                                original_shp='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/E_box')
+    b2s.set_modify_func(func=basin2grid_shp.example_func1)
+    b2s.create_shp(out_dir='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe1deg')
+
+    '''delete invalid subbasins'''
+    model_land_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/model_land_mask.h5'
+    GRACE_1deg_land_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/GlobalLandMaskForGRACE.hdf5'
+    Forcing_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/forcing_mask.npy'
+
+    import h5py
+    model = h5py.File(model_land_mask, 'r')['mask'][:-1, :]
+    # GRACE = np.flipud(h5py.File(GRACE_1deg_land_mask, 'r')['resolution_1']['mask'][:])
+    Forcing = np.load(Forcing_mask)
+    mask = model * Forcing
+    gdf = gpd.read_file(filename='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe1deg')
+
+    invalids = []
+
+    for id in range(1, gdf.ID.size + 1):
+        tt = gdf[gdf.ID == id]
+        minx = int(float(tt.bounds.minx) / 0.1) + 1800
+        maxx = int(float(tt.bounds.maxx) / 0.1) + 1800
+        maxy = 900 - int(float(tt.bounds.miny) / 0.1)
+        miny = 900 - int(float(tt.bounds.maxy) / 0.1)
+        vv = np.sum(mask[miny:maxy + 1, minx:maxx + 1])
+        tg = mask[miny:maxy + 1, minx:maxx + 1].size
+
+        flag = True
+
+        '''in case the land area is too small'''
+        if vv / tg < 0.16:
+            flag = False
+
+        '''in case it is beyond the land mask of GRACE. to be checked manually'''
+        '''This only works for this shapefile'''
+
+        invalids.append(flag)
+
+        pass
+
+    n = gdf[invalids]
+    n.loc[:, 'ID'] = np.arange(np.sum(np.array(invalids))) + 1
+    gdf = n
+
+    gdf.to_file('/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe_valid1deg/Europe_subbasins.shp')
+    '''visualization'''
+    gdf =gpd.read_file(filename='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe_valid1deg/Europe_subbasins.shp')
+    import pygmt
+
+    fig = pygmt.Figure()
+    pygmt.config(MAP_HEADING_OFFSET=0, MAP_TITLE_OFFSET=-0.2)
+    pygmt.config(FONT_ANNOT='10p', COLOR_NAN='white')
+    pygmt.makecpt(cmap='wysiwyg', series=[0, 56], background='o')
+
+    region = [box_area[2] - 5, box_area[3] + 5, box_area[1] - 5, box_area[0] + 5]
+    pj = "Q30/-20/12c"
+    fig.basemap(region=region, projection=pj,
+                frame=['WSne', 'xa10f5+lLongitude (\\260 E)', 'ya5f5+lLatitude (\\260 N)'])
+
+    fig.coast(shorelines="1/0.2p", region=region, projection=pj, water="skyblue")
+
+    for i in range(gdf.shape[0], gdf.shape[0] + 1):
+    # for i in range(1, gdf.shape[0] + 1):
+        xy = gdf[gdf.ID == i].centroid
+        fig.text(x=xy.x, y=xy.y, text="%s" % i, font='7p,black')
+
+    fig.plot(data=gdf.boundary, pen="0.5p,red", projection=pj)
+    fig.show()
+
+    fig.savefig('/home/user/Documents/ESA_SING_EXP/Europe/shape1deg.png')
+
+    pass
 
 def loadShp():
     import geopandas as gpd
@@ -531,5 +612,6 @@ if __name__ == '__main__':
     # Danube_grid_show(res=4)
     # plot_Europe()
     # box2shp()
-    EuropeContinent()
+    # EuropeContinent()
+    EuropeContinent_1deg()
     # loadShp()
