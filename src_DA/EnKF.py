@@ -126,7 +126,7 @@ class EnKF:
         rr = -1
         previous_month = -1
 
-        print('=====================Data assimilation=========================')
+        print('=================== Data assimilation =======================')
         for count, day in enumerate(daylist):
             "print information"
             if day.month != previous_month:
@@ -183,6 +183,10 @@ class EnKF:
 
             '''collect states from each ensemble'''
             ens_states = comm.gather(root=main_thread, sendobj=historic_mean_states)
+
+            '''free memory'''
+            historic_mean_states=None
+            sv = None
 
             if rank != main_thread:
                 delta_state = None
@@ -398,7 +402,7 @@ class EnKF_domain_localization(EnKF):
 
     def __init__(self, DA_setting: config_DA, model: model_run_daily, obs: GRACE_obs, sv: EnsStates):
         super().__init__(DA_setting, model, obs, sv)
-        self._dl_Pmatrix = DomainLocalization(shapefile=DA_setting.basic.basin_shp, radius=1.5).Pmatrix()
+        self._dl_Pmatrix = DomainLocalization(shapefile=DA_setting.basic.basin_shp, radius=3).Pmatrix()
 
 
     def update(self, obs, obs_cov, ens_states):
@@ -426,11 +430,14 @@ class EnKF_domain_localization(EnKF):
 
         '''regularization: solve the stability problem by adding a tiny diagonal matrix'''
         cc = CovRegu().set_COV(cov=CA)
-        cc.method_shrinkage(alpha=0.10) # covariance in obs space is better not too strong to prevent from sharpness
+        cc.method_shrinkage(alpha=0.10) # model covariance in obs space is better not too strong to prevent from sharpness
         CA = cc.get_COV()
 
         '''domain localization applied to the observation'''
         R = R*self._dl_Pmatrix
+        cc.set_COV(cov=R)
+        cc.method_shrinkage(alpha=0.20)
+        R = cc.get_COV()
 
         '''calculate matrix P'''
         P = CA + R

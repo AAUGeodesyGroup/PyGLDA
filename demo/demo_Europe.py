@@ -232,14 +232,14 @@ def save_data(data_type=data_var.TotalWater):
     '''====================================================================='''
     dsr.aggregation_daily(date_begin=RDA.resume_begin_time, date_end=RDA.resume_end_time)
 
-    '''OpenLoop results'''
-    dsr = dataManager_ensemble_member(ens=0).configure(setting_fn=str(settings),
-                                                       out_dir='/work/data_for_w3/w3ra/save_data/OL_mean',
-                                                       variable=data_type, dims=data_dim.one_dimension)
-    # dsr.reduce_datasize(global_basin_mask=global_basin_mask)
-
-    '''====================================================================='''
-    dsr.aggregation_daily(date_begin=RDA.resume_begin_time, date_end=RDA.resume_end_time)
+    # '''OpenLoop results'''
+    # dsr = dataManager_ensemble_member(ens=0).configure(setting_fn=str(settings),
+    #                                                    out_dir='/work/data_for_w3/w3ra/save_data/OL_mean',
+    #                                                    variable=data_type, dims=data_dim.one_dimension)
+    # # dsr.reduce_datasize(global_basin_mask=global_basin_mask)
+    #
+    # '''====================================================================='''
+    # dsr.aggregation_daily(date_begin=RDA.resume_begin_time, date_end=RDA.resume_end_time)
 
     pass
 
@@ -263,16 +263,16 @@ if __name__ == '__main__':
     '''multiple threads'''
     # demo_OL(skipModelPerturb=False, skipSR=True)
     # demo_OL(skipModelPerturb=True, skipSR=True)
-    demo_only_DA(skip_obs_perturbation=False)
+    # demo_only_DA(skip_obs_perturbation=False)
 
     # demo_complete_DA(skipModelPerturb=True, skipObsPerturb=False, skipSR=True)  # OL and DA
     # demo_only_DA(skip_obs_perturbation=False)  # only DA
 
     '''single thread for plotting'''
     # demo_DA_visualization(GRACE_res=1, upscale_res=1)
-    # save_data(data_type=data_var.TotalWater)
-    # save_data(data_type=data_var.SoilWater)
-    # save_data(data_type=data_var.GroundWater)
-    # save_data(data_type=data_var.SurfaceWater)
-    # save_data(data_type=data_var.TopSoil)
+    save_data(data_type=data_var.TotalWater)
+    save_data(data_type=data_var.SoilWater)
+    save_data(data_type=data_var.GroundWater)
+    save_data(data_type=data_var.SurfaceWater)
+    save_data(data_type=data_var.TopSoil)
 

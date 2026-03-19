@@ -384,7 +384,7 @@ class DA_GRACE_flexibile(DA_GRACE):
             f = open('../log/OL/log_%s.txt' % rank, 'w')
             sys.stdout = f
 
-        print('\n=================Configure DA experiment====================')
+        print('\n================ Configure DA experiment ===================')
 
         '''configure DA'''
         dp_dir = self.setting_dir / 'DA_setting.json'
@@ -438,8 +438,8 @@ class DA_GRACE_flexibile(DA_GRACE):
         # da = EnKF(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = EnSQRA(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = EnSQRA_V2(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
-        # da = EnKF_localization_v1(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
-        da = EnKF_domain_localization(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da = EnKF_localization_v1(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        # da = EnKF_domain_localization(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = EnKF_localization_v2(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da.configure_design_matrix(DM=dm)

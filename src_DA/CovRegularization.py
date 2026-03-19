@@ -235,8 +235,8 @@ class DomainLocalization:
 
 
 def demo1():
-    dl = DomainLocalization(shapefile='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe1deg'
-                                      '/Europe_subbasins.shp', radius=1.5)
+    dl = DomainLocalization(shapefile='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe_valid'
+                                      '/Europe_subbasins.shp', radius=4)
 
     P = dl.Pmatrix()
     Q = dl.Pmatrix()

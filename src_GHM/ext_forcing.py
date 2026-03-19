@@ -16,9 +16,8 @@ class load_forcing:
         self.__par = par
         self.__fieldtype = forcingSource[settings.run.exttype]
         self.__date = datetime(1000, 1, 1)
-
+        self.__ERA5_year_month = '-2000'
         pass
-
 
     def update_Forcing(self, date: datetime):
         ext = None
@@ -33,25 +32,36 @@ class load_forcing:
         """
         :param date:
         :return:
+
+        Please note that, for ERA5-land daily data, the total precipitation (and solar radiation) of a given day is actually
+        obtained from 00:00:00 of the next day.
+        ref: https://confluence.ecmwf.int/pages/viewpage.action?pageId=197702790
+
         """
         ext = {}
 
         settings = self.__settings
-        lat0, lat1, lon0, lon1 = settings.CoorRoI[settings.run.res]
 
-        fn = Path(settings.input.meteo) / ('%s.h5' % (date.strftime('%Y-%m')))
-        ff=h5py.File(str(fn), 'r')
+        day_next = date + timedelta(days=1)
 
-        if settings.parallel_id <0:
+        ERA5_year_month = day_next.strftime('%Y-%m')
+
+        if ERA5_year_month != self.__ERA5_year_month:
+            """this is to avoid the opening operation"""
+            self.__ERA5_year_month = ERA5_year_month
+            fn = Path(settings.input.meteo) / ('%s.h5' % ERA5_year_month)
+            self.__ff = h5py.File(str(fn), 'r')
+
+        if settings.parallel_id < 0:
             key_word = 'data'
         else:
-            key_word = 'ens_%s'%settings.parallel_id
+            key_word = 'ens_%s' % settings.parallel_id
 
-        dict_group_load = ff[key_word]
-        ext['dswrf'] = dict_group_load['ssrd'][int(date.day)-1]/86400  #(Jm^-2 -> Wm^-2)
-        ext['prcp'] = dict_group_load['tp'][int(date.day)-1]*1000/86400    #(m/day -> mm/s)
-        ext['tmax'] = dict_group_load['2t'][int(date.day)-1]
-        ext['tmin'] = dict_group_load['2t'][int(date.day)-1]
+        dict_group_load = self.__ff[key_word]
+        ext['dswrf'] = dict_group_load['ssrd'][int(day_next.day) - 1] / 86400  # (Jm^-2 -> Wm^-2)
+        ext['prcp'] = dict_group_load['tp'][int(day_next.day) - 1] * 1000 / 86400  # (m/day -> mm/s)
+        ext['tmax'] = dict_group_load['2t'][int(day_next.day) - 1]
+        ext['tmin'] = dict_group_load['2t'][int(day_next.day) - 1]
 
         return ext
 
@@ -115,7 +125,6 @@ class load_forcing:
             var = eval(key)
             ext[forcing[key]] = var[settings.mask]
 
-
         # '''Apply adjustment layers'''
         # '''multiply with rainfall gain factor'''
         # ext[forcing.Pg] *= par.PgainF
@@ -139,7 +148,7 @@ def demo1():
     settings = config_settings.loadjson(dp).process()
     par = config_parameters(settings)
     ext_da = load_forcing(par=par, settings=settings)
-    ext=ext_da.update_Forcing(date=datetime.strptime('2003-01-02', '%Y-%m-%d'))
+    ext = ext_da.update_Forcing(date=datetime.strptime('2003-01-02', '%Y-%m-%d'))
     pass
 
 

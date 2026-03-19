@@ -4,7 +4,7 @@ import h5py
 import json
 from pathlib import Path
 import metview as mv
-from datetime import datetime
+from datetime import datetime, timedelta
 from src_GHM.GeoMathKit import GeoMathKit
 
 
@@ -93,6 +93,15 @@ class preprocess_base:
         out_dir = Path(self._out_dir) / 'forcing'
         if not out_dir.exists():
             out_dir.mkdir()
+
+        """
+        Please note that, for ERA5-land daily data, the total precipitation (and solar radiation) of a given day is actually
+        obtained from 00:00:00 of the next day. So, it is necessary to expand the time-series by adding one additional day.
+        ref: https://confluence.ecmwf.int/pages/viewpage.action?pageId=197702790
+        """
+
+        '''A trick: add 4 days to 28 to ensure the acquisition of next month'''
+        date_end = (datetime.strptime(date_end, '%Y-%m').replace(day=28) + timedelta(days=4)).strftime('%Y-%m')
 
         months = GeoMathKit.monthListByMonth(begin=date_begin, end=date_end)
 
