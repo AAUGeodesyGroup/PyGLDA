@@ -1,4 +1,6 @@
 # PyGLDA: a fine-scale Python-based Global Land Data Assimilation system for integrating satellite gravity data into hydrological models
+## Discussion
+Should you have any question, suggestion and comment on PyGLDA, feel free to leave your message in our discussion forum (https://github.com/orgs/NCSGgroup/discussions) so that we can answer or reach out to you as soon as possible.
 
 ## Description
 Data assimilation (DA) has been widely used to merge the hydrological 'model' and 
