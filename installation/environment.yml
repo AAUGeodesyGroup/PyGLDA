@@ -1,0 +1,44 @@
+# PyGLDA v1 (py-w3ra) core environment - conda-forge only.
+# Versions are pinned to the science stack of the reference env used so far (anaconda3/envs/pyglda, Aug 2025),
+# so results do not change. MPI = MPICH (portable to clusters/UCloud; the old spec used Intel MPI impi_rt).
+# HDF5 and netCDF are the serial ("nompi") builds; h5py comes from conda-forge against the same HDF5 as netCDF4.
+# Reproducible install: use linux-64.lock.txt (explicit URLs + md5) via install.sh; this file is for re-solving.
+name: pyglda_v1
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.10.12
+  # numerics
+  - numpy=1.26.0
+  - scipy=1.11.3
+  - libopenblas=0.3.24                      # BLAS/LAPACK as in the reference env (EnKF gain uses lstsq)
+  - libblas=3.9.0=19_linux64_openblas
+  - pandas=2.1.2
+  # data formats (serial HDF5 shared by h5py and netCDF4)
+  - hdf5=1.14.2=nompi*
+  - h5py=*=nompi*
+  - libnetcdf=4.9.2=nompi*
+  - netcdf4=1.6.4=nompi*
+  - cftime=1.6.3
+  # geospatial
+  - geopandas=0.14.0
+  - shapely=2.0.2
+  - pyproj=3.6.1
+  - gdal=3.7.2
+  - fiona=1.9.5
+  # GRIB / ERA5 forcing (src_GHM.preprocess uses metview)
+  - eccodes=2.32.1
+  - metview-batch=5.20.0
+  - metview-python=1.15.0
+  - cdsapi=0.6.1
+  # parallel (one MPI rank per ensemble member)
+  - mpich
+  - mpi4py=3.1.5
+  # light plotting / misc used by src_* and demo/
+  - matplotlib-base=3.8.0
+  - requests=2.31.0
+  # packaging tools as in the reference env; setuptools provides pkg_resources, which cdsapi 0.6.1 imports
+  - setuptools=68.2.2
+  - pip=23.3.1
+  - wheel=0.41.3

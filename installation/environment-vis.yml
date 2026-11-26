@@ -1,0 +1,16 @@
+# PyGLDA v1 optional visualisation environment (pygmt figures in demo/plotshow.py and the *visualization* functions).
+# Separate from the core env because GMT pulls a large, independent dependency tree. Not needed to run the model or DA.
+name: pyglda_vis
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.10
+  - pygmt
+  - gmt
+  - numpy=1.26
+  - scipy
+  - h5py
+  - netcdf4
+  - geopandas
+  - matplotlib-base
