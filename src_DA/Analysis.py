@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append('../')
+from src_FlowControl import run_context as _rc
 
 import numpy as np
 from pathlib import Path
@@ -8,6 +9,14 @@ import h5py
 from src_DA.shp2mask import basin_shp_process
 from datetime import datetime, timedelta
 from src_GHM.GeoMathKit import GeoMathKit
+
+
+def _case_dir(d):
+    """folder for saved/loaded analysis files: as given, else <case>/res of the active layout, else ../temp (legacy)"""
+    if d is not None:
+        return d
+    L = _rc.get_layout()
+    return str(L.res_dir) if L is not None else '../temp'
 
 
 class BasinSignalAnalysis:
@@ -73,7 +82,7 @@ class BasinSignalAnalysis:
         self.coordinate = coordinate
         return self
 
-    def get_2D_map(self, this_day: datetime, save_dir='../temp', save=False):
+    def get_2D_map(self, this_day: datetime, save_dir=None, save=False):
 
         map_2D = {}
 
@@ -108,7 +117,7 @@ class BasinSignalAnalysis:
         hf.close()
 
         if save:
-            hf = h5py.File(str(Path(save_dir) / ('map2D_%s.h5' % (this_day.strftime('%Y%m%d')))), 'w')
+            hf = h5py.File(str(Path(_case_dir(save_dir)) / ('map2D_%s.h5' % (this_day.strftime('%Y%m%d')))), 'w')
             for gr, bb in map_2D.items():
                 dict_group = hf.create_group(gr)
                 for key, vv in bb.items():
@@ -117,7 +126,7 @@ class BasinSignalAnalysis:
         pass
 
     def get_basin_average(self, date_begin='2002-04-01', date_end='2002-04-02',
-                          save_dir='../temp', save=False, post_fix=None):
+                          save_dir=None, save=False, post_fix=None):
 
         mask_2D, mask_1D, lat, lon, res = self.__bm.collect_mask
 
@@ -185,7 +194,7 @@ class BasinSignalAnalysis:
         #             tws[basin] += map_average[basin][state][0]
 
         if save:
-            hf = h5py.File(str(Path(save_dir) / ('basin_ts%s.h5' % pf)), 'w')
+            hf = h5py.File(str(Path(_case_dir(save_dir)) / ('basin_ts%s.h5' % pf)), 'w')
             for gr, bb in map_average.items():
                 dict_group = hf.create_group(gr)
                 for key, vv in bb.items():
@@ -222,7 +231,9 @@ class Postprocessing_basin:
 
         temp_dict = {}
         for ens in range(self.ens + 1):
-            fn = h5py.File(Path(dir) / ('output_%s_ensemble_%s' % (self.case, ens)) / ('basin_ts%s.h5' % post_fix), 'r')
+            from src_FlowControl.run_context import find_ens_dir
+            fn = h5py.File(find_ens_dir(dir, 'output', self.case, ens, stage=post_fix.lstrip('_')) /
+                           ('basin_ts%s.h5' % post_fix), 'r')
             ens_dict = {}
             for basin, item in fn.items():
                 state_dict = {}
@@ -307,10 +318,10 @@ class Postprocessing_basin:
 
         return kk
 
-    def save_states(self, save_dir='../temp', prefix='1'):
+    def save_states(self, save_dir=None, prefix='1'):
         ff = self.__states
 
-        hf = h5py.File(Path(save_dir) / ('Res_%s.h5df' % prefix), 'w')
+        hf = h5py.File(Path(_case_dir(save_dir)) / ('Res_%s.h5df' % prefix), 'w')
 
         for ii, jj in ff.items():
             if ii == 'time':
@@ -327,11 +338,11 @@ class Postprocessing_basin:
 
         pass
 
-    def save_GRACE(self, save_dir='../temp', prefix='1'):
+    def save_GRACE(self, save_dir=None, prefix='1'):
 
         ff = self.__GRACE
 
-        hf = h5py.File(Path(save_dir) / ('GRACE_%s.h5df' % prefix), 'w')
+        hf = h5py.File(Path(_case_dir(save_dir)) / ('GRACE_%s.h5df' % prefix), 'w')
 
         for ii, jj in ff.items():
             if ii == 'time':
@@ -345,14 +356,14 @@ class Postprocessing_basin:
         hf.close()
         pass
 
-    def load_states(self, load_dir='../temp', prefix='1'):
+    def load_states(self, load_dir=None, prefix='1'):
         """
         This is simply for loading states from pre-saved results. No calculation has been done.
         It is mostly used for plotting a figure
         """
         ff = {}
 
-        hf = h5py.File(Path(load_dir) / ('Res_%s.h5df' % prefix), 'r')
+        hf = h5py.File(Path(_case_dir(load_dir)) / ('Res_%s.h5df' % prefix), 'r')
 
         for ii, jj in hf.items():
             if ii == 'time':
@@ -368,14 +379,14 @@ class Postprocessing_basin:
             ff[ii] = dict_group1
         return ff
 
-    def load_GRACE(self, load_dir='../temp', prefix='1'):
+    def load_GRACE(self, load_dir=None, prefix='1'):
         """
         This is simply for loading GRACE from pre-saved results. No calculation has been done.
         It is mostly used for plotting a figure
         """
         ff = {}
 
-        hf = h5py.File(Path(load_dir) / ('GRACE_%s.h5df' % prefix), 'r')
+        hf = h5py.File(Path(_case_dir(load_dir)) / ('GRACE_%s.h5df' % prefix), 'r')
 
         for ii, jj in hf.items():
             if ii == 'time':
@@ -465,7 +476,8 @@ class Postprocessing_grid_second:
         temp_dict = {}
         temp_dict_2 = {}
         for ens in range(self.ens + 1):
-            fn = h5py.File(Path(fdir) / ('output_%s_ensemble_%s' % (self.case, ens)) / (
+            from src_FlowControl.run_context import find_ens_dir
+            fn = h5py.File(find_ens_dir(fdir, 'output', self.case, ens, stage=postfix) / (
                     'monthly_mean_%s_%s.h5' % (state, postfix)), 'r')
             for time, vv in fn.items():
                 if ens == 0:
@@ -486,7 +498,7 @@ class Postprocessing_grid_second:
 
 def demo1():
     bs = basin_shp_process(res=0.1, basin_name='MDB').shp_to_mask(
-        shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
+        shp_path=str(_rc.basin_path('MDB_4_shapefiles/MDB_4_subbasins.shp')))
 
     bs.mask_to_vec(model_mask_global='/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test/mask/mask_global.h5')
     # bs.mask_nan()

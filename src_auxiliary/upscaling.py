@@ -1,3 +1,4 @@
+from src_FlowControl import run_context as _rc
 import numpy as np
 from src_DA.Analysis import basin_shp_process
 import h5py
@@ -42,20 +43,12 @@ class upscaling:
         import os
 
         '''search for the shape file'''
-        pp = Path('../data/basin/shp/')
-        target = []
-        for root, dirs, files in os.walk(pp):
-            for file_name in files:
-                if (str(file_name).split('_')[0] == self.__basin) and file_name.endswith('.shp') and (
-                        'subbasins' in file_name):
-                    # if (self.__basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
-                    target.append(os.path.join(root, file_name))
-        assert len(target) == 1, target
+        target = [_rc.find_basin_shp(self.__basin)]          # RDA/GDA shapefile, else the single match below basin/shp
 
         mf = basin_shp_process(res=res, basin_name=self.__basin).shp_to_mask(shp_path=str(target[0])).mask
 
         '''load land mask'''
-        GRACE_land_mask = '../data/GRACE/GlobalLandMaskForGRACE.hdf5'
+        GRACE_land_mask = _rc.grace_land_mask()
         if np.fabs(res - 0.5) < 0.01:
             lm = np.flipud(h5py.File(GRACE_land_mask, 'r')['resolution_05']['mask'][:])
         elif np.fabs(res - 1) < 0.01:
@@ -89,7 +82,7 @@ class upscaling:
         import os
 
         '''search for the shape file'''
-        pp = Path('../res/global_shp_new_nooverlap')
+        pp = _rc.basin_path('global/global_shp_new_nooverlap')
         target = []
         for root, dirs, files in os.walk(pp):
             for file_name in files:

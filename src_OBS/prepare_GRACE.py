@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append('../')
+from src_FlowControl import run_context as _rc
 
 import numpy as np
 import h5py
@@ -16,9 +17,13 @@ from src_OBS.obs_auxiliary import aux_GRACE_SH_monthly
 class GRACE_preparation:
 
     def __init__(self, basin_name='MDB',
-                 shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp'):
+                 shp_path='MDB_4_shapefiles/MDB_4_subbasins.shp', mask_dir=None):
         self.basin_name = basin_name
-        self.__shp_path = shp_path
+        '''shapefile absolute or relative to <data_root>/basin/shp'''
+        self.__shp_path = _rc.resolve_shp(shp_path)
+        '''folder of the basin masks <basin>_res_<res>.h5 (written by generate_mask, read by the other methods);
+        default: the legacy mask folder <data_root>/w3ra/legacy_repo/basin_mask'''
+        self.mask_dir = str(mask_dir) if mask_dir else _rc.legacy_mask_dir()
         self.configure_global_land_ocean_mask()
         pass
 
@@ -29,19 +34,22 @@ class GRACE_preparation:
 
         '''for signal: 0.5 degree'''
         if res_05:
-            bs1 = basin_shp_process(res=0.5, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
+            Path(self.mask_dir).mkdir(parents=True, exist_ok=True)
+            bs1 = basin_shp_process(res=0.5, basin_name=self.basin_name, save_dir=self.mask_dir).configureBox(box_mask).shp_to_mask(
                 shp_path=self.__shp_path, issave=True)
 
         '''for cov: 1 degree'''
         if res_10:
-            bs2 = basin_shp_process(res=1, basin_name=self.basin_name).configureBox(box_mask).shp_to_mask(
+            Path(self.mask_dir).mkdir(parents=True, exist_ok=True)
+            bs2 = basin_shp_process(res=1, basin_name=self.basin_name, save_dir=self.mask_dir).configureBox(box_mask).shp_to_mask(
                 shp_path=self.__shp_path, issave=True)
 
         '''get the area information of each subbasin'''  ##TODO: a raw estimation of the area
         self._sub_basin_area = gpd.read_file(self.__shp_path).area.values
         pass
 
-    def configure_global_land_ocean_mask(self, fn='../data/GRACE/GlobalLandMaskForGRACE.hdf5'):
+    def configure_global_land_ocean_mask(self, fn=None):
+        fn = fn or _rc.grace_land_mask()             # <data_root>/GRACE/masks/GlobalLandMaskForGRACE.hdf5
         """
         This is to prevent accounting for the oceanic GRACE into the land observations.
         lat: 90=>-90
@@ -65,7 +73,7 @@ class GRACE_preparation:
 
         '''load basin mask'''
         res = 0.5
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
 
         basins_num = len(list(mf.keys())) - 1
 
@@ -160,7 +168,7 @@ class GRACE_preparation:
 
         '''load mask'''
         res = 1
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
 
         basins_num = len(list(mf.keys())) - 1
 
@@ -262,7 +270,7 @@ class GRACE_preparation:
 
         '''load mask'''
         res = 0.5
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
 
         basins_num = len(list(mf.keys())) - 1
 
@@ -322,7 +330,8 @@ class GRACE_global_preparation:
     def __init__(self):
         pass
 
-    def configure_global_mask(self, fn='/media/user/My Book/Fan/W3RA_data/basin_selection/GlobalLandMaskForGRACE.hdf5'):
+    def configure_global_mask(self, fn=None):
+        fn = fn or str(_rc.global_path('basin_selection/GlobalLandMaskForGRACE.hdf5'))
         """
         This is to prevent accounting for the oceanic GRACE into the land observations.
         """
@@ -330,7 +339,8 @@ class GRACE_global_preparation:
         self._05deg_mask = np.flipud(h5py.File(fn, 'r')['resolution_05']['mask'][:])
         return self
 
-    def configure_global_shp(self, fn='../data/basin/shp/global_shp_new'):
+    def configure_global_shp(self, fn=None):
+        fn = fn or str(_rc.basin_path('global_shp_new'))
         valid_basin_mask_05 = {}
         valid_basin_mask_10 = {}
 
@@ -600,14 +610,14 @@ class GRACE_global_preparation:
 
 def demo1():
     # GR = GRACE_preparation(basin_name='Brahmaputra',
-    #                        shp_path='../data/basin/shp/Brahmaputra_3_shapefiles/Brahmaputra_3_subbasins.shp')
+    #                        shp_path=str(_rc.basin_path('Brahmaputra_3_shapefiles/Brahmaputra_3_subbasins.shp')))
     # GR = GRACE_preparation(basin_name='MDB',
-    #                        shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
+    #                        shp_path=str(_rc.basin_path('MDB_4_shapefiles/MDB_4_subbasins.shp')))
     # GR.basin_TWS(month_begin='2002-04', month_end='2023-06')
     # GR = GRACE_preparation(basin_name='GDRB',
-    #                        shp_path='../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp')
+    #                        shp_path=str(_rc.basin_path('GDRB_shapefiles/GDRB_subbasins.shp')))
     GR = GRACE_preparation(basin_name='Tile81',
-                           shp_path='../data/basin/shp/global_shp_new/Tile81_subbasins.shp')
+                           shp_path=str(_rc.basin_path('global_shp_new/Tile81_subbasins.shp')))
 
     GR.generate_mask()
     GR.basin_TWS(month_begin='2005-01', month_end='2005-12')
@@ -641,12 +651,12 @@ def demo2():
 
 def demo3():
     # GR = GRACE_preparation(basin_name='Brahmaputra',
-    #                        shp_path='../data/basin/shp/Brahmaputra_3_shapefiles/Brahmaputra_3_subbasins.shp')
+    #                        shp_path=str(_rc.basin_path('Brahmaputra_3_shapefiles/Brahmaputra_3_subbasins.shp')))
     # GR = GRACE_preparation(basin_name='MDB',
-    #                        shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
+    #                        shp_path=str(_rc.basin_path('MDB_4_shapefiles/MDB_4_subbasins.shp')))
     # GR.basin_TWS(month_begin='2002-04', month_end='2023-06')
     # GR = GRACE_preparation(basin_name='GDRB',
-    #                        shp_path='../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp')
+    #                        shp_path=str(_rc.basin_path('GDRB_shapefiles/GDRB_subbasins.shp')))
     GR = GRACE_preparation(basin_name='DRBtype2',
                            shp_path='/media/user/My Book/Fan/GRACE_spatial_resolution_study/DRB/shp/DRB.shp')
 

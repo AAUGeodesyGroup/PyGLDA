@@ -4,6 +4,19 @@ import h5py
 import numpy as np
 
 sys.path.append('../')
+from src_FlowControl import run_context as _rc
+
+
+def _agg_file(name):
+    """global maps: <data_root>/w3ra/aggregates/<global_run>/<name> (GDA.legacy_layout False) or the old place
+    /work/data_for_w3/w3ra/temp/<name>"""
+    from pathlib import Path
+    from src_FlowControl.global_DA import GDA
+    if GDA.legacy_layout:
+        return '/work/data_for_w3/w3ra/temp/' + name
+    d = Path(_rc.resolve_data_root(GDA.data_root)) / 'w3ra' / 'aggregates' / GDA.global_run
+    d.mkdir(parents=True, exist_ok=True)
+    return str(d / name)
 
 
 def TWS_trend_annual_phase():
@@ -23,7 +36,7 @@ def TWS_trend_annual_phase():
     DA_map = {}
     GR_map = {}
 
-    dp_dir = Path(GDA.setting_dir) / 'setting.json'
+    dp_dir = Path(GDA._sd()) / 'setting.json'
     dp4 = json.load(open(dp_dir, 'r'))
     sh = dp4['input']['mask_fn']
 
@@ -38,7 +51,7 @@ def TWS_trend_annual_phase():
             hf = h5py.File(Path(GDA.res_output) / ('monthly_mean_TWS_%s_DA.h5' % GDA.basin), 'r')
 
             us = upscaling(basin=GDA.basin)
-            us.configure_model_state(globalmask_fn=Path(sh) / GDA.case / 'mask/mask_global.h5')
+            us.configure_model_state(globalmask_fn=_rc.crop_dir(sh, GDA.case) / 'mask/mask_global.h5')
             us.configure_GRACE()
             us.extra_mask()
 
@@ -73,7 +86,7 @@ def TWS_trend_annual_phase():
         res_OL = tsd.getSignal(obs=vv)
 
         '''load GRACE'''
-        dp_dir = Path(GDA.setting_dir) / 'DA_setting.json'
+        dp_dir = Path(GDA._sd()) / 'DA_setting.json'
         dp4 = json.load(open(dp_dir, 'r'))
         hf = h5py.File(Path(dp4['obs']["GRACE"]['preprocess_res']) / ('%s_gridded_signal.hdf5' % GDA.basin), 'r')
         gr_time = hf['time_epoch'][:].astype(str)
@@ -158,19 +171,19 @@ def TWS_trend_annual_phase():
                     DA_map['phase'][~np.isnan(temp)] = temp[~np.isnan(temp)]
 
     '''save the global map for visualization'''
-    fn = h5py.File('/work/data_for_w3/w3ra/temp/GDA_DA_map.h5', 'w')
+    fn = h5py.File(_agg_file('GDA_DA_map.h5'), 'w')
     fn.create_dataset(name='trend', data=DA_map['trend'])
     fn.create_dataset(name='amplitude', data=DA_map['amplitude'])
     fn.create_dataset(name='phase', data=DA_map['phase'])
     fn.close()
 
-    fn = h5py.File('/work/data_for_w3/w3ra/temp/GDA_GR_map.h5', 'w')
+    fn = h5py.File(_agg_file('GDA_GR_map.h5'), 'w')
     fn.create_dataset(name='trend', data=GR_map['trend'])
     fn.create_dataset(name='amplitude', data=GR_map['amplitude'])
     fn.create_dataset(name='phase', data=GR_map['phase'])
     fn.close()
 
-    fn = h5py.File('/work/data_for_w3/w3ra/temp/GDA_OL_map.h5', 'w')
+    fn = h5py.File(_agg_file('GDA_OL_map.h5'), 'w')
     fn.create_dataset(name='trend', data=OL_map['trend'])
     fn.create_dataset(name='amplitude', data=OL_map['amplitude'])
     fn.create_dataset(name='phase', data=OL_map['phase'])
@@ -336,7 +349,7 @@ def TWS_trend_annual_phase_overlap_average():
     DA_map = {}
     GR_map = {}
 
-    dp_dir = Path(GDA.setting_dir) / 'setting.json'
+    dp_dir = Path(GDA._sd()) / 'setting.json'
     dp4 = json.load(open(dp_dir, 'r'))
     sh = dp4['input']['mask_fn']
 
@@ -356,7 +369,7 @@ def TWS_trend_annual_phase_overlap_average():
             hf = h5py.File(Path(GDA.res_output) / ('monthly_mean_TWS_%s_DA.h5' % GDA.basin), 'r')
 
             us = upscaling(basin=GDA.basin)
-            us.configure_model_state(globalmask_fn=Path(sh) / GDA.case / 'mask/mask_global.h5')
+            us.configure_model_state(globalmask_fn=_rc.crop_dir(sh, GDA.case) / 'mask/mask_global.h5')
             us.configure_GRACE()
             # us.extra_mask()
 
@@ -391,7 +404,7 @@ def TWS_trend_annual_phase_overlap_average():
         res_OL = tsd.getSignal(obs=vv)
 
         '''load GRACE'''
-        dp_dir = Path(GDA.setting_dir) / 'DA_setting.json'
+        dp_dir = Path(GDA._sd()) / 'DA_setting.json'
         dp4 = json.load(open(dp_dir, 'r'))
         hf = h5py.File(Path(dp4['obs']["GRACE"]['preprocess_res']) / ('%s_gridded_signal.hdf5' % GDA.basin), 'r')
         gr_time = hf['time_epoch'][:].astype(str)
@@ -465,7 +478,7 @@ def TWS_trend_annual_phase_overlap_average():
                     OL_map['phase'][~np.isnan(temp)] = temp[~np.isnan(temp)]
 
     '''save the global map for visualization'''
-    fn = h5py.File('/work/data_for_w3/w3ra/temp/GDA_DA_map.h5', 'w')
+    fn = h5py.File(_agg_file('GDA_DA_map.h5'), 'w')
     # fn.create_dataset(name='trend', data=DA_map['trend'])
     DA_trendmap.finish()
     DA_ampmap.finish()
@@ -476,13 +489,13 @@ def TWS_trend_annual_phase_overlap_average():
     fn.create_dataset(name='phase', data=DA_phasemap.AG_map)
     fn.close()
 
-    fn = h5py.File('/work/data_for_w3/w3ra/temp/GDA_GR_map.h5', 'w')
+    fn = h5py.File(_agg_file('GDA_GR_map.h5'), 'w')
     fn.create_dataset(name='trend', data=GR_map['trend'])
     fn.create_dataset(name='amplitude', data=GR_map['amplitude'])
     fn.create_dataset(name='phase', data=GR_map['phase'])
     fn.close()
 
-    fn = h5py.File('/work/data_for_w3/w3ra/temp/GDA_OL_map.h5', 'w')
+    fn = h5py.File(_agg_file('GDA_OL_map.h5'), 'w')
     fn.create_dataset(name='trend', data=OL_map['trend'])
     fn.create_dataset(name='amplitude', data=OL_map['amplitude'])
     fn.create_dataset(name='phase', data=OL_map['phase'])
@@ -742,22 +755,33 @@ def demo_SR_nooverlap_aggregation():
 
     tile = tiles1 + tiles2 + tiles3
 
-    dir_in = '/work/data_for_w3/w3ra/save_data/SR/'
-    mask_dir = '/work/data_for_w3/w3ra/crop_input/'
+    from src_FlowControl.global_DA import GDA
+    if GDA.legacy_layout:
+        dir_in = '/work/data_for_w3/w3ra/save_data/SR/'
+        mask_dir = '/work/data_for_w3/w3ra/crop_input/'
+        out_dir = dir_in
+        tile_mask = lambda tt: Path(mask_dir) / ('GDA_%s' % tt) / 'mask'
+        tile_sr = lambda tt: Path(dir_in) / ('GDA_%s' % tt)
+    else:       # tile SR products (DataManager out_dir=None) and masks in the tile domains, result in aggregates/
+        w3 = Path(_rc.resolve_data_root(GDA.data_root)) / 'w3ra'
+        out_dir = w3 / 'aggregates' / GDA.global_run / 'SR'
+        out_dir.mkdir(parents=True, exist_ok=True)
+        tile_mask = lambda tt: w3 / 'domains' / ('%s_Tile%s' % (GDA.global_run, tt)) / 'input' / 'mask'
+        tile_sr = lambda tt: w3 / 'domains' / ('%s_Tile%s' % (GDA.global_run, tt)) / 'spinup' / 'products' / 'SR'
 
     '''load mask'''
     gg_mask = {}
     gg_mask2 = {}
     for tt in tile:
-        fn = h5py.File(Path(mask_dir) / ('GDA_%s' % tt) / 'mask' / 'mask_global.h5', 'r')
+        fn = h5py.File(tile_mask(tt) / 'mask_global.h5', 'r')
         gg_mask[tt] = fn['mask'][:].astype(bool)
-        fn1 = h5py.File(Path(mask_dir) / ('GDA_%s' % tt) / 'mask' / 'mask.h5', 'r')
+        fn1 = h5py.File(tile_mask(tt) / 'mask.h5', 'r')
         gg_mask2[tt] = fn1['mask'][:].astype(bool)
 
     shape = np.shape(fn['mask'][:])
 
     for yy in np.arange(start=begin_year, stop=end_year + 1):
-        final = h5py.File(name=Path(dir_in) / ('W3RA_%s_monthly_10km.h5df' % yy), mode='w')
+        final = h5py.File(name=Path(out_dir) / ('W3RA_%s_monthly_10km.h5df' % yy), mode='w')
         print('Year-------------: %s' % yy)
         for month in range(1, 13):
             # print(month)
@@ -767,7 +791,7 @@ def demo_SR_nooverlap_aggregation():
             for tt in tile:
                 # print(tt)
                 # print('%02d'%month)
-                fn = h5py.File(name=Path(dir_in) / ('GDA_%s' % tt) / ('TotalWater.%s.h5' % yy), mode='r')
+                fn = h5py.File(name=tile_sr(tt) / ('TotalWater.%s.h5' % yy), mode='r')
                 gg[gg_mask[tt]] = fn['%s%02d' % (yy, month)][:][gg_mask2[tt]]
 
             final.create_dataset(name='%s-%02d' % (yy, month), data=gg)

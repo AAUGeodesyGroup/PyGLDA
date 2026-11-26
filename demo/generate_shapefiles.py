@@ -1,3 +1,4 @@
+from src_FlowControl import run_context as _rc
 import numpy as np
 
 
@@ -440,9 +441,9 @@ def EuropeContinent():
     b2s.create_shp(out_dir='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe')
 
     '''delete invalid subbasins'''
-    model_land_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/model_land_mask.h5'
-    GRACE_1deg_land_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/GlobalLandMaskForGRACE.hdf5'
-    Forcing_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/forcing_mask.npy'
+    model_land_mask = str(_rc.global_path('basin_selection/model_land_mask.h5'))
+    GRACE_1deg_land_mask = str(_rc.global_path('basin_selection/GlobalLandMaskForGRACE.hdf5'))
+    Forcing_mask = str(_rc.global_path('basin_selection/forcing_mask.npy'))
 
     import h5py
     model = h5py.File(model_land_mask, 'r')['mask'][:-1, :]
@@ -523,9 +524,9 @@ def EuropeContinent_1deg():
     b2s.create_shp(out_dir='/media/user/My Book/Fan/ESA_SING/shapefiles/EuropeContinent/Europe1deg')
 
     '''delete invalid subbasins'''
-    model_land_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/model_land_mask.h5'
-    GRACE_1deg_land_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/GlobalLandMaskForGRACE.hdf5'
-    Forcing_mask = '/media/user/My Book/Fan/W3RA_data/basin_selection/forcing_mask.npy'
+    model_land_mask = str(_rc.global_path('basin_selection/model_land_mask.h5'))
+    GRACE_1deg_land_mask = str(_rc.global_path('basin_selection/GlobalLandMaskForGRACE.hdf5'))
+    Forcing_mask = str(_rc.global_path('basin_selection/forcing_mask.npy'))
 
     import h5py
     model = h5py.File(model_land_mask, 'r')['mask'][:-1, :]
@@ -593,7 +594,7 @@ def EuropeContinent_1deg():
 
 def loadShp():
     import geopandas as gpd
-    gdf = gpd.read_file('../data/basin/shp/Europe/Grid_3/Europe_subbasins.shp')
+    gdf = gpd.read_file(str(_rc.basin_path('Europe/Grid_3/Europe_subbasins.shp')))
 
     pass
 

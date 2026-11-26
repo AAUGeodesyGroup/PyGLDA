@@ -159,7 +159,8 @@ EOF
 LINE="source $PREFIX/activate.sh"
 RC="\$HOME/.bashrc"
 grep -qF "\$LINE" "\$RC" 2>/dev/null || printf '\n# PyGLDA v1 env (added by ucloud_init.sh)\n%s\n' "\$LINE" >> "\$RC"
-TC="\$HOME/.tmux.conf"
+# tmux: user overrides go to ~/.tmux.conf.local when it exists ("Oh my tmux" setups: ~/.tmux.conf must not be edited)
+TC="\$HOME/.tmux.conf"; [ -f "\$HOME/.tmux.conf.local" ] && TC="\$HOME/.tmux.conf.local"
 grep -q '^set -g mouse on' "\$TC" 2>/dev/null || printf '\n# PyGLDA v1 (added by ucloud_init.sh)\nset -g mouse on\nset -g history-limit 50000\n' >> "\$TC"
 source "$PREFIX/activate.sh" >/dev/null 2>&1
 {

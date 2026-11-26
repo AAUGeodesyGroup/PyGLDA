@@ -3,7 +3,7 @@
         "fromdate": "2000-01-02",
         "todate": "2000-01-31",
         "basin": "MDB",
-        "basin_shp": "../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp",
+        "basin_shp": "${DATA_ROOT}/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp",
         "NaNmaskStatesDir": "/media/user/My Book/Fan/W3RA_data/states_sample",
         "ensemble": 30,
         "layer": {

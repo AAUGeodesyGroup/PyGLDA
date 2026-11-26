@@ -1,8 +1,10 @@
 import sys
 
 sys.path.append('../')
+from src_FlowControl import run_context as _rc
 
 from pathlib import Path
+from src_FlowControl.run_context import stage_guard
 from datetime import datetime
 
 res_output = '/work/data_for_w3/w3ra/res'
@@ -11,8 +13,17 @@ figure_output = '/work/data_for_w3/w3ra/figure'
 
 
 class GDA:
+    """global tile-wise DA. legacy_layout = True (default): old places (crop_input/GDA_<n>, res/GDA_<n>, settings
+    written in setting_dir) exactly as before. legacy_layout = False: every tile is a case <global_run>_Tile<n> with
+    its own domain and unit set in <data_root>/w3ra (src_FlowControl/run_context.py), the settings are a run copy in
+    cases/<case>/settings, and the global maps go to aggregates/<global_run> (src_auxiliary/GlobalAggregation.py).
+    The layout mode is not yet tested with a tile run."""
     setting_dir = '../settings/Ucloud_DA'
     ens = 30
+    data_root = None
+    legacy_layout = True
+    global_run = 'GDA'
+    _run_settings = None
 
     case = 'case_study_DA'
     box = [50.5, 42, 8.5, 29.5]
@@ -45,6 +56,7 @@ class GDA:
     pass
 
     @staticmethod
+    @stage_guard('global_preparation_1')
     def global_preparation_1():
 
         """preparation for GRACE and forcing fields for global tiles"""
@@ -57,6 +69,7 @@ class GDA:
         pass
 
     @staticmethod
+    @stage_guard('global_preparation_2')
     def global_preparation_2(tiles):
         from src_FlowControl.SingleModel import SingleModel
         from src_GHM.EnumType import init_mode
@@ -72,7 +85,7 @@ class GDA:
                 # print('Not exists')
                 continue
 
-            demo = SingleModel(case=GDA.case, setting_dir=GDA.setting_dir)
+            demo = SingleModel(case=GDA.case, setting_dir=GDA._sd())
 
             demo.configure_time(begin_time=GDA.cold_begin_time, end_time=GDA.resume_end_time)
 
@@ -87,16 +100,56 @@ class GDA:
         pass
 
     @staticmethod
+    def _sd():
+        """settings folder of the stages: the run copy of the current tile (layout) or setting_dir (legacy)"""
+        return GDA._run_settings if (not GDA.legacy_layout and GDA._run_settings) else GDA.setting_dir
+
+    @staticmethod
+    def _tile_layout():
+        """register the layout of the current tile and make its run copy (rank 0 of a multi-rank job writes)"""
+        import json
+        root = _rc.resolve_data_root(GDA.data_root)
+        _rc.set_data_root(root)
+        try:
+            kind = json.loads(_rc.substitute((Path(GDA._sd()) / 'DA_setting.json').read_text(),
+                                             root))['obs']['GRACE'].get('kind')
+        except Exception:
+            kind = None
+        L = _rc.Layout(root, GDA.case, domain=GDA.case, ensemble='n%d' % GDA.ens, unit_set=GDA.case,
+                       grace_product=_rc.PRODUCT_BY_KIND.get(kind, kind or 'unknown_product'),
+                       global_run=GDA.global_run)
+        _rc.set_layout(L)
+        comm = None
+        try:
+            from mpi4py import MPI
+            comm = MPI.COMM_WORLD if MPI.COMM_WORLD.Get_size() > 1 else None
+        except ImportError:
+            pass
+        if comm is None or comm.Get_rank() == 0:
+            L.make_dirs()
+            L.write_case_json()
+            _rc.make_run_copy(GDA.setting_dir, L.settings_dir, root)
+            from src_FlowControl.Regional_DA import RDA
+            RDA._rewrite_paths(L.settings_dir, L)
+        if comm is not None:
+            comm.barrier()
+        GDA._run_settings = str(L.settings_dir)
+        return L
+
+    @staticmethod
     def set_tile(tile_ID=1, create_folder=True):
         import geopandas as gpd
 
-        if GDA.case == 'GDA_%s' % tile_ID:
+        case = ('GDA_%s' % tile_ID) if GDA.legacy_layout else ('%s_Tile%s' % (GDA.global_run, tile_ID))
+        if GDA.case == case:
             return
 
-        GDA.case = 'GDA_%s' % tile_ID
+        GDA.case = case
         GDA.basin = 'Tile%s' % tile_ID
 
-        gf = gpd.read_file('../data/basin/shp/global_shp_new/Tile%s_subbasins.shp' % tile_ID)
+        shp = str(_rc.basin_path('global_shp_new/Tile%s_subbasins.shp')) % tile_ID
+        _rc.set_shapefile(shp)              # DA_GRACE uses this one (several Tile sets exist below basin/shp)
+        gf = gpd.read_file(shp)
         GDA.box = list(gf.total_bounds[[3, 1, 0, 2]])  # latmax, latmin, lonmin, lonmax
 
         '''slightly expand the box area'''
@@ -120,6 +173,11 @@ class GDA:
         else:
             GDA.box[3] += 0.2
 
+        if not GDA.legacy_layout:
+            L = GDA._tile_layout()
+            GDA.figure_output, GDA.res_output = str(L.figure_dir), str(L.res_dir)
+            return
+
         dn1 = Path(figure_output) / GDA.case
         GDA.figure_output = str(dn1)
         dn2 = Path(res_output) / GDA.case
@@ -136,6 +194,7 @@ class GDA:
         pass
 
     @staticmethod
+    @stage_guard('single_run')
     def single_run(tile_ID):
         from src_FlowControl.SingleModel import SingleModel
         from src_GHM.EnumType import init_mode
@@ -143,7 +202,7 @@ class GDA:
 
         '''configuration'''
         GDA.set_tile(tile_ID=tile_ID)
-        demo = SingleModel(case=GDA.case, setting_dir=GDA.setting_dir)
+        demo = SingleModel(case=GDA.case, setting_dir=GDA._sd())
         # demo.configure_time(begin_time=GDA.cold_begin_time, end_time=GDA.cold_end_time)
         demo.configure_time(begin_time=GDA.resume_begin_time, end_time=GDA.resume_end_time)
         demo.configure_area(box=GDA.box, basin=GDA.basin)
@@ -174,7 +233,7 @@ class GDA:
 
         '''configuration'''
         GDA.set_tile(tile_ID=tile_ID)
-        demo = SingleModel(case=GDA.case, setting_dir=GDA.setting_dir)
+        demo = SingleModel(case=GDA.case, setting_dir=GDA._sd())
         demo.configure_time(begin_time=GDA.cold_begin_time, end_time=GDA.cold_end_time)
         demo.configure_area(box=GDA.box, basin=GDA.basin)
 
@@ -189,6 +248,7 @@ class GDA:
         pass
 
     @staticmethod
+    @stage_guard('OL_run')
     def OL_run(tile_ID, prepare=True):
         from src_FlowControl.DA_GRACE import DA_GRACE
         from src_GHM.EnumType import init_mode
@@ -205,7 +265,7 @@ class GDA:
         GDA.set_tile(tile_ID=tile_ID)
 
         '''configuration'''
-        demo = DA_GRACE(case=GDA.case, setting_dir=GDA.setting_dir, ens=GDA.ens)
+        demo = DA_GRACE(case=GDA.case, setting_dir=GDA._sd(), ens=GDA.ens)
 
         demo.configure_time(begin_time=GDA.warm_begin_time, end_time=GDA.warm_end_time)
         demo.configure_area(box=GDA.box, basin=GDA.basin)
@@ -235,7 +295,7 @@ class GDA:
             demo.post_processing(file_postfix='OL', save_dir=GDA.res_output)
 
             '''change the time to get prepared for DA experiment'''
-            demo = DA_GRACE(case=GDA.case, setting_dir=GDA.setting_dir, ens=GDA.ens)
+            demo = DA_GRACE(case=GDA.case, setting_dir=GDA._sd(), ens=GDA.ens)
 
             demo.configure_time(begin_time=GDA.resume_begin_time, end_time=GDA.resume_end_time)
             demo.configure_area(box=GDA.box, basin=GDA.basin)
@@ -254,6 +314,7 @@ class GDA:
         pass
 
     @staticmethod
+    @stage_guard('DA_run')
     def DA_run(tile_ID, prepare=True):
         from src_FlowControl.DA_GRACE import DA_GRACE
         from src_GHM.EnumType import init_mode
@@ -270,7 +331,7 @@ class GDA:
         GDA.set_tile(tile_ID=tile_ID)
 
         '''configuration'''
-        demo = DA_GRACE(case=GDA.case, setting_dir=GDA.setting_dir, ens=GDA.ens)
+        demo = DA_GRACE(case=GDA.case, setting_dir=GDA._sd(), ens=GDA.ens)
 
         demo.configure_time(begin_time=GDA.resume_begin_time, end_time=GDA.resume_end_time)
         demo.configure_area(box=GDA.box, basin=GDA.basin)
@@ -321,7 +382,7 @@ class GDA:
         GDA.set_tile(tile_ID=tile_ID)
 
         '''configuration'''
-        demo = DA_GRACE(case=GDA.case, setting_dir=GDA.setting_dir, ens=GDA.ens)
+        demo = DA_GRACE(case=GDA.case, setting_dir=GDA._sd(), ens=GDA.ens)
 
         demo.configure_time(begin_time=GDA.resume_begin_time, end_time=GDA.resume_end_time)
         demo.configure_area(box=GDA.box, basin=GDA.basin)
@@ -348,7 +409,7 @@ class GDA:
         GDA.set_tile(tile_ID=tile_ID)
 
         case = GDA.case
-        setting_dir = GDA.setting_dir
+        setting_dir = GDA._sd()
         ens = GDA.ens
         box = GDA.box
         basin = GDA.basin
@@ -471,15 +532,7 @@ class GDA:
 
         '''load shp'''
         '''search for the shape file'''
-        pp = Path('../data/basin/shp/')
-        target = []
-        for root, dirs, files in os.walk(pp):
-            for file_name in files:
-                if (str(file_name).split('_')[0] == GDA.basin) and file_name.endswith('.shp') and (
-                        'subbasins' in file_name):
-                    # if (GDA.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
-                    target.append(os.path.join(root, file_name))
-        assert len(target) == 1, target
+        target = [_rc.find_basin_shp(GDA.basin)]          # RDA/GDA shapefile, else the single match below basin/shp
 
         gdf = gpd.read_file(str(target[0]))
 
@@ -518,7 +571,7 @@ class GDA:
         res_OL = tsd.getSignal(obs=vv)
 
         '''load GRACE'''
-        dp_dir = Path(GDA.setting_dir) / 'DA_setting.json'
+        dp_dir = Path(GDA._sd()) / 'DA_setting.json'
         dp4 = json.load(open(dp_dir, 'r'))
         hf = h5py.File(Path(dp4['obs']["GRACE"]['preprocess_res']) / ('%s_gridded_signal.hdf5' % GDA.basin), 'r')
         gr_time = hf['time_epoch'][:].astype(str)
@@ -537,11 +590,11 @@ class GDA:
             xx = xx[0]
 
         '''1d --> 2d map'''
-        dp_dir = Path(GDA.setting_dir) / 'setting.json'
+        dp_dir = Path(GDA._sd()) / 'setting.json'
         dp4 = json.load(open(dp_dir, 'r'))
         sh = dp4['input']['mask_fn']
         us = upscaling(basin=GDA.basin)
-        us.configure_model_state(globalmask_fn=Path(sh) / GDA.case / 'mask/mask_global.h5')
+        us.configure_model_state(globalmask_fn=_rc.crop_dir(sh, GDA.case) / 'mask/mask_global.h5')
         us.configure_GRACE()
         # us.downscale_model(model_state=1, GRACEres=0.5, modelres=0.1)
         res_GRACE = us.get2D_GRACE(GRACE_obs=xx)
@@ -821,7 +874,7 @@ def demo_data_manager():
         # demo_global_run_complete(tile_ID=tile_ID)
         GDA.single_run(tile_ID=tile_ID)
 
-        dsr = dataManager_single_run().configure(setting_fn=Path(GDA.setting_dir)/'setting.json',
+        dsr = dataManager_single_run().configure(setting_fn=Path(GDA._sd())/'setting.json',
                                                  out_dir='/work/data_for_w3/w3ra/save_data/SR',
                                                  variable=data_var.TotalWater)
         dsr.aggregation_monthly(date_begin='2023-01-01', date_end='2024-06-01')

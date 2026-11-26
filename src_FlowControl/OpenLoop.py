@@ -1,3 +1,4 @@
+from src_FlowControl import run_context as _rc
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -34,9 +35,14 @@ class OpenLoop(SingleModel):
         dp1['input']["pars"] = dp2['out_dir']
         dp1['input']["clim"] = dp2['out_dir']
         dp1['input']["mask_fn"] = dp2['out_dir']
-        dp1['init']['spec'] = self.case
+        from src_FlowControl import run_context as rc
+        dp1['init']['spec'] = rc.init_name(self.case)          # the domain (layout) or the case (legacy)
 
         dp1['init']['mode'] = mode.name
+        '''folder layout (src_FlowControl/run_context.py): domains -> <domain>/OL/<ensemble>/ens_kk, <case>/DA/ens_kk; legacy -> shared'''
+        from src_FlowControl import run_context as rc
+        dp1['output']['layout'] = 'domains' if rc.get_layout() is not None else 'legacy'
+        dp1['output']['stage'] = {'warm': 'OL', 'resume': 'DA'}.get(mode.name, '')
         if mode == init_mode.cold:
             dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
         else:
@@ -50,8 +56,8 @@ class OpenLoop(SingleModel):
         '''modify dp3'''
         dp_dir = self.setting_dir / 'perturbation.json'
         dp3 = json.load(open(dp_dir, 'r'))
-        dp3['dir']["in"] = str(Path(dp2['out_dir']) / self.case)
-        dp3['dir']["out"] = str(Path(dp2['out_dir']) / self.case)
+        dp3['dir']["in"] = str(rc.crop_dir(dp2['out_dir'], self.case))           # <domain>/input or legacy
+        dp3['dir']["out"] = str(rc.ens_input_dir(dp2['out_dir'], self.case))     # <domain>/ensembles/<ensemble>
         dp3['ensemble'] = self.ens
 
         with open(dp_dir, 'w') as f:
@@ -93,7 +99,12 @@ class OpenLoop(SingleModel):
         rank = comm.Get_rank()
 
         if rank != 0:
-            f = open('../log/OL/log_%s.txt' % rank, 'w')
+            from src_FlowControl import run_context as rc
+            if rc.log_dir() is None:
+                f = open('../log/OL/log_%s.txt' % rank, 'w')
+            else:
+                rc.log_dir().mkdir(parents=True, exist_ok=True)
+                f = open(rc.log_dir() / ('OL_log_rank%s.txt' % rank), 'w')
             sys.stdout = f
 
         # print()
@@ -131,29 +142,24 @@ class OpenLoop(SingleModel):
         self._outdir2 = dp1['output']['dir']
 
         '''search for the shape file'''
-        pp = Path('../data/basin/shp/')
-        target = []
-        for root, dirs, files in os.walk(pp):
-            for file_name in files:
-                if (str(file_name).split('_')[0] == self.basin) and file_name.endswith('.shp') and (
-                        'subbasins' in file_name):
-                    # if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
-                    target.append(os.path.join(root, file_name))
-        assert len(target) == 1
+        target = [_rc.find_basin_shp(self.basin)]          # RDA/GDA shapefile, else the single match below basin/shp
 
         '''generate mask and vec files for given basin'''
         outdir = Path(self._outdir)
         bs = basin_shp_process(res=0.1, basin_name=self.basin).shp_to_mask(
             shp_path=str(target[0]), issave=False)
         statedir = Path(self._outdir2)
-        bs.mask_to_vec(model_mask_global=str(outdir / self.case / 'mask' / 'mask_global.h5'))
+        from src_FlowControl import run_context as rc
+        bs.mask_to_vec(model_mask_global=str(rc.crop_dir(outdir, self.case) / 'mask' / 'mask_global.h5'))
 
         '''basin analysis'''
-        statedir2 = str(statedir / ('state_%s_ensemble_%s' % (self.case, rank)))
+        '''member folder of stage <postfix> in the layout (<domain>/OL/<ensemble>/ens_kk or <case>/DA/ens_kk), else the legacy shared one'''
+        from src_FlowControl.run_context import find_ens_dir
+        statedir2 = str(find_ens_dir(statedir, 'state', self.case, rank, stage=postfix))
         # print(statedir2)
-        save_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, rank)))
+        save_dir = str(find_ens_dir(statedir, 'output', self.case, rank, stage=postfix))
         an = BasinSignalAnalysis(basin_mask=bs, state_dir=statedir2,
-                                 par_dir=str(outdir / self.case / 'par'))
+                                 par_dir=str(rc.crop_dir(outdir, self.case) / 'par'))
 
         # an.configure_mask2D().get_2D_map(this_day=datetime.strptime('2001-01-07', '%Y-%m-%d'), save=True)
 
@@ -164,7 +170,7 @@ class OpenLoop(SingleModel):
 
         '''2D monthly mean for further analysis'''
         pg = Postprocessing_grid_first(state_dir=statedir2,
-                                       par_dir=str(outdir / self.case / 'par'))
+                                       par_dir=str(rc.crop_dir(outdir, self.case) / 'par'))
 
         print('\nMonthly-mean grid analysis for %s:' % self.basin)
         state = 'TWS'

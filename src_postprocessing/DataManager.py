@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append('../')
+from src_FlowControl import run_context as _rc
 
 import numpy as np
 from src_GHM.config_settings import config_settings
@@ -10,6 +11,18 @@ from src_GHM.GeoMathKit import GeoMathKit
 from calendar import monthrange
 from src_postprocessing.Enumtype import data_var, data_dim
 import shutil
+
+
+def _product_dir(out_dir, kind, prefix) -> Path:
+    """folder of the saved products: <out_dir>/<prefix> (as before), or with out_dir=None the folder of the layout
+    (src_FlowControl/run_context.py: SR -> domain spin-up, OL_mean -> domain OL ensemble, DA_* / mask -> case)"""
+    if out_dir is not None:
+        return Path(out_dir) / prefix
+    L = _rc.get_layout()
+    if L is None:
+        raise ValueError('PyGLDA v1 DataManager: out_dir is None but no data layout is active; call RDA.activate() '
+                         'first (domains/cases layout) or pass out_dir')
+    return L.products_dir(kind)
 
 
 class dataManager_single_run:
@@ -26,12 +39,14 @@ class dataManager_single_run:
         self._state_dir = None
         self._basin_mask_1D = None
 
-    def configure(self, setting_fn, out_dir, variable=data_var.TotalWater, dims=data_dim.one_dimension):
+    _kind = 'SR'      # product kind of out_dir=None (see _product_dir)
+
+    def configure(self, setting_fn, out_dir=None, variable=data_var.TotalWater, dims=data_dim.one_dimension):
         setting = config_settings.loadjson(setting_fn).process()
         self._setting = setting
         self._mask = setting.mask
         self._basin_mask_1D = self._mask[self._mask.astype(bool)].astype(bool)
-        self._out_dir = Path(out_dir) / setting.bounds.prefix
+        self._out_dir = _product_dir(out_dir, self._kind, setting.bounds.prefix)
         self._state_dir = Path(setting.statedir)
         self._outputOtherVariables_dir = Path(setting.outdir)
 
@@ -39,7 +54,7 @@ class dataManager_single_run:
         self._Fhru = hf['data']['Fhru'][:]
 
         if not self._out_dir.exists():
-            self._out_dir.mkdir()
+            self._out_dir.mkdir(parents=True)
 
         statesnn = ['S0', 'Ss', 'Sd', 'Sr', 'Sg', 'Mleaf', 'FreeWater', 'DrySnow']
         self._variable = variable
@@ -79,6 +94,9 @@ class dataManager_single_run:
         self._basin_mask_1D = basin_mask_1D
         gl_DA_mask[dl[0]: dl[1], dl[2]: dl[3]] = self._mask
 
+        if save_mask is True:                   # layout: <case>/products/mask
+            save_mask = _rc.get_layout().products_dir('mask')
+            Path(save_mask).mkdir(parents=True, exist_ok=True)
         if save_mask is not None:
             res = ss.run.res
             err = res / 10
@@ -264,6 +282,10 @@ class dataManager_single_run:
         """
 
         settings = self._setting
+        if _rc.get_layout() is not None:
+            # layout: forcing, spin-up states and outputs belong to the domain and are shared by all its cases
+            print('DataManager cleanup: layout active, shared domain data (input, spin-up) is kept')
+            return
         '''step-1: clean the forcing field that has a large storage'''
         try:
             shutil.rmtree(settings.input.meteo)
@@ -293,17 +315,19 @@ class dataManager_ensemble_member(dataManager_single_run):
     Instead of the single run mode, this class targets to extracting data from each ensemble member
     """
 
-    def __init__(self, ens=2):
+    def __init__(self, ens=2, stage='OL'):
         super().__init__()
         self._ens = ens
+        self._stage = stage                     # member of the open loop ('OL') or of the DA ('DA'); layout only
+        self._kind = 'OL_mean' if stage == 'OL' else 'DA_ens_%02d' % ens
         pass
 
-    def configure(self, setting_fn, out_dir, variable=data_var.TotalWater, dims=data_dim.one_dimension):
+    def configure(self, setting_fn, out_dir=None, variable=data_var.TotalWater, dims=data_dim.one_dimension):
         super().configure(setting_fn=setting_fn, out_dir=out_dir, variable=variable, dims=dims)
-        self._state_dir = Path(self._setting.output.dir) / (
-                'state_' + self._setting.bounds.prefix + '_ensemble_%s' % self._ens)
-        self._outputOtherVariables_dir = Path(self._setting.output.dir) / (
-                'output_' + self._setting.bounds.prefix + '_ensemble_%s' % self._ens)
+        s = self._setting
+        self._state_dir = _rc.member_dir(s.output.dir, 'state', s.bounds.prefix, self._ens, stage=self._stage)
+        self._outputOtherVariables_dir = _rc.member_dir(s.output.dir, 'output', s.bounds.prefix, self._ens,
+                                                        stage=self._stage)
         return self
 
 
@@ -312,22 +336,23 @@ class dataManager_ensemble_statistic(dataManager_single_run):
     def __init__(self, ens_size=2):
         super().__init__()
         self._ens_size = ens_size
+        self._kind = 'DA_mean'
         pass
 
-    def configure(self, setting_fn, out_dir_mean, out_dir_std, variable=data_var.TotalWater,
+    def configure(self, setting_fn, out_dir_mean=None, out_dir_std=None, variable=data_var.TotalWater,
                   dims=data_dim.one_dimension):
         super().configure(setting_fn=setting_fn, out_dir=out_dir_mean, variable=variable, dims=dims)
         self._state_dir = {}
         self._outputOtherVariables_dir = {}
+        s = self._setting
         for ens in range(self._ens_size + 1):
-            self._state_dir[ens] = Path(self._setting.output.dir) / (
-                    'state_' + self._setting.bounds.prefix + '_ensemble_%s' % ens)
-            self._outputOtherVariables_dir[ens] = Path(self._setting.output.dir) / (
-                    'output_' + self._setting.bounds.prefix + '_ensemble_%s' % ens)
+            self._state_dir[ens] = _rc.member_dir(s.output.dir, 'state', s.bounds.prefix, ens, stage='DA')
+            self._outputOtherVariables_dir[ens] = _rc.member_dir(s.output.dir, 'output', s.bounds.prefix, ens,
+                                                                 stage='DA')
 
-        self._out_dir_std = Path(out_dir_std) / self._setting.bounds.prefix
+        self._out_dir_std = _product_dir(out_dir_std, 'DA_std', s.bounds.prefix)
         if not self._out_dir_std.exists():
-            self._out_dir_std.mkdir()
+            self._out_dir_std.mkdir(parents=True)
 
         return self
 
@@ -516,6 +541,13 @@ class dataManager_ensemble_statistic(dataManager_single_run):
         """
 
         settings = self._setting
+        L = _rc.get_layout()
+        if L is not None:
+            # layout: only the daily DA members and tmp of this case; the ensemble, the OL and the domain inputs are
+            # shared with other cases and are kept
+            for d in [L.member_dir('DA', k) for k in range(self._ens_size + 1)] + [L.tmp_dir]:
+                shutil.rmtree(d, ignore_errors=True)
+            return
         '''step-1: clean the forcing field that has a large storage'''
 
         try:
@@ -573,13 +605,13 @@ def demo2():
     from src_DA.shp2mask import basin_shp_process
 
     basin = 'US'
-    shp_path = '../data/basin/shp/USgrid/US_subbasins.shp'
-    global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir='../data/basin/mask').shp_to_mask(
+    shp_path = str(_rc.basin_path('USgrid/US_subbasins.shp'))
+    global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir=_rc.legacy_mask_dir()).shp_to_mask(
         shp_path=shp_path).mask[0]
 
     # basin = 'Africa'
-    # shp_path = '../data/basin/shp/Africa/Africa_subbasins.shp'
-    # global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir='../data/basin/mask').shp_to_mask(
+    # shp_path = str(_rc.basin_path('Africa/Africa_subbasins.shp'))
+    # global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir=_rc.legacy_mask_dir()).shp_to_mask(
     #     shp_path=shp_path).mask[0]
 
     # '''DA results'''

@@ -1,0 +1,9 @@
+{
+    "date_begin": "2000-01",
+    "date_end": "2006-12",
+    "out_dir": "${DATA_ROOT}/w3ra/crop_input",
+    "mask_dir": "${DATA_ROOT}/w3ra/global/pyW3RA/mask",
+    "forcing_dir": "${DATA_ROOT}/ERA5/Raw_W3",
+    "clim_dir": "${DATA_ROOT}/w3ra/global/pyW3RA/clim",
+    "par_dir": "${DATA_ROOT}/w3ra/global/pyW3RA/par"
+}

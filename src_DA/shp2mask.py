@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append('../')
+from src_FlowControl import run_context as _rc
 
 import numpy as np
 import geopandas as gpd
@@ -11,7 +12,8 @@ import h5py
 
 class basin_shp_process:
 
-    def __init__(self, res, basin_name='MDB', save_dir='../data/basin/mask'):
+    def __init__(self, res, basin_name='MDB', save_dir=None):
+        save_dir = save_dir or _rc.legacy_mask_dir()      # default: <data_root>/w3ra/legacy_repo/basin_mask
         self._res = res
         self._basin_name = basin_name
         self._save_dir = Path(save_dir)
@@ -57,7 +59,8 @@ class basin_shp_process:
 
         return self
 
-    def shp_to_mask(self, shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp', issave=False):
+    def shp_to_mask(self, shp_path='MDB_4_shapefiles/MDB_4_subbasins.shp', issave=False):
+        shp_path = _rc.resolve_shp(shp_path)              # absolute or relative to <data_root>/basin/shp
         res = self._res
         basin_name = self._basin_name
 
@@ -215,7 +218,7 @@ class basin_shp_process:
 
 def demo1():
     bs = basin_shp_process(res=0.1, basin_name='MDB').shp_to_mask(
-        shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
+        shp_path=str(_rc.basin_path('MDB_4_shapefiles/MDB_4_subbasins.shp')))
 
     x = bs.mask_to_vec()
 

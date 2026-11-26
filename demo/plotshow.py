@@ -1,3 +1,4 @@
+from src_FlowControl import run_context as _rc
 import numpy as np
 from pathlib import Path
 import pygmt
@@ -351,7 +352,7 @@ def map2D_comparison():
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
 
-    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    gdf = gpd.read_file(str(_rc.basin_path('DRB_3_shapefiles')))
     fig.plot(data=gdf.boundary, pen="1p,black")
 
     # if signal != 'trend':
@@ -372,7 +373,7 @@ def map2D_comparison():
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
 
-    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    gdf = gpd.read_file(str(_rc.basin_path('DRB_3_shapefiles')))
     fig.plot(data=gdf.boundary, pen="1p,black")
     # fig.colorbar()
 
@@ -389,7 +390,7 @@ def map2D_comparison():
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
 
-    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    gdf = gpd.read_file(str(_rc.basin_path('DRB_3_shapefiles')))
     fig.plot(data=gdf.boundary, pen="1p,black")
 
     '''===================================================='''
@@ -408,7 +409,7 @@ def map2D_comparison():
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
 
-    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    gdf = gpd.read_file(str(_rc.basin_path('DRB_3_shapefiles')))
     fig.plot(data=gdf.boundary, pen="1p,black")
 
     if signal != 'trend':
@@ -430,7 +431,7 @@ def map2D_comparison():
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
 
-    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    gdf = gpd.read_file(str(_rc.basin_path('DRB_3_shapefiles')))
     fig.plot(data=gdf.boundary, pen="1p,black")
     # fig.colorbar()
 
@@ -447,7 +448,7 @@ def map2D_comparison():
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
 
-    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    gdf = gpd.read_file(str(_rc.basin_path('DRB_3_shapefiles')))
     fig.plot(data=gdf.boundary, pen="1p,black")
 
     fig.show()
@@ -475,7 +476,7 @@ def tile_GRACE_1():
     gdf_list = []
     invalid_basins = []
     tile = '80'
-    gdf = gpd.read_file(filename='../res/global_shp_new/Tile%s_subbasins.shp' % tile)
+    gdf = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_new/Tile%s_subbasins.shp')) % tile)
 
     GRACE = h5py.File('/media/user/My Book/Fan/GRACE/output/Tile%s_signal.hdf5' % tile, 'r')
 
@@ -486,7 +487,7 @@ def tile_GRACE_1():
     region = [min(lon), max(lon), min(lat), max(lat)]
     lon, lat = np.meshgrid(lon, lat)
 
-    fshp = '../res/global_shp_new/Tile%s_subbasins.shp' % tile
+    fshp = str(_rc.basin_path('global/global_shp_new/Tile%s_subbasins.shp')) % tile
     mask = basin_shp_process(res=res, basin_name='Tile%s' % tile).shp_to_mask(shp_path=str(fshp), issave=False).mask
 
     x = np.full(shape=mask[0].shape, fill_value=np.nan)
@@ -551,7 +552,7 @@ def tile_GRACE_2():
     fig.colorbar()
 
     tile = '80'
-    gdf = gpd.read_file(filename='../res/global_shp_new/Tile%s_subbasins.shp' % tile)
+    gdf = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_new/Tile%s_subbasins.shp')) % tile)
     fig.plot(data=gdf.boundary, pen="0.2p,black")
     fig.coast(shorelines="1/0.2p", region=region, projection="Q9c")
     fig.show()
@@ -574,7 +575,7 @@ def Danube_exp():
                  # outline ("+p")
                  frame=["a1500", "x", "y+lm"])
 
-    geo_df = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    geo_df = gpd.read_file(str(_rc.basin_path('DRB_3_shapefiles')))
     fig.plot(data=geo_df.geometry, pen="1.5p,blue")
     fig.text(x=13, y=48, text='Upper Basin', fill='white@40')
     fig.text(x=20, y=46, text='Middle Basin', fill='white@40')
@@ -992,9 +993,9 @@ def show_trend_annual():
     begin_time = '2002-01-01'
     end_time = '2010-01-31'
     # res_output = '/home/user/Desktop/res1/RDA_DRB_BasinScale'
-    # shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
+    # shp_path = str(_rc.basin_path('DRB_3_shapefiles/DRB_subbasins.shp'))
     res_output = '/home/user/Desktop/res1/RDA_GDRB_BasinScale'
-    shp_path = '../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp'
+    shp_path = str(_rc.basin_path('GDRB_shapefiles/GDRB_subbasins.shp'))
     box = [50.5, 42, 8.5, 29.5]
 
     '''load shp'''
@@ -1354,7 +1355,7 @@ def otherfigure2():
     fig.coast(shorelines="1/0.2p", region=region, projection="Q8c", land="darkgray", water="skyblue")
 
     gdf = gpd.read_file(filename='../temp/GDRB_subbasins.shp')
-    # gdf = gpd.read_file(filename='../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp')
+    # gdf = gpd.read_file(filename=str(_rc.basin_path('DRB_3_shapefiles/DRB_subbasins.shp')))
 
     for i in range(1, 20):
         x = gdf[gdf.ID == i].centroid.item().x
@@ -1378,7 +1379,7 @@ def otherfigure3():
     region = [min(lon), max(lon), min(lat), max(lat)]
     lon, lat = np.meshgrid(lon, lat)
 
-    tt = h5py.File(mode='r', name='../data/basin/mask/DRB_basin_res_%s.h5' % (res))
+    tt = h5py.File(mode='r', name=str(Path(_rc.legacy_mask_dir()) / 'DRB_basin_res_%s.h5') % (res))
 
     v = []
     No = 1
@@ -1421,7 +1422,7 @@ def otherfigure3():
     fig.coast(shorelines="1/0.2p", region=region, projection="Q12c", water="skyblue")
     # fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
 
-    gdf = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    gdf = gpd.read_file(str(_rc.basin_path('DRB_3_shapefiles')))
     fig.plot(data=gdf.boundary, pen="1p,black")
     for i in range(1, 4):
         x = gdf[gdf.ID == i].centroid.item().x
@@ -1437,7 +1438,7 @@ def otherfigure3():
     region = [min(lon), max(lon), min(lat), max(lat)]
     lon, lat = np.meshgrid(lon, lat)
 
-    tt2 = h5py.File(mode='r', name='../data/basin/mask/GDRB_res_%s.h5' % (res))
+    tt2 = h5py.File(mode='r', name=str(Path(_rc.legacy_mask_dir()) / 'GDRB_res_%s.h5') % (res))
 
     hm = h5py.File('/media/user/My Book/Fan/GRACE/output/GDRB_cov.hdf5', 'r')
     i = 0
@@ -1485,7 +1486,7 @@ def otherfigure3():
     # fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q12c", water="skyblue")
-    gdf = gpd.read_file('../data/basin/shp/GDRB_shapefiles')
+    gdf = gpd.read_file(str(_rc.basin_path('GDRB_shapefiles')))
     fig.plot(data=gdf.boundary, pen="1p,black")
 
     for i in range(1, 19):

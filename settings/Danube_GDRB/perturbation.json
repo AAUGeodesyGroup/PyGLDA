@@ -1,0 +1,406 @@
+{
+    "ensemble": 30,
+    "dir": {
+        "in": "${DATA_ROOT}/w3ra/crop_input/Danube_GDRB",
+        "out": "${DATA_ROOT}/w3ra/crop_input/Danube_GDRB"
+    },
+    "forcing": {
+        "2t": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "ssrd": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "tp": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        }
+    },
+    "par": {
+        "ER_frac_ref": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "FdrainFC": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "FdrainFC_scale": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "FdrainFC_shape": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Fgw_conn": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Fhru": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "FsoilEmax": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "FwaterE": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Gfrac_max": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "InitLoss": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "K_gw": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "K_gw_scale": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "K_gw_shape": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "K_rout": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "K_rout_int": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "K_rout_scale": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "LAImax": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "LAIref": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Nhru": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "PrefR": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "S0FC": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "SLA": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "S_sls": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "SdFC": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Sgref": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Sgref_scale": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Sgref_shape": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "SsFC": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Tgrow": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Tsenc": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Ud0": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Us0": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "Vc": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "alb_dry": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "alb_wet": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "beta": {
+            "is_perturbed": true,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "cGsmax": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "fday": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "fvegref_G": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "hveg": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "latitude": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "w0limE": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "w0ref_alb": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "wdlimU": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        },
+        "wslimU": {
+            "is_perturbed": false,
+            "error_distribution": "triangle",
+            "coefficients": [
+                0.3
+            ],
+            "perturb_method": "multiplicative"
+        }
+    },
+    "correlation": {
+        "forcing": {
+            "isSpatialCorrelated": true,
+            "isTemporalCorrelated": false,
+            "customize": false
+        },
+        "par": {
+            "isSpatialCorrelated": true,
+            "customize": false
+        }
+    }
+}

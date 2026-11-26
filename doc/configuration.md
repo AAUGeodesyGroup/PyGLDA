@@ -1,7 +1,9 @@
 # PyGLDA v1 — configuration guide
 
-Describes the code at commit `8c775b5`. Items marked **[issue n]** behave differently from what one would expect;
-see `known_issues.md`.
+Describes the code with the "run cleanly" changes of V1 reviews 14-16 (data root, settings run copy, start-date
+check, error logs, and the data layout domains/units/cases/aggregates with `made_with.json` reuse rules; numbers
+unchanged, bit-identical to commit `f3f5263`). Items marked **[issue n]** behave
+differently from what one would expect; see `known_issues.md`.
 
 An experiment is described by a driver script and four JSON files in one settings folder:
 
@@ -15,7 +17,10 @@ An experiment is described by a driver script and four JSON files in one setting
 
 `settings/SummerSchool/Installation` is the smallest complete example (Brahmaputra, 3 sub-basins, 2005, 3 members).
 `demo/demo_3.py` is the Danube example (`DRB`, 3 sub-basins, or `GDRB`, 19 grid units; 2 members, 2005, sample data);
-the JSON files in `settings/demo_3` were last rewritten for basin `Tile81` **[issue 9]**. The published Danube runs
+`settings/demo_3/DA_setting.json` still names basin `Tile81` from an earlier run; the driver's basin replaces it in
+the run copy (the files in `settings/` are no longer written). Ready-made Danube settings in the current format:
+`settings/Danube_DRB`, `settings/Danube_GDRB` with the driver `demo/demo_danube.py` (CSR mascons, 30 members,
+2002-2006, `${DATA_ROOT}` paths). The published Danube runs
 (30 members) are the UCloud cases `RDA_DRB_BasinScale` and `RDA_GDRB_BasinScale` (results in `/work/data_for_w3/w3ra/res`).
 
 ## 0. How the driver and the JSON files interact
@@ -27,38 +32,62 @@ RDA.setting_dir = '../settings/demo_3'
 RDA.ens = 30                       # perturbed members; MPI needs ens + 1 ranks
 RDA.case = 'case_study_demo3'      # names all folders of this experiment
 RDA.basin = 'DRB'
-RDA.shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
+RDA.shp_path = 'DRB_3_shapefiles/DRB_subbasins.shp'   # relative to <data_root>/basin/shp (or absolute)
 RDA.cold_begin_time, RDA.cold_end_time = '2005-01-01', '2005-12-31'      # spin-up (single run)
 RDA.warm_begin_time, RDA.warm_end_time = '2005-01-02', '2005-12-31'      # open loop
 RDA.resume_begin_time, RDA.resume_end_time = '2005-04-01', '2005-12-31'  # assimilation
 ```
 
-At the start of every stage, `generate_settings(mode)` **rewrites the JSON files in the settings folder in place**
-**[issue 9]** so that they agree with the driver:
+**Data root.** `RDA.data_root` (default: environment variable `PYGLDA_V1_DATA`; without either the stages stop with
+a clear error) is the root of `ERA5/`, `GRACE/`, `basin/` and `w3ra/`. Paths in the JSON files may be written as
+`${DATA_ROOT}/...`. The repository holds no data: shapefiles are in `<data_root>/basin/shp/` (formerly the repository
+`data/basin/shp`, `data/subbasins` and `res/`), the GRACE land mask in `<data_root>/GRACE/masks/`. A settings file or
+driver that still names `../data/...` or `../res/...` stops with an error that gives the new place.
+
+**Run copy.** At the start of every stage the four JSON files of `RDA.setting_dir` are copied, with `${DATA_ROOT}`
+substituted, to `<data_root>/w3ra/cases/<case>/settings/` (legacy layout: `<data_root>/w3ra/runs/<case>/settings/`), and the
+paths of the shared folders are pointed to the layout (section 7); the stage and `generate_settings(mode)` read and write only
+that copy, so the files in `settings/` are never written (issue 9 fixed). `generate_settings` sets these keys so that
+the copy agrees with the driver:
 
 | file | keys written by the driver |
 |---|---|
 | `pre_process.json` | `date_begin`, `date_end` (from the stage period) |
 | `setting.json` | `bounds.lat/lon` (shapefile box + 0.2°), `bounds.prefix` = case, `input.*` = `pre_process.out_dir`, `init.spec` = case, `init.mode`; `init.spinup` (cold) or `run.fromdate/todate` and `init.date` = day before (warm/resume) |
 | `perturbation.json` | `dir.in`, `dir.out` = `<pre_process.out_dir>/<case>`, `ensemble` |
-| `DA_setting.json` | `basic.ensemble`, `fromdate`, `todate`, `basin`; `basic.basin_shp` = the single file under `data/basin/shp/` named `<basin>_…subbasins….shp` (the driver's `shp_path` is not used here) |
+| `DA_setting.json` | `basic.ensemble`, `fromdate`, `todate`, `basin`; `basic.basin_shp` = the driver's `shp_path` if its file name starts with `<basin>_`, else the only `<basin>_…subbasins….shp` below `<data_root>/basin/shp/` (several byte-identical copies are accepted; different ones stop with a list) |
 
-Everything else in the JSON files is taken as written. `RDA.config_external_data()` (optional) rewrites every path
-that contains `/w3ra/`, `/GRACE/` or `/ERA5/` so that it starts with `RDA.external_data_path`.
+It also records the folder layout in `setting.json` (`output.layout` = `domains` or `legacy`, `output.stage` =
+`OL`/`DA`). Everything else is taken as written. `RDA.config_external_data()` (optional, for old settings with fixed
+paths) rewrites, in the run copy only, every path that contains `/w3ra/`, `/GRACE/` or `/ERA5/` so that it starts with
+the data root (`RDA.data_root`, else the deprecated `RDA.external_data_path`).
 
-The result folders `res_output` and `figure_output` are module variables of `Regional_DA.py`
-(`/work/data_for_w3/w3ra/res` and `…/figure`). Setting variables of the same name in a driver has no effect
-**[issue 13]**; set `Regional_DA.res_output` instead.
+**Result folders.** `RDA.res_output` / `RDA.figure_output` are the roots of the collected results and figures
+(layout: `cases/<case>/res` and `cases/<case>/figure`; legacy default `<data_root>/w3ra/res` and `…/figure` plus the
+case name; issue 13 fixed). The old module
+variables `Regional_DA.res_output/figure_output` are still honoured, with a deprecation warning, if a driver sets them.
+
+**Layout.** `RDA.legacy_layout = False` (default) uses the layout domains/units/cases/aggregates (section 7);
+`True` keeps the old places (`crop_input/<case>`, shared `state_<case>_ensemble_<k>` folders, `../temp`, `../log/OL`,
+masks in `<data_root>/w3ra/legacy_repo/basin_mask`), needed to read the old cases.
+
+**Errors.** Every stage is guarded: an exception on any rank prints the traceback with the rank and calls
+`MPI.COMM_WORLD.Abort(1)`, so no rank waits at a barrier until the job ends. Wall time and peak memory (ru_maxrss)
+per stage and rank go to `<data_root>/w3ra/cases/<case>/log/resources.csv`.
 
 ## 1. Stages
 
 | stage (`RDA.`) | ranks | what it does | main outputs |
 |---|---|---|---|
-| `prepare_Forcing()` | 1 | crops global ERA5 forcing, climatology, parameters and land mask to the box (Metview) | `<pre_process.out_dir>/<case>/{forcing,clim,par,mask}` |
-| `prepare_GRACE(...)` / `prepare_GRACE_Mascon(...)` | 1 | basin and grid TWS of GRACE (SH grids or CSR mascons) and the basin covariance from the DDK3 samples | `obs.GRACE.preprocess_res` |
-| `single_run()` | 1 | spin-up (`init.mode = cold`) over the cold period; writes the initial state for the warm start | `<init.dir>/<case>_state.<YYYYMMDD>.h5` |
-| `OL_run(skip_perturbation)` | ens + 1 | perturbs forcing and parameters (unless skipped), runs the open-loop ensemble, basin series, collects; prepares DA: OL mean for the datum and a state sample for the NaN mask | `state_<case>_ensemble_<k>/`, `output_<case>_ensemble_<k>/`, `<res_output>/<case>/…OL…`, `OL_mean/<case>_<basin>.hdf5` |
-| `DA_run(skip_obs_perturbation)` | ens + 1 | perturbs GRACE (unless skipped), builds the design matrix, runs the EnKF, basin series, collects | daily states (same folders as the OL **[issue 5]**), `<res_output>/<case>/…DA…` |
+| `prepare_Forcing()` | 1 | crops global ERA5 forcing, climatology, parameters and land mask to the box (Metview); only months not yet in the domain | `domains/<domain>/input/{forcing,clim,par,mask}` |
+| `prepare_GRACE(...)` / `prepare_GRACE_Mascon(...)` | 1 | basin and grid TWS of GRACE (SH grids or CSR mascons) and the basin covariance from the DDK3 samples; only months not yet there | `units/<unit_set>/grace/<product>/` |
+| `single_run()` | 1 | spin-up (`init.mode = cold`) over the cold period; writes the initial state for the warm start; reused if done | `domains/<domain>/spinup/init/<domain>_state.<YYYYMMDD>.h5` |
+| `OL_run(skip_perturbation)` | ens + 1 | perturbs forcing and parameters (unless skipped or the ensemble exists), runs the open-loop ensemble (unless it exists), basin series, collects; prepares DA: OL mean for the datum and a state sample for the NaN mask | `domains/<domain>/ensembles/<ensemble>/`, `domains/<domain>/OL/<ensemble>/ens_kk/`, `cases/<case>/res/…OL…`, `cases/<case>/grace/ol_mean.hdf5` |
+| `DA_run(skip_obs_perturbation)` | ens + 1 | checks the start date (below), perturbs GRACE (unless skipped), builds the design matrix (unless it exists), runs the EnKF from the OL state of the day before, basin series, collects; empties `tmp/` | `cases/<case>/DA/ens_kk/` (issue 5 fixed), `cases/<case>/grace/obs/`, `cases/<case>/res/…DA…` |
+
+**DA start date.** Before anything runs, `DA_run` checks that `resume_begin_time` is the first day of an
+observation window and that every member's OL state of the day before exists; otherwise it stops and names the first
+valid start date (e.g. with an open loop from 2002-04-01 and CSR mascons the first possible DA start is 2002-05-01).
 
 Member 0 is the unperturbed run; members 1…ens are perturbed. Run the MPI stages with
 `mpiexec -n <ens+1> python <driver>.py` from `demo/` (all relative paths start at `../`).
@@ -105,7 +134,8 @@ its keys must be given.
 
 ### 5.1 `basic`
 `fromdate`, `todate`, `basin`, `basin_shp`, `ensemble` (written by the driver); `NaNmaskStatesDir` (a state file of
-the open loop, `<case>_state.h5`, is copied here to mask cells without data **[issue 11]**); `layer` — the state
+the open loop, `<case>_state.h5`, is copied here to mask cells without data: the last OL day, chosen by date; the
+legacy layout keeps the old arbitrary `listdir()[-1]`, issue 11); `layer` — the state
 vector, one switch per W3RA store: `S0`, `Ss`, `Sd` (top, shallow, deep soil), `Sr` (surface/river), `Sg`
 (groundwater), `Mleaf` (canopy; ×4 in TWS), `FreeWater`, `DrySnow` (snow). Two hydrological response units per cell
 are combined with `Fhru`.
@@ -145,15 +175,93 @@ not centred **[issue 2]**.
   `lstsq`; each member is updated with its own perturbed observation. The applied increment is the analysis minus
   the *uninflated* forecast, so the inflation itself is kept in the states.
 - Member 0 (the unperturbed run) takes no part in the update and is not changed: in a DA run it stays an open loop.
-- The time bookkeeping requires `fromdate` to coincide with the start of a GRACE window; days after the last window
-  are not assimilated **[issue 6]**.
+- The time bookkeeping requires `fromdate` to coincide with the start of a GRACE window (now checked before the run,
+  see section 1); days after the last window are not assimilated **[issue 6]**.
+- The time of every analysis (update and whole window) is logged to `<data_root>/w3ra/cases/<case>/log/analysis_times.csv`.
 - No per-window log of forecast HX, innovation or increment is written **[issue 7]**.
 
-## 7. Outputs
+## 7. Data layout and outputs
 
-| what | where |
+Everything a run writes is below `<data_root>/w3ra/` (`src_FlowControl/run_context.py`, class `Layout`). Folders that
+several cases can share are named by driver attributes, recorded in `cases/<case>/case.json`:
+
+| attribute | default | names |
+|---|---|---|
+| `RDA.domain` | case name | model box: cropped inputs, spin-up, ensembles, open loops |
+| `RDA.ensemble` | `n<ens>` | perturbed forcing/parameters and the open loop run with them |
+| `RDA.unit_set` | basin name | observation units (shapefile): masks, design matrices, prepared GRACE |
+| `RDA.grace_product` | from `obs.GRACE.kind` (`CSR_mascon`, `SH_monthly`, `ESA_SING`, `ESA_SING_ESM3`) | prepared GRACE product of the units |
+| `RDA.obs_input` | None | with `DA_run(skip_obs_perturbation=True)`: an existing perturbed-obs file, copied into the case (e.g. `${DATA_ROOT}/GRACE/ESA_SING/Europe_obs_GRACE.hdf5`) |
+
+```
+<data_root>/
+  ERA5/  GRACE/{SaGEA,aux,masks,ESA_SING,...}  basin/shp/<name>/...      model-independent input (never written by runs)
+  w3ra/global/        pyW3RA/ matlab/ perturbation_sample/ basin_selection/
+  w3ra/domains/<domain>/
+      input/{forcing,clim,par,mask}            cropped inputs; months added when missing
+      spinup/{state,output}/  spinup/init/<domain>_state.<YYYYMMDD>.h5   spinup/products/SR/
+      ensembles/<ensemble>/{ens_forcing,ens_par}
+      OL/<ensemble>/ens_00..ens_NN/{state,output}/   OL/<ensemble>/nan_sample.h5   OL/<ensemble>/products/OL_mean/
+  w3ra/units/<unit_set>/
+      mask/  DM/<domain>__<ensemble>/DM.hdf5  grace/<product>/   (basin TWS, grid TWS, covariance)
+  w3ra/cases/<case>/
+      case.json  settings/  log/  tmp/ (emptied after a successful DA)
+      grace/ol_mean.hdf5  grace/obs/ (perturbed obs)   DA/ens_00..ens_NN/{state,output}/
+      res/  figure/  products/{DA_mean,DA_std,mask}/
+  w3ra/aggregates/<global_run>/   GDA_{DA,OL,GR}_map.h5, SR/   (global tile-wise DA, see below)
+```
+
+**Sharing and `made_with.json`.** Every shared folder (domain, ensemble, open loop, unit set, GRACE product, design
+matrix) holds a `made_with.json` with the inputs that define it: domain = box, resolution, forcing source, cropped
+months; ensemble = the full `perturbation.json` content, member count, seed note; open loop = ensemble, members, period,
+initial state; unit set = shapefile path and md5, resolution; GRACE product = kind, input folders, months, diagonal or
+full covariance; design matrix = units shapefile md5, domain, ensemble, state layers. A stage reuses a folder only if
+its definition matches; a mismatch stops with an error naming the differing keys (e.g. `perturbation.forcing.tp.
+coefficients`) and asking for another name. Nothing is silently reused or overwritten. Missing months (forcing, GRACE)
+are added and `made_with.json` is updated. Every reuse is noted in `cases/<case>/log/reuse.log`. Two cases on the same
+domain, ensemble and units therefore run only their own DA; a second case with another perturbation needs another
+`RDA.ensemble`.
+
+**Legacy layout** (`RDA.legacy_layout = True`): the old places, unchanged: `w3ra/crop_input/<case>`,
+`w3ra/output/{state,output}_<case>[_ensemble_<k>]`, `w3ra/initial_states`, `w3ra/states_sample`, `GRACE/{output,obs,OLmean}`,
+`w3ra/res|figure/<case>`, `../temp/DM.hdf5`, `../log/OL/`; settings run copy in `w3ra/runs/<case>/settings`.
+
+**Post-processing.** `RDA.activate()` registers the data root and the layout of the case set in the driver (without
+running a stage) and returns its run copy of the settings. Then `src_postprocessing/DataManager.py` with `out_dir=None`
+writes to the layout: `dataManager_ensemble_statistic` -> `cases/<case>/products/DA_mean`, `DA_std`;
+`reduce_datasize(save_mask=True)` -> `products/mask`; `dataManager_ensemble_member(ens, stage='OL')` ->
+`domains/<domain>/OL/<ensemble>/products/OL_mean`; `dataManager_single_run` -> `domains/<domain>/spinup/products/SR`.
+With an explicit `out_dir` the old `<out_dir>/<case>` is used. `cleanup()` in the layout deletes only the case's
+`DA/` members and `tmp/`, never shared domain data. The visualization methods of `RDA` read the run copy, not
+`RDA.setting_dir`. `src_DA/Analysis.py` save/load functions default to `cases/<case>/res` (legacy `../temp`).
+
+**Global tile-wise DA** (`src_FlowControl/global_DA.py`, class `GDA`): `GDA.legacy_layout = True` (default) keeps the
+old places. With `False`, every tile is a case `<GDA.global_run>_Tile<n>` with its own domain and unit set, settings run
+copy in `cases/<case>/settings`, and `src_auxiliary/GlobalAggregation.py` writes the global maps and the SR mosaic to
+`aggregates/<global_run>/`. The tile shapefile is `basin/shp/global_shp_new/Tile<n>_subbasins.shp`. This mode is
+not yet tested with a tile run.
+
+| what | where (layout) |
 |---|---|
-| daily states / outputs per member | `<output.dir>/state_<case>_ensemble_<k>/`, `output_<case>_ensemble_<k>/` |
-| basin series per member | `basin_ts_<OL|DA>.h5` (states of each unit, cos-latitude weighted), collected by `post_processing` into `<res_output>/<case>/` |
-| design matrix | `../temp/` (shared by all cases **[issue 12]**) |
-| logs | `../log/OL/log_<rank>.txt`, `signal_log_<rank>.txt` (OL and DA use the same names) |
+| basin series per member | `basin_ts_<OL|DA>.h5` in each member's `output/`, collected by `post_processing` into `cases/<case>/res/` |
+| logs | `cases/<case>/log/`: `OL_log_rank<k>.txt`, `OL_signal_log_rank<k>.txt`, `DA_log_rank<k>.txt`, `DA_signal_log_rank<k>.txt`, `resources.csv`, `analysis_times.csv`, `reuse.log`, `errors.log` (legacy: `../log/OL/`) |
+| error log of all runs | `<repo>/log/errors.log` and `<repo>/log/errors/` (see Logs below) |
+
+### Logs
+
+Two places, with different jobs:
+
+- **Code log `py-w3ra/log/`** (git-ignored, found from the package path, not from the working directory) collects the
+  **errors of all runs** started from this checkout. When a stage fails on any rank, the guard writes one detail file
+  `log/errors/<YYYYmmdd-HHMMSS>_<case>_<stage>_rank<k>.txt` (time, host and UCloud job id, case, stage, rank/size, data
+  root, run-copy settings folder, git commit with a dirty flag, python and numpy versions, full traceback) and appends
+  one tab-separated line (time, case, stage, rank, exception, detail file) to `log/errors.log`; then it calls
+  `MPI.COMM_WORLD.Abort(1)`. One file per error, so several ranks never write the same file. On UCloud this is
+  `/work/W3RA_Fan/py-w3ra/log/`; the Syncthing link does not bring it back to the desktop, so read it on UCloud.
+- **Case log `<data_root>/w3ra/cases/<case>/log/`** holds **everything of one case**: rank logs of OL and DA,
+  `resources.csv`, `analysis_times.csv`, `reuse.log` (every shared folder reused, every month added), and the same error
+lines (`errors.log`), so a case folder is complete on its own.
+
+The old `log/OL/` is used only with `legacy_layout = True`. Test only: the environment variable
+`PYGLDA_V1_FAIL_TEST=<stage>:<rank>` (stage = `forcing`, `prepare_GRACE_Mascon`, `prepare_GRACE`, `spinup`, `ol`, `da`)
+raises an exception in that stage on that rank, to test the abort and the error logs; never set it in production.

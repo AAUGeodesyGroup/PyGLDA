@@ -3,7 +3,7 @@
         "fromdate": "2005-02-01",
         "todate": "2005-12-31",
         "basin": "Brahmaputra3subbasins",
-        "basin_shp": "../data/basin/shp/Brahmaputra/Brahmaputra3subbasins_subbasins.shp",
+        "basin_shp": "${DATA_ROOT}/basin/shp/Brahmaputra/Brahmaputra3subbasins_subbasins.shp",
         "NaNmaskStatesDir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/states_sample",
         "ensemble": 5,
         "layer": {

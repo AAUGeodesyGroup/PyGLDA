@@ -32,7 +32,8 @@ class model_initialise:
             yesterday = today - timedelta(days=1)
 
             states_file = 'state.' + yesterday.strftime("%Y%m%d.h5")
-            fn = Path(settings.statedir)/states_file
+            '''layout: the DA starts from the OL state of the day before (config_settings.init_statedir)'''
+            fn = Path(getattr(settings, 'init_statedir', settings.statedir))/states_file
             assert fn.is_file(), 'Initialization failed: file %s not found' % fn
             dd = h5py.File(fn, 'r')
             for key in dd.keys():

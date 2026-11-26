@@ -21,13 +21,16 @@ Repository layout:
 | `src_GHM` | W3RA model (`W3RA_timestep_model.py`, `hotrun.py`), configuration (`config_settings.py`), input cropping (`preprocess.py`) |
 | `src_OBS` | GRACE preparation: SH grids (`prepare_GRACE.py`), CSR mascons (`prepare_GRACE_mascon.py`), time epochs (`obs_auxiliary.py`), perturbation of the observations (`GRACE_perturbation.py`) |
 | `src_DA` | EnKF variants (`EnKF.py`, `EnSQRA.py`), forcing/parameter perturbation (`Perturbation.py`), basin mask and design matrix (`shp2mask.py`, `ObsDesignMatrix.py`), configuration (`configure_DA.py`), basin series (`Analysis.py`) |
-| `src_FlowControl` | stages and drivers: `SingleModel`, `OpenLoop`, `DA_GRACE`, `Regional_DA` (class `RDA`), `global_DA` |
-| `src_postprocessing` | figures |
+| `src_FlowControl` | stages and drivers: `SingleModel`, `OpenLoop`, `DA_GRACE`, `Regional_DA` (class `RDA`), `global_DA`; data root, layout and error logs (`run_context.py`) |
+| `src_postprocessing` | figures, products (`DataManager.py`) |
 | `demo/` | example drivers and the summer-school notebooks |
 | `settings/` | one folder of JSON files per case |
-| `data/basin/shp/` | basin shapefiles (`<basin>_subbasins.shp`) |
+| `tests/regression/` | regression harness (fixed seeds) and bit-by-bit comparison |
 | `installation/` | environment files, install script and checks |
 | `doc/` | this documentation |
-| `temp/` | scratch (git-ignored): design matrices, logs, coordination notes |
+| `temp/` | scratch (git-ignored): coordination notes, test logs |
+| `log/` | error log of all runs from this checkout (git-ignored) |
+
+No data in the repository: shapefiles, masks and all model data are below the data root (`installation.md` §6).
 
 Version 2 (WaterGAP 2.2e) lives in a separate repository; where v1 is being aligned with it, `known_issues.md` says so.

@@ -1,3 +1,4 @@
+from src_FlowControl import run_context as _rc
 import numpy as np
 import geopandas as gpd
 from shapely import box
@@ -18,7 +19,7 @@ def shp_change_Danube():
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q12c")
 
-    gdf = gpd.read_file('../data/basin/shp/Danube_9_shapefiles/Danube_9_subbasins.shp')
+    gdf = gpd.read_file(str(_rc.basin_path('Danube_9_shapefiles/Danube_9_subbasins.shp')))
 
     a = gdf[gdf.ID == 1].geometry
     b = gdf[gdf.ID == 2].geometry
@@ -52,9 +53,9 @@ def shp_change_Danube():
                               geometry='geometry',
                               crs='epsg:4326')
 
-    # geo_df.to_file('../res/DRB.shp')
+    # geo_df.to_file(str(_rc.basin_path('global/DRB.shp')))
     #
-    # geo_df = gpd.read_file('../data/basin/shp/DRB_3_shapefiles')
+    # geo_df = gpd.read_file(str(_rc.basin_path('DRB_3_shapefiles')))
     # fig.plot(data=geo_df.geometry, pen="1p,black")
     #
     # fig.show()
@@ -64,8 +65,8 @@ def shp_change_Danube():
 
 def shp_revision_multipolygon():
     """This is to eliminate the multipolygon issue of the basin shapefile"""
-    # bp = gpd.read_file('../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
-    bp = gpd.read_file('../data/basin/shp/Rhine-Meuse/Rhine-Meuse_subbasin_old.shp')
+    # bp = gpd.read_file(str(_rc.basin_path('MDB_4_shapefiles/MDB_4_subbasins.shp')))
+    bp = gpd.read_file(str(_rc.basin_path('Rhine-Meuse/Rhine-Meuse_subbasin_old.shp')))
     ID = []
     polys = []
     for sub in bp.ID:
@@ -81,7 +82,7 @@ def shp_revision_multipolygon():
 
     # new_shp = gpd.GeoDataFrame(d, crs='epsg:4326')
     new_shp = gpd.GeoDataFrame(d)
-    new_shp.to_file('../data/basin/shp/Rhine-Meuse/Rhine-Meuse_subbasins.shp')
+    new_shp.to_file(str(_rc.basin_path('Rhine-Meuse/Rhine-Meuse_subbasins.shp')))
 
     pass
 
@@ -152,7 +153,7 @@ class global_box_shp:
         ID = [i for i in range(1, num_sub_basins + 1)]
         d = {'ID': ID, 'geometry': list(poly.flatten())}
         gdf = gpd.GeoDataFrame(d, crs='epsg:4326')
-        gdf.to_file('../res/global_shp_old/Tile%s_subbasins.shp' % tile_ID)
+        gdf.to_file(str(_rc.basin_path('global/global_shp_old/Tile%s_subbasins.shp')) % tile_ID)
 
         pass
 
@@ -162,7 +163,7 @@ class global_box_shp:
         """
 
         '''load data'''
-        invalid_subbasin = np.load('../res/invalid_subbasin.npy')
+        invalid_subbasin = np.load(str(_rc.basin_path('global/invalid_subbasin.npy')))
 
         sub_basin = self.sub_basin
 
@@ -191,7 +192,7 @@ class global_box_shp:
             if i in glaciers:
                 continue
 
-            gf = gpd.read_file('../res/global_shp_old/Tile%s_subbasins.shp' % i)
+            gf = gpd.read_file(str(_rc.basin_path('global/global_shp_old/Tile%s_subbasins.shp')) % i)
 
             x = sub_id[i].flatten()
 
@@ -208,7 +209,7 @@ class global_box_shp:
             n = gf[a]
             n.loc[:, 'ID'] = np.arange(np.sum(a)) + 1
 
-            n.to_file('../res/global_shp_new/Tile%s_subbasins.shp' % i)
+            n.to_file(str(_rc.basin_path('global/global_shp_new/Tile%s_subbasins.shp')) % i)
             pass
 
         pass
@@ -272,7 +273,7 @@ class global_box_shp_overlap(global_box_shp):
         ID = [i for i in range(1, num_sub_basins + 1)]
         d = {'ID': ID, 'geometry': list(poly.flatten())}
         gdf = gpd.GeoDataFrame(d, crs='epsg:4326')
-        gdf.to_file('../res/global_shp_overlap/Tile%s_subbasins.shp' % tile_ID)
+        gdf.to_file(str(_rc.basin_path('global/global_shp_overlap/Tile%s_subbasins.shp')) % tile_ID)
 
         pass
 
@@ -282,7 +283,7 @@ class global_box_shp_overlap(global_box_shp):
         """
 
         '''load data'''
-        invalid_subbasin = np.load('../res/invalid_subbasin.npy')
+        invalid_subbasin = np.load(str(_rc.basin_path('global/invalid_subbasin.npy')))
 
         '''preparation'''
         sub_basin = self.sub_basin
@@ -314,7 +315,7 @@ class global_box_shp_overlap(global_box_shp):
             if i in glaciers:
                 continue
 
-            gf = gpd.read_file('../res/global_shp_overlap/Tile%s_subbasins.shp' % i)
+            gf = gpd.read_file(str(_rc.basin_path('global/global_shp_overlap/Tile%s_subbasins.shp')) % i)
 
             bd = gf.unary_union.bounds
             x2 = id_basins[((lat <= bd[3]) * (lat >= bd[1]) * (lon >= bd[0]) * (lon <= bd[2])).astype(bool)].flatten()
@@ -345,7 +346,7 @@ class global_box_shp_overlap(global_box_shp):
             n = gf[a]
             n.loc[:, 'ID'] = np.arange(np.sum(a)) + 1
 
-            n.to_file('../res/global_shp_overlap_new/Tile%s_subbasins.shp' % i)
+            n.to_file(str(_rc.basin_path('global/global_shp_overlap_new/Tile%s_subbasins.shp')) % i)
             pass
 
         pass
@@ -487,7 +488,7 @@ def demo2():
 
     fig.coast(shorelines="1/0.2p", region=region, projection="Q8c")
 
-    gdf = gpd.read_file(filename='../res/global_shp_new/Tile58_subbasins.shp')
+    gdf = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_new/Tile58_subbasins.shp')))
 
     fig.plot(data=gdf.boundary, pen="1p,black")
 
@@ -509,7 +510,7 @@ def demo3():
     region = [min(lon), max(lon), min(lat), max(lat)]
     lon, lat = np.meshgrid(lon, lat)
 
-    x = np.load('/media/user/My Book/Fan/W3RA_data/basin_selection/forcing_mask.npy')[:, :].astype(float)
+    x = np.load(str(_rc.global_path('basin_selection/forcing_mask.npy')))[:, :].astype(float)
     x[x == 0] = np.nan
     grace = pygmt.xyz2grd(y=lat.flatten(), x=lon.flatten(), z=x.flatten(),
                           spacing=(res, res), region=region)
@@ -561,8 +562,8 @@ def demo5():
     invalid_basins = []
     for tile in range(1, 150 + 1):
         try:
-            # gdf = gpd.read_file(filename='../res/global_shp_overlap_new/Tile%s_subbasins.shp' % tile)
-            gdf = gpd.read_file(filename='../res/global_shp_new_nooverlap/Tile%s_subbasins.shp' % tile)
+            # gdf = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_overlap_new/Tile%s_subbasins.shp')) % tile)
+            gdf = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_new_nooverlap/Tile%s_subbasins.shp')) % tile)
             gdf_list.append(gdf)
 
         except Exception:
@@ -578,11 +579,11 @@ def demo5():
     for tile in range(1, 150 + 1):
         if tile in invalid_basins:
             continue
-        # gdf = gpd.read_file(filename='../res/global_shp_overlap/Tile%s_subbasins.shp' % tile)
-        # gdf = gpd.read_file(filename='../res/global_shp_new/Tile%s_subbasins.shp' % tile)
-        gdf1 = gpd.read_file(filename='../res/global_shp_old/Tile%s_subbasins.shp' % tile)
-        # gdf = gpd.read_file(filename='../res/global_shp_overlap_new/Tile%s_subbasins.shp' % tile)
-        gdf = gpd.read_file(filename='../res/global_shp_new_nooverlap/Tile%s_subbasins.shp' % tile)
+        # gdf = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_overlap/Tile%s_subbasins.shp')) % tile)
+        # gdf = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_new/Tile%s_subbasins.shp')) % tile)
+        gdf1 = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_old/Tile%s_subbasins.shp')) % tile)
+        # gdf = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_overlap_new/Tile%s_subbasins.shp')) % tile)
+        gdf = gpd.read_file(filename=str(_rc.basin_path('global/global_shp_new_nooverlap/Tile%s_subbasins.shp')) % tile)
         # gdf_list.append(gdf)
 
         fig.plot(data=gpd.GeoSeries(gdf.unary_union.boundary), pen="0.5p,red", fill='lightblue', transparency=60)
@@ -655,7 +656,7 @@ def demo_show_basin_grid():
 
 def demo_basin_grid():
     b2g = basin2grid_shp(grid=(3, 3))
-    b2g.create_shp(new_basin_name='GDRB_subbasins', shp='../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp')
+    b2g.create_shp(new_basin_name='GDRB_subbasins', shp=str(_rc.basin_path('DRB_3_shapefiles/DRB_subbasins.shp')))
 
     pass
 

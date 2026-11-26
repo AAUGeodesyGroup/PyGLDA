@@ -1,3 +1,4 @@
+from src_FlowControl import run_context as _rc
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -20,6 +21,19 @@ class DA_GRACE(OpenLoop):
 
         pass
 
+    def _dm_dir(self):
+        """folder of the design matrix: units/<unit_set>/DM/<domain>__<ensemble> (layout) or ../temp (legacy)"""
+        from src_FlowControl import run_context as rc
+        return rc.dm_dir('../temp')
+
+    def _log_file(self, kind, rank):
+        from src_FlowControl import run_context as rc
+        d = rc.log_dir()
+        if d is None:
+            return '../log/OL/%s_%s.txt' % (kind, rank)
+        d.mkdir(parents=True, exist_ok=True)
+        return str(d / ('DA_%s_rank%s.txt' % (kind, rank)))
+
     def generate_settings(self, mode: init_mode):
         """modify the json setting file to make each sub-setting consistent with each other"""
         import os
@@ -41,9 +55,14 @@ class DA_GRACE(OpenLoop):
         dp1['input']["pars"] = dp2['out_dir']
         dp1['input']["clim"] = dp2['out_dir']
         dp1['input']["mask_fn"] = dp2['out_dir']
-        dp1['init']['spec'] = self.case
+        from src_FlowControl import run_context as rc
+        dp1['init']['spec'] = rc.init_name(self.case)          # the domain (layout) or the case (legacy)
 
         dp1['init']['mode'] = mode.name
+        '''folder layout (src_FlowControl/run_context.py): domains -> <domain>/OL/<ensemble>/ens_kk, <case>/DA/ens_kk; legacy -> shared'''
+        from src_FlowControl import run_context as rc
+        dp1['output']['layout'] = 'domains' if rc.get_layout() is not None else 'legacy'
+        dp1['output']['stage'] = {'warm': 'OL', 'resume': 'DA'}.get(mode.name, '')
         if mode == init_mode.cold:
             dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
         else:
@@ -57,8 +76,8 @@ class DA_GRACE(OpenLoop):
         '''modify dp3'''
         dp_dir = self.setting_dir / 'perturbation.json'
         dp3 = json.load(open(dp_dir, 'r'))
-        dp3['dir']["in"] = str(Path(dp2['out_dir']) / self.case)
-        dp3['dir']["out"] = str(Path(dp2['out_dir']) / self.case)
+        dp3['dir']["in"] = str(rc.crop_dir(dp2['out_dir'], self.case))           # <domain>/input or legacy
+        dp3['dir']["out"] = str(rc.ens_input_dir(dp2['out_dir'], self.case))     # <domain>/ensembles/<ensemble>
         dp3['ensemble'] = self.ens
 
         with open(dp_dir, 'w') as f:
@@ -75,18 +94,8 @@ class DA_GRACE(OpenLoop):
         dp4['basic']['todate'] = self.period[1].strftime('%Y-%m-%d')
         dp4['basic']['basin'] = self.basin
 
-        '''search for the shape file'''
-        pp = Path('../data/basin/shp/')
-        target = []
-        for root, dirs, files in os.walk(pp):
-            for file_name in files:
-                if (str(file_name).split('_')[0] == self.basin) and file_name.endswith('.shp') and (
-                        'subbasins' in file_name):
-                    # if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
-                    target.append(os.path.join(root, file_name))
-        assert len(target) == 1, target
-
-        dp4['basic']['basin_shp'] = str(target[0])
+        '''the shape file: the case's own (RDA.shp_path) or the only one of this basin below <data_root>/basin/shp'''
+        dp4['basic']['basin_shp'] = _rc.find_basin_shp(self.basin)
 
         with open(dp_dir, 'w') as f:
             json.dump(dp4, f, indent=4)
@@ -135,7 +144,8 @@ class DA_GRACE(OpenLoop):
         ens_TWS = []
         for ens_id in range(0, self.ens + 1):
             statedir = Path(self._outdir2)
-            ens_dir = str(statedir / ('output_%s_ensemble_%s' % (self.case, ens_id)))
+            from src_FlowControl.run_context import find_ens_dir
+            ens_dir = str(find_ens_dir(statedir, 'output', self.case, ens_id, stage=post_fix))
             mm = h5py.File(str(Path(ens_dir) / ('basin_ts_%s.h5' % post_fix)), 'r')
 
             subbasin_num = len(list(mm.keys())) - 1
@@ -160,7 +170,9 @@ class DA_GRACE(OpenLoop):
         mean_0 = ens_TWS[0]
         mean_1 = np.mean(ens_TWS[1:], axis=0)
 
-        fn = Path(configDA.obs.GRACE['OL_mean']) / ('%s_%s.hdf5' % (self.case, self.basin))
+        from src_FlowControl import run_context as rc
+        fn = rc.ol_mean_path(configDA.obs.GRACE['OL_mean'], self.case, self.basin)   # <case>/grace/ol_mean.hdf5
+        Path(fn).parent.mkdir(parents=True, exist_ok=True)
         ww = h5py.File(fn, 'w')
         ww.create_dataset(data=mean_0, name='mean_unperturbed')
         ww.create_dataset(data=mean_1, name='mean_ensemble')
@@ -182,7 +194,9 @@ class DA_GRACE(OpenLoop):
             configure_time(month_begin=begin_day.strftime('%Y-%m'), month_end=end_day.strftime('%Y-%m'))
 
         ob.perturb_TWS().remove_temporal_mean()
-        fn = Path(configDA.obs.GRACE['OL_mean']) / ('%s_%s.hdf5' % (self.case, self.basin))
+        from src_FlowControl import run_context as rc
+        fn = rc.ol_mean_path(configDA.obs.GRACE['OL_mean'], self.case, self.basin)   # <case>/grace/ol_mean.hdf5
+        Path(fn).parent.mkdir(parents=True, exist_ok=True)
         ob.add_temporal_mean(fn=str(fn))
         ob.save()
 
@@ -202,14 +216,15 @@ class DA_GRACE(OpenLoop):
         bs = basin_shp_process(res=0.1, basin_name=basin).shp_to_mask(shp_path=shp_path)
 
         print('\nPreparing the design matrix that projects the state to observation space...')
-        land_mask = str(Path(self._outdir) / self.case / 'mask' / 'mask_global.h5')
+        from src_FlowControl import run_context as rc
+        land_mask = str(rc.crop_dir(self._outdir, self.case) / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
 
-        state_sample = Path(configDA.basic.NaNmaskStatesDir) / ('%s_state.h5' % self.case)
+        state_sample = rc.nan_sample_path(configDA.basic.NaNmaskStatesDir, self.case)
         bs.mask_nan(sample=state_sample)
 
-        par_dir = str(Path(self._outdir) / self.case / 'par')
-        dm_save_dir = '../temp'
+        par_dir = str(rc.crop_dir(self._outdir, self.case) / 'par')
+        dm_save_dir = self._dm_dir()
         dm = DM_basin_average(shp=bs, layer=layer, par_dir=par_dir)
         dm.vertical_aggregation(isVec=True).basin_average()
         dm.saveDM(out_path=dm_save_dir)
@@ -227,17 +242,25 @@ class DA_GRACE(OpenLoop):
 
         target_folder = Path(configDA.basic.NaNmaskStatesDir)
 
-        source_folder = Path(self._outdir2) / ('state_%s_ensemble_%s' % (self.case, 0))
+        from src_FlowControl import run_context as rc
+        source_folder = rc.find_ens_dir(self._outdir2, 'state', self.case, 0, stage='OL')
 
-        ss = os.listdir(source_folder)
+        if rc.get_layout() is None:
+            '''legacy: an arbitrary day (listdir order is not sorted, issue 11)'''
+            ss = os.listdir(source_folder)
+            assert 'h5' in ss[-1]
+            taget_fn = ss[-1]
+        else:
+            '''the last day of the open loop, chosen by date (issue 11)'''
+            import json
+            ol_end = json.load(open(self.setting_dir / 'setting.json'))['run']['todate']
+            ol_files = sorted(f for f in os.listdir(source_folder) if f.startswith('state.') and f.endswith('.h5'))
+            want = 'state.%s.h5' % ol_end.replace('-', '')
+            taget_fn = want if want in ol_files else ol_files[-1]
 
-        assert 'h5' in ss[-1]
-
-        taget_fn = ss[-1]
-
-        shutil.copy(source_folder / taget_fn, target_folder)
-
-        os.replace(target_folder / taget_fn, target_folder / ('%s_state.h5' % self.case))
+        dst = rc.nan_sample_path(target_folder, self.case)      # <domain>/OL/<ensemble>/nan_sample.h5 or legacy
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(source_folder / taget_fn, dst)
 
         pass
 
@@ -282,9 +305,10 @@ class DA_GRACE(OpenLoop):
         dp_dir = self.setting_dir / 'pre_process.json'
         dp2 = json.load(open(dp_dir, 'r'))
         lm = dp2['out_dir']
-        land_mask = str(Path(lm) / self.case / 'mask' / 'mask_global.h5')
+        from src_FlowControl import run_context as rc
+        land_mask = str(rc.crop_dir(lm, self.case) / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
-        state_sample = Path(configDA.basic.NaNmaskStatesDir) / ('%s_state.h5' % self.case)
+        state_sample = rc.nan_sample_path(configDA.basic.NaNmaskStatesDir, self.case)
         bs.mask_nan(sample=state_sample)
 
         print('Configure OBS and its design matrix: %s' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -327,9 +351,38 @@ class DA_GRACE_flexibile(DA_GRACE):
 
         pass
 
-    def generate_perturbed_GRACE_obs(self):
+    def get_obs_aux(self, configDA, begin_day, end_day):
+        """time reference (epochs, windows) of the observations between begin_day and end_day ('YYYY-MM-DD'), by
+        obs.GRACE.kind; a missing key gives a clear error naming the key and the settings file"""
         from src_OBS.obs_auxiliary import aux_ESAsing_5daily, aux_GRACE_SH_monthly, aux_GRACE_mascon_monthly, \
             aux_ESM3_5daily
+        for key in ('kind', 'aux_for_time_epochs'):
+            if key not in configDA.obs.GRACE:
+                raise KeyError('PyGLDA v1: obs.GRACE.%s is missing in %s (kind: SH_monthly, Mascon_monthly, ESA_SING or '
+                               'ESA_SING_ESM3; aux_for_time_epochs: folder of the GRACE product)'
+                               % (key, self.setting_dir / 'DA_setting.json'))
+        kind = configDA.obs.GRACE['kind']
+        if kind == 'SH_monthly':
+            t1 = datetime.strptime(begin_day, '%Y-%m-%d').strftime('%Y-%m')
+            t2 = datetime.strptime(end_day, '%Y-%m-%d').strftime('%Y-%m')
+            obs_aux = aux_GRACE_SH_monthly().setTimeReference(month_begin=t1, month_end=t2,
+                                                              dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+        elif kind == 'ESA_SING':
+            obs_aux = aux_ESAsing_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
+                                                            dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+        elif kind == 'ESA_SING_ESM3':
+            obs_aux = aux_ESM3_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
+                                                         dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+        elif kind == 'Mascon_monthly':
+            t1 = datetime.strptime(begin_day, '%Y-%m-%d').strftime('%Y-%m')
+            t2 = datetime.strptime(end_day, '%Y-%m-%d').strftime('%Y-%m')
+            obs_aux = aux_GRACE_mascon_monthly().setTimeReference(month_begin=t1, month_end=t2,
+                                                                  dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+        else:
+            raise ValueError('PyGLDA v1: unknown obs.GRACE.kind %r in %s' % (kind, self.setting_dir / 'DA_setting.json'))
+        return obs_aux
+
+    def generate_perturbed_GRACE_obs(self):
         from src_OBS.GRACE_perturbation import GRACE_perturbed_obs
 
         dp_dir = self.setting_dir / 'DA_setting.json'
@@ -341,27 +394,13 @@ class DA_GRACE_flexibile(DA_GRACE):
         ob = GRACE_perturbed_obs(ens=configDA.basic.ensemble, basin_name=configDA.basic.basin)
         ob.configure_dir(input_dir=configDA.obs.GRACE['preprocess_res'], obs_dir=configDA.obs.dir)
 
-        if configDA.obs.GRACE['kind'] == 'SH_monthly':
-            t1 = datetime.strptime(begin_day, '%Y-%m-%d').strftime('%Y-%m')
-            t2 = datetime.strptime(end_day, '%Y-%m-%d').strftime('%Y-%m')
-            obs_aux = aux_GRACE_SH_monthly().setTimeReference(month_begin=t1, month_end=t2,
-                                                              dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
-        elif configDA.obs.GRACE['kind'] == 'ESA_SING':
-            obs_aux = aux_ESAsing_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
-                                                            dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
-        elif configDA.obs.GRACE['kind'] == 'ESA_SING_ESM3':
-            obs_aux = aux_ESM3_5daily().setTimeReference(day_begin=begin_day, day_end=end_day,
-                                                         dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
-
-        elif configDA.obs.GRACE['kind'] == 'Mascon_monthly':
-            t1 = datetime.strptime(begin_day, '%Y-%m-%d').strftime('%Y-%m')
-            t2 = datetime.strptime(end_day, '%Y-%m-%d').strftime('%Y-%m')
-            obs_aux = aux_GRACE_mascon_monthly().setTimeReference(month_begin=t1, month_end=t2,
-                                                                  dir_in=configDA.obs.GRACE['aux_for_time_epochs'])
+        obs_aux = self.get_obs_aux(configDA=configDA, begin_day=begin_day, end_day=end_day)
 
         ob.configure_obs_aux(obs_aux=obs_aux)
         ob.perturb_TWS().remove_temporal_mean()
-        fn = Path(configDA.obs.GRACE['OL_mean']) / ('%s_%s.hdf5' % (self.case, self.basin))
+        from src_FlowControl import run_context as rc
+        fn = rc.ol_mean_path(configDA.obs.GRACE['OL_mean'], self.case, self.basin)   # <case>/grace/ol_mean.hdf5
+        Path(fn).parent.mkdir(parents=True, exist_ok=True)
         ob.add_temporal_mean(fn=str(fn))
         ob.save()
 
@@ -381,7 +420,7 @@ class DA_GRACE_flexibile(DA_GRACE):
         from src_DA.EnSQRA import EnSQRA, EnSQRA_V2
 
         if rank != 0:
-            f = open('../log/OL/log_%s.txt' % rank, 'w')
+            f = open(self._log_file('log', rank), 'w')
             sys.stdout = f
 
         print('\n================ Configure DA experiment ===================')
@@ -408,9 +447,10 @@ class DA_GRACE_flexibile(DA_GRACE):
         dp_dir = self.setting_dir / 'pre_process.json'
         dp2 = json.load(open(dp_dir, 'r'))
         lm = dp2['out_dir']
-        land_mask = str(Path(lm) / self.case / 'mask' / 'mask_global.h5')
+        from src_FlowControl import run_context as rc
+        land_mask = str(rc.crop_dir(lm, self.case) / 'mask' / 'mask_global.h5')
         bs.mask_to_vec(model_mask_global=land_mask)
-        state_sample = Path(configDA.basic.NaNmaskStatesDir) / ('%s_state.h5' % self.case)
+        state_sample = rc.nan_sample_path(configDA.basic.NaNmaskStatesDir, self.case)
         bs.mask_nan(sample=state_sample)
 
         print('Configure OBS and its design matrix: %s' % (configDA.obs.GRACE['kind']))
@@ -418,7 +458,7 @@ class DA_GRACE_flexibile(DA_GRACE):
         layer = {}
         for key, vv in configDA.basic.layer.items():
             layer[states_var[key]] = vv
-        dm_save_dir = '../temp'
+        dm_save_dir = self._dm_dir()
         dm = DM_basin_average(shp=bs, layer=layer, LoadfromDisk=True, dir=dm_save_dir)
         # par_dir = str(Path(lm) / self.case / 'par')
         # dm_save_dir = '../temp'
@@ -430,7 +470,8 @@ class DA_GRACE_flexibile(DA_GRACE):
 
         '''states extract operator'''
         sv = EnsStates(DM=dm, Ens=configDA.basic.ensemble)
-        sv.configure_dir(states_dir=str(Path(dp1['output']['dir']) / ('state_%s_ensemble_%s' % (self.case, rank))))
+        '''the DA's own state folder (layout: <case>/DA/ens_kk/state; legacy: the shared folder)'''
+        sv.configure_dir(states_dir=str(settings.statedir))
 
         '''DA experiment'''
         # da = DataAssimilation(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
@@ -443,6 +484,9 @@ class DA_GRACE_flexibile(DA_GRACE):
         # da = EnKF_localization_v2(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         da.configure_design_matrix(DM=dm)
+        '''per-window analysis time -> <case>/log/analysis_times.csv (written by the analysis rank)'''
+        if rc.log_dir() is not None:
+            da.analysis_log = str(rc.log_dir() / 'analysis_times.csv')
 
         '''running with MPI parallelization'''
         print('User case: %s' % self.case)

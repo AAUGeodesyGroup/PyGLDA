@@ -31,9 +31,34 @@ class perturbation:
 
     def __init__(self, dp='../settings/perturbation.json'):
         self.setting = json.load(open(dp, 'r'))
+        self._upgrade_old_format(dp)
         self.ens = self.setting['ensemble']
         self._format_check()
         pass
+
+    '''default 'correlation' block for settings in the old format: the old code perturbed forcing and parameters
+    with spatial coherence only (perturb_par_spatial_coherence / perturb_forcing_spatial_coherence)'''
+    OLD_FORMAT_CORRELATION = {'forcing': {'isSpatialCorrelated': True, 'isTemporalCorrelated': False, 'customize': False},
+                              'par': {'isSpatialCorrelated': True, 'customize': False}}
+
+    def _upgrade_old_format(self, dp):
+        """accept perturbation.json files in the old format (key 'perturbe_method', no 'correlation' block) with a
+        warning; only the setting in memory is changed, the file is not written"""
+        import warnings
+        n = 0
+        for grp in ('forcing', 'par'):
+            for value in self.setting.get(grp, {}).values():
+                if 'perturbe_method' in value and 'perturb_method' not in value:
+                    value['perturb_method'] = value.pop('perturbe_method')
+                    n += 1
+        if n:
+            warnings.warn('%s: old key "perturbe_method" read as "perturb_method" (%d entries); please update the file'
+                          % (dp, n))
+        if 'correlation' not in self.setting:
+            import copy
+            self.setting['correlation'] = copy.deepcopy(self.OLD_FORMAT_CORRELATION)
+            warnings.warn('%s: no "correlation" block; using the old default (spatially correlated forcing and '
+                          'parameters, no temporal correlation); please add the block' % dp)
 
     def setDate(self, month_begin='2002-04', month_end='2002-04'):
         """
@@ -554,7 +579,13 @@ class perturbation:
         pass
 
     @staticmethod
-    def save_default_json(sample_dir='/media/user/My Book/Fan/W3RA_data/perturbation_sample'):
+    def save_default_json(sample_dir=None, out_fn=None):
+        """write a default perturbation.json (all variables listed, none perturbed) from the sample files
+        forcing.h5/par.h5 (default <data_root>/w3ra/global/perturbation_sample) to out_fn (default
+        <repo>/settings/templates/perturbation.json); paths in it use the ${DATA_ROOT} placeholder"""
+        from src_FlowControl import run_context as _rc
+        if sample_dir is None:
+            sample_dir = _rc.global_path('perturbation_sample')
         ff = h5py.File(Path(sample_dir) / 'forcing.h5', 'r')
         forcing = list(ff['data'].keys())
         ff.close()
@@ -566,8 +597,8 @@ class perturbation:
         perturbation_dict = {
             'ensemble': 30,
             'dir': {
-                'in': '/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test',
-                'out': '/media/user/My Book/Fan/W3RA_data/crop_input/ens'
+                'in': '${DATA_ROOT}/w3ra/crop_input',
+                'out': '${DATA_ROOT}/w3ra/crop_input'
             },
             "correlation": {
                 "forcing": {
@@ -597,7 +628,9 @@ class perturbation:
         for key in par:
             perturbation_dict['par'][key] = template
 
-        default_path = Path.cwd().parent / 'settings' / 'perturbation.json'
+        default_path = Path(out_fn) if out_fn else \
+            Path(__file__).resolve().parents[1] / 'settings' / 'templates' / 'perturbation.json'
+        default_path.parent.mkdir(parents=True, exist_ok=True)
         with open(default_path, 'w') as f:
             json.dump(perturbation_dict, f, indent=4)
 
@@ -1039,7 +1072,13 @@ class perturbation_old:
         return np.random.normal(loc=mean, scale=std, size=size)
 
     @staticmethod
-    def save_default_json(sample_dir='/media/user/My Book/Fan/W3RA_data/perturbation_sample'):
+    def save_default_json(sample_dir=None, out_fn=None):
+        """write a default perturbation.json (all variables listed, none perturbed) from the sample files
+        forcing.h5/par.h5 (default <data_root>/w3ra/global/perturbation_sample) to out_fn (default
+        <repo>/settings/templates/perturbation.json); paths in it use the ${DATA_ROOT} placeholder"""
+        from src_FlowControl import run_context as _rc
+        if sample_dir is None:
+            sample_dir = _rc.global_path('perturbation_sample')
         ff = h5py.File(Path(sample_dir) / 'forcing.h5', 'r')
         forcing = list(ff['data'].keys())
         ff.close()
@@ -1051,8 +1090,8 @@ class perturbation_old:
         perturbation_dict = {
             'ensemble': 30,
             'dir': {
-                'in': '/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test',
-                'out': '/media/user/My Book/Fan/W3RA_data/crop_input/ens'
+                'in': '${DATA_ROOT}/w3ra/crop_input',
+                'out': '${DATA_ROOT}/w3ra/crop_input'
             },
             "correlation": {
                 "forcing": {
@@ -1083,7 +1122,9 @@ class perturbation_old:
         for key in par:
             perturbation_dict['par'][key] = template
 
-        default_path = Path.cwd().parent / 'settings' / 'perturbation.json'
+        default_path = Path(out_fn) if out_fn else \
+            Path(__file__).resolve().parents[1] / 'settings' / 'templates' / 'perturbation.json'
+        default_path.parent.mkdir(parents=True, exist_ok=True)
         with open(default_path, 'w') as f:
             json.dump(perturbation_dict, f, indent=4)
 

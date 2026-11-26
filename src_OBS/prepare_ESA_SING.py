@@ -1,6 +1,7 @@
 import sys
 
 sys.path.append('../')
+from src_FlowControl import run_context as _rc
 
 import numpy as np
 import h5py
@@ -21,8 +22,8 @@ class ESA_SING_5daily(GRACE_preparation):
     """
 
     def __init__(self, basin_name='Brahmaputra_ExpZero',
-                 shp_path='../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp'):
-        super().__init__(basin_name=basin_name, shp_path=shp_path)
+                 shp_path='ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp'):
+        super().__init__(basin_name=basin_name, shp_path=_rc.resolve_shp(shp_path))   # relative to <data_root>/basin/shp
         self._filter = None
         self._mission = None
         pass
@@ -52,7 +53,7 @@ class ESA_SING_5daily(GRACE_preparation):
 
         '''load basin mask'''
         res = 0.5
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
         basins_num = len(list(mf.keys())) - 1
 
         '''load EWH'''
@@ -99,7 +100,7 @@ class ESA_SING_5daily(GRACE_preparation):
 
         '''load basin mask'''
         res = 0.5
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
 
         '''load EWH'''
         name = Path(dir_in) / 'gravity_signal_cov' / ('%s_%s_Danube_v5.hdf5' % (
@@ -145,7 +146,7 @@ class ESA_SING_5daily(GRACE_preparation):
 
         '''load mask'''
         res = 0.5
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
         mask = mf['basin'][:] * self._05deg_mask
 
         '''load EWH'''
@@ -193,8 +194,8 @@ class ESA_SING_ESM2(GRACE_preparation):
     """
 
     def __init__(self, basin_name='Brahmaputra_ExpZero',
-                 shp_path='../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp'):
-        super().__init__(basin_name=basin_name, shp_path=shp_path)
+                 shp_path='ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp'):
+        super().__init__(basin_name=basin_name, shp_path=_rc.resolve_shp(shp_path))   # relative to <data_root>/basin/shp
         self._mission = None
         pass
 
@@ -222,7 +223,7 @@ class ESA_SING_ESM2(GRACE_preparation):
 
         '''load basin mask'''
         res = 1
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
         basins_num = len(list(mf.keys())) - 1
 
         '''load EWH'''
@@ -287,7 +288,7 @@ class ESA_SING_ESM2(GRACE_preparation):
 
         '''load basin mask'''
         res = 1
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
         basins_num = len(list(mf.keys())) - 1
 
         '''load EWH'''
@@ -354,7 +355,7 @@ class ESA_SING_ESM2(GRACE_preparation):
 
         '''load basin mask'''
         res = 1
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
         mask = mf['basin'][:] * self._1deg_mask
 
         '''load EWH'''
@@ -393,8 +394,8 @@ class ESA_SING_ESM3(ESA_SING_ESM2):
     """
 
     def __init__(self, basin_name='Brahmaputra_ExpZero',
-                 shp_path='../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp'):
-        super().__init__(basin_name=basin_name, shp_path=shp_path)
+                 shp_path='ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp'):
+        super().__init__(basin_name=basin_name, shp_path=_rc.resolve_shp(shp_path))   # relative to <data_root>/basin/shp
         pass
 
     def set_extra_info(self, mission=ESA_SING_mission.GRACE_C_Like):
@@ -413,7 +414,7 @@ class ESA_SING_ESM3(ESA_SING_ESM2):
 
 def demo1():
     es = ESA_SING_5daily(basin_name='Brahmaputra_ExpZero',
-                         shp_path='../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp')
+                         shp_path=str(_rc.basin_path('ESA_SING/subbasins_3/Brahmaputra_3_subbasins.shp')))
 
     # es.set_extra_info(filter='1e+16', mission='GRACE-C-like')
     # es.set_extra_info(filter='1e+16', mission='MAGIC')
@@ -431,7 +432,7 @@ def demo1():
 
 def demo2():
     es = ESA_SING_ESM3(basin_name='Europe',
-                       shp_path='../data/basin/shp/Europe/Grid_3/Europe_subbasins.shp')
+                       shp_path=str(_rc.basin_path('Europe/Grid_3/Europe_subbasins.shp')))
 
     # es.set_extra_info(mission=ESA_SING_mission.GRACE_C_Like)
     # es.set_extra_info(mission=ESA_SING_mission.NGGM)

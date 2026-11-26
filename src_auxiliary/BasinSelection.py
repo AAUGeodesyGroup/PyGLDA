@@ -1,3 +1,4 @@
+from src_FlowControl import run_context as _rc
 import numpy as np
 import h5py
 
@@ -9,10 +10,12 @@ class BasinSelection:
     def __init__(self):
         pass
 
-    def configure_mask(self, model_land_mask='/media/user/My Book/Fan/W3RA_data/basin_selection/model_land_mask.h5',
-                       GRACE_1deg_land_mask='/media/user/My Book/Fan/W3RA_data/basin_selection/GlobalLandMaskForGRACE'
-                                            '.hdf5',
-                       Forcing_mask='/media/user/My Book/Fan/W3RA_data/basin_selection/forcing_mask.npy'):
+    def configure_mask(self, model_land_mask=None, GRACE_1deg_land_mask=None, Forcing_mask=None):
+        '''defaults: <data_root>/w3ra/global/basin_selection/{model_land_mask.h5, GlobalLandMaskForGRACE.hdf5,
+        forcing_mask.npy}'''
+        model_land_mask = model_land_mask or str(_rc.global_path('basin_selection/model_land_mask.h5'))
+        GRACE_1deg_land_mask = GRACE_1deg_land_mask or str(_rc.global_path('basin_selection/GlobalLandMaskForGRACE.hdf5'))
+        Forcing_mask = Forcing_mask or str(_rc.global_path('basin_selection/forcing_mask.npy'))
         self.__model = h5py.File(model_land_mask, 'r')['mask'][:-1, :]
         self.__GRACE = np.flipud(h5py.File(GRACE_1deg_land_mask, 'r')['resolution_1']['mask'][:])
         self.__Forcing = np.load(Forcing_mask)
@@ -86,7 +89,7 @@ class BasinSelection:
                 invalid_id_10_list.append(id)
             pass
 
-        np.save('../res/invalid_subbasin.npy', np.array(list(set(invalid_id_01_list).union(set(invalid_id_10_list)))))
+        np.save(str(_rc.basin_path('global/invalid_subbasin.npy')), np.array(list(set(invalid_id_01_list).union(set(invalid_id_10_list)))))
 
         pass
 
@@ -95,12 +98,12 @@ def generateForcingSample():
     import metview as mv
     from pathlib import Path
 
-    fn = '/media/user/My Book/Fan/W3RA_data/basin_selection/W3_ERA5_daily_199912.grib'
+    fn = str(_rc.global_path('basin_selection/W3_ERA5_daily_199912.grib'))
     grib = mv.read(source=str(fn), area=[90, -180, -90, 180], param='tp')[0]
 
     mask = 1 - np.isnan(grib.values().reshape(1801, 3600))[:-1, :]
 
-    np.save('/media/user/My Book/Fan/W3RA_data/basin_selection/forcing_mask.npy', mask)
+    np.save(str(_rc.global_path('basin_selection/forcing_mask.npy')), mask)
     pass
 
 

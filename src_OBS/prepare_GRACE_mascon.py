@@ -15,8 +15,9 @@ from src_OBS.obs_auxiliary import aux_GRACE_mascon_monthly
 
 class GRACE_CSR_mascon(GRACE_preparation):
 
-    def __init__(self, basin_name='MDB', shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp'):
-        super().__init__(basin_name=basin_name, shp_path=shp_path)
+    def __init__(self, basin_name='MDB', shp_path='MDB_4_shapefiles/MDB_4_subbasins.shp',
+                 mask_dir=None):
+        super().__init__(basin_name=basin_name, shp_path=shp_path, mask_dir=mask_dir)
         pass
 
     def basin_TWS(self, month_begin='2002-04', month_end='2002-04',
@@ -30,7 +31,7 @@ class GRACE_CSR_mascon(GRACE_preparation):
 
         '''===============handling data mask===================='''
         res = 0.5
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
 
         basins_num = len(list(mf.keys())) - 1
 
@@ -129,7 +130,7 @@ class GRACE_CSR_mascon(GRACE_preparation):
                                                                 dir_in=dir_in)
         '''===============handling data mask===================='''
         res = 0.5
-        mf = h5py.File('../data/basin/mask/%s_res_%s.h5' % (self.basin_name, res), 'r')
+        mf = h5py.File(str(Path(self.mask_dir) / ('%s_res_%s.h5' % (self.basin_name, res))), 'r')
 
         basins_num = len(list(mf.keys())) - 1
 

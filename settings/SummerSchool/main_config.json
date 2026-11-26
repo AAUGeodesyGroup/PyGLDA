@@ -1,6 +1,6 @@
 {
     "basin": "Rhine-Meuse",
-    "shp_path": "../data/basin/shp/Rhine-Meuse/Rhine-Meuse_subbasins.shp",
+    "shp_path": "${DATA_ROOT}/basin/shp/Rhine-Meuse/Rhine-Meuse_subbasins.shp",
     "case": "Exercise_4",
     "setting_dir": "../settings/SummerSchool/Exercise_4",
     "ens": 10,

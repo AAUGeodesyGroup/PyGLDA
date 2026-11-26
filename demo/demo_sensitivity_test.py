@@ -52,11 +52,11 @@ RDA.basin = 'Brahmaputra1degree'
 # RDA.basin = 'Brahmaputra3degree'
 # RDA.basin = 'Brahmaputra4degree'
 
-# RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins_3/Brahmaputra3subbasins_3_subbasins.shp'
-RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_1/Brahmaputra1degree_subbasins.shp'
-# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_2/Brahmaputra2degree_subbasins.shp'
-# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_3/Brahmaputra3degree_subbasins.shp'
-# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_4/Brahmaputra4degree_subbasins.shp'
+# RDA.shp_path = 'ESA_SING/subbasins_3/Brahmaputra3subbasins_3_subbasins.shp'
+RDA.shp_path = 'ESA_SING/Grid_1/Brahmaputra1degree_subbasins.shp'
+# RDA.shp_path = 'ESA_SING/Grid_2/Brahmaputra2degree_subbasins.shp'
+# RDA.shp_path = 'ESA_SING/Grid_3/Brahmaputra3degree_subbasins.shp'
+# RDA.shp_path = 'ESA_SING/Grid_4/Brahmaputra4degree_subbasins.shp'
 
 '''this is useless, as the area will be automatically calculated from the shape file'''
 RDA.box = [50.5, 42, 8.5, 29.5]

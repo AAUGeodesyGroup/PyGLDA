@@ -3,7 +3,7 @@
         "fromdate": "2005-04-01",
         "todate": "2005-12-31",
         "basin": "Tile81",
-        "basin_shp": "../data/basin/shp/global_shp_new/Tile81_subbasins.shp",
+        "basin_shp": "${DATA_ROOT}/basin/shp/global_shp_new/Tile81_subbasins.shp",
         "NaNmaskStatesDir": "../../../External Data/w3ra/states_sample",
         "ensemble": 2,
         "layer": {
@@ -21,10 +21,12 @@
         "name": "GRACE",
         "dir": "../../../External Data/GRACE/obs",
         "GRACE": {
-            "EWH_grid_dir": "../../../External Data/GRACE/obs",
-            "cov_dir": "../../../External Data/GRACE/obs",
+            "EWH_grid_dir": "../../../External Data/GRACE/SaGEA/signal_Mascon",
+            "cov_dir": "../../../External Data/GRACE/SaGEA/sample_DDK3",
             "preprocess_res": "../../../External Data/GRACE/output",
-            "OL_mean": "../../../External Data/GRACE/OLmean"
+            "OL_mean": "../../../External Data/GRACE/OLmean",
+            "aux_for_time_epochs": "../../../External Data/GRACE/SaGEA/signal_Mascon",
+            "kind": "Mascon_monthly"
         }
     },
     "model": {

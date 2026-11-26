@@ -87,8 +87,10 @@ release can be changed with `PYGLDA_MINIFORGE_VERSION=<tag>` (default `26.9.4-2`
 
 ### Every new UCloud job
 
-1. In the job form mount `/work/data_for_w3` and the code folder, enable ssh, and select
-   `/work/data_for_w3/envs/ucloud_init.sh` in the **Initialization** field. If it was not selected, run
+1. In the job form mount the two UCloud drives - `/data/data_for_w3` (appears as `/work/data_for_w3`) and
+   `/code/W3RA_Fan` (appears as `/work/W3RA_Fan`, holds `py-w3ra`) - enable ssh and tmux, and select
+   `/data/data_for_w3/envs/ucloud_init.sh` (= `/work/data_for_w3/envs/ucloud_init.sh`) in the **Initialization** field.
+   Tested 26 Nov 2026 on DeiC Interactive HPC `cpu-amd-zen5-8-vcpu` (8 vCPU, 24 GB) and on a 2 vCPU / 6 GB job. If it was not selected, run
    `source /work/data_for_w3/envs/activate.sh` in each shell yourself.
 2. Every new shell then has the env first on PATH (`python`, `mpiexec`, `metview` from the env).
    Always use the env's `mpiexec`, not the system one (`which mpiexec` must point into the env).
@@ -124,7 +126,7 @@ MPI ranks (31 for 30 members). The job used for the inventory (2 vCPU, 6 GB) is 
 | metview selfcheck | yes | `python -m metview selfcheck` finds Metview 5 (needed to crop the ERA5 GRIB forcing) |
 | imports | yes for the regional DA chain | every module under `src_*` is imported; failures outside the `RDA` chain are WARN |
 | h5py / netCDF4 | yes | write and read a small file |
-| geopandas | yes | read `data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp` and reproject it (PROJ database) |
+| geopandas | yes | read `$PYGLDA_V1_DATA/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp` (without a data root: write and read a small shapefile in a temporary folder) and reproject it (PROJ database) |
 | MPI | yes | `mpiexec -n 4 python -m mpi4py.bench helloworld` and an Allreduce sum on 4 ranks |
 | pygmt | no | only in `pyglda_vis` |
 
@@ -133,32 +135,45 @@ Exit code 0 only if all required checks pass. `PYGLDA_CHECK_NP` changes the numb
 ## 5. Running PyGLDA v1
 
 ```bash
-conda activate pyglda_v1
+conda activate pyglda_v1                          # UCloud: source /work/data_for_w3/envs/activate.sh
+export PYGLDA_V1_DATA=/work/data_for_w3           # data root (ERA5/, GRACE/, basin/, w3ra/); or RDA.data_root in the driver
 cd py-w3ra/demo                                   # all paths in the code start at '../'
 python <driver>.py                                # single-process stages (prepare_Forcing, prepare_GRACE*, single_run)
 mpiexec -n <ens+1> python <driver>.py             # OL_run / DA_run: one rank per member + member 0
 ```
 
+Without a data root the stages stop with a clear error. Each case gets its own folder
+`<data_root>/w3ra/cases/<case>/` (run copy of the settings, logs, perturbed obs, DA members, results); what several
+cases can share (cropped inputs, spin-up, ensembles, open loops, units, prepared GRACE) is kept once under
+`w3ra/domains/` and `w3ra/units/` and reused only if its `made_with.json` matches (`configuration.md` §7).
+Example: `python demo_danube.py --basin DRB --stages forcing,grace,spinup`, then
+`mpiexec -n 31 python demo_danube.py --basin DRB --stages ol,da` (settings `settings/Danube_DRB`).
 How a driver and the four JSON files define an experiment: `configuration.md`.
 
 ## 6. Data
 
-The code reads an `External Data` tree (paths are set in the JSON files, or with `RDA.external_data_path` +
-`RDA.config_external_data()`):
+The repository holds code only. All data is below one data root (`PYGLDA_V1_DATA` or `RDA.data_root`; UCloud
+`/work/data_for_w3`, desktop `/media/user/My Book/Fan/PyGLDA/External Data`). Paths in the JSON files are written as
+`${DATA_ROOT}/...`.
 
 ```
-External Data/
+<data_root>/
   ERA5/Raw_W3/                      W3_ERA5_daily_YYYYMM.grib (daily ERA5 forcing, global, ~1.6 GB/month)
-  w3ra/global/pyW3RA/{mask,clim,par}  global W3RA land mask, monthly climatologies, parameters
-  w3ra/crop_input/<case>/            cropped inputs and the perturbed ensemble (written by the code)
-  w3ra/initial_states/               <case>_state.YYYYMMDD.h5 (spin-up result)
-  w3ra/output/                       daily states state_<case>_ensemble_<k>/ and basin series
-  w3ra/res/<case>/                   collected OL / DA results
-  w3ra/states_sample/                one state per case (NaN mask for the DA)
-  GRACE/SaGEA/signal_Mascon/         CSR_GRACE_GRACE-FO_RL0603_Mascons_all-corrections.nc
-  GRACE/SaGEA/sample_DDK3/           YYYY-MM_0.npy, 2000 DDK3 samples x 180 x 360 (1 deg), ~1 GB/month
-  GRACE/{obs,output,OLmean}/         prepared and perturbed GRACE (written by the code)
+  GRACE/SaGEA/signal_Mascon/        CSR_GRACE_GRACE-FO_RL0603_Mascons_all-corrections.nc
+  GRACE/SaGEA/sample_DDK3/          YYYY-MM_0.npy, 2000 DDK3 samples x 180 x 360 (1 deg), ~1 GB/month
+  GRACE/masks/                      GlobalLandMaskForGRACE.hdf5
+  GRACE/aux/, GRACE/ESA_SING/       time epochs; simulated ESA-SING observations (input)
+  basin/shp/<name>/                 shapefiles of the units (DRB_3_shapefiles, GDRB_shapefiles, Brahmaputra, ESA_SING,
+                                    global_shp_new, ...; global/ = the global tile sets formerly in the repository res/)
+  w3ra/global/                      pyW3RA/{mask,clim,par} (global W3RA inputs), perturbation_sample/, basin_selection/
+  w3ra/domains/ units/ cases/ aggregates/   written by the code (configuration.md §7)
+  w3ra/crop_input/ initial_states/ output/ res/ states_sample/, GRACE/{obs,output,OLmean}/
+                                    old cases (legacy layout, read with RDA.legacy_layout = True)
+  w3ra/legacy_repo/basin_mask/      basin masks formerly in the repository data/basin/mask (legacy layout)
 ```
+
+`settings/templates/perturbation.json` (all variables listed, none perturbed) is written by
+`perturbation.save_default_json()` from `w3ra/global/perturbation_sample`.
 
 | set | where | content |
 |---|---|---|

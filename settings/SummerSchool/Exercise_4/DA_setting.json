@@ -3,7 +3,7 @@
         "fromdate": "2005-02-01",
         "todate": "2005-12-31",
         "basin": "Rhine-Meuse",
-        "basin_shp": "../data/basin/shp/Rhine-Meuse/Rhine-Meuse_subbasins.shp",
+        "basin_shp": "${DATA_ROOT}/basin/shp/Rhine-Meuse/Rhine-Meuse_subbasins.shp",
         "NaNmaskStatesDir": "/media/user/My Book/Fan/SummerSchool/External Data/w3ra/states_sample",
         "ensemble": 10,
         "layer": {

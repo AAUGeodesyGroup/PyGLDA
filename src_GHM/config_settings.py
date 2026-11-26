@@ -81,36 +81,44 @@ class config_settings:
         input = self.input
         self.input = self.config_inputpath()
         self.input.__dict__.update(input)
-        self.input.clim = Path(self.input.clim)/self.bounds.prefix/'clim'
-        self.input.mask_fn = Path(self.input.mask_fn)/self.bounds.prefix/'mask'
-        self.input.pars = Path(self.input.pars) / self.bounds.prefix
-        self.input.meteo = Path(self.input.meteo) / self.bounds.prefix
-
+        '''cropped inputs: <domain>/input (layout, src_FlowControl/run_context.py) or <input>/<prefix> (legacy);
+        perturbed inputs of the members: <domain>/ensembles/<ensemble> (layout) or <input>/<prefix> (legacy)'''
+        from src_FlowControl import run_context as rc
+        self.input.clim = rc.crop_dir(self.input.clim, self.bounds.prefix)/'clim'
+        self.input.mask_fn = rc.crop_dir(self.input.mask_fn, self.bounds.prefix)/'mask'
         if Parallel_ID <0:
-            self.input.pars = self.input.pars/'par'
-            self.input.meteo = self.input.meteo/'forcing'
+            self.input.pars = rc.crop_dir(self.input.pars, self.bounds.prefix)/'par'
+            self.input.meteo = rc.crop_dir(self.input.meteo, self.bounds.prefix)/'forcing'
         else:
-            self.input.pars = self.input.pars / 'ens_par'
-            self.input.meteo = self.input.meteo/'ens_forcing'
+            self.input.pars = rc.ens_input_dir(self.input.pars, self.bounds.prefix) / 'ens_par'
+            self.input.meteo = rc.ens_input_dir(self.input.meteo, self.bounds.prefix)/'ens_forcing'
 
 
         output = self.output
         self.output = self.config_output()
         self.output.__dict__.update(output)
 
+        '''daily states and outputs: spin-up (Parallel_ID < 0) in <domain>/spinup, members of stage OL/DA
+        (output.stage) in <domain>/OL/<ensemble>/ens_kk or <case>/DA/ens_kk (layout); legacy: shared
+        state_<prefix>[_ensemble_k] folders. The DA starts from the OL state of the day before (init_statedir).'''
+        from src_FlowControl import run_context as rc
+        stage = getattr(self.output, 'stage', '') or ''
         if Parallel_ID < 0:
-            self.outdir = Path(self.output.dir) / ('output_' + self.bounds.prefix)
-            self.statedir = Path(self.output.dir) / ('state_' + self.bounds.prefix)
+            self.outdir = rc.single_dir(self.output.dir, 'output', self.bounds.prefix)
+            self.statedir = rc.single_dir(self.output.dir, 'state', self.bounds.prefix)
         else:
-            self.outdir = Path(self.output.dir) / ('output_' + self.bounds.prefix + '_ensemble_%s' % Parallel_ID)
-            self.statedir = Path(self.output.dir) / ('state_' + self.bounds.prefix + '_ensemble_%s' % Parallel_ID)
+            self.outdir = rc.member_dir(self.output.dir, 'output', self.bounds.prefix, Parallel_ID, stage=stage)
+            self.statedir = rc.member_dir(self.output.dir, 'state', self.bounds.prefix, Parallel_ID, stage=stage)
+        self.init_statedir = self.statedir
+        if stage == 'DA' and Parallel_ID >= 0 and rc.get_layout() is not None:
+            self.init_statedir = rc.member_dir(self.output.dir, 'state', self.bounds.prefix, Parallel_ID, stage='OL')
 
         # print('Create the desired directory structure')
         if not self.outdir.exists():
-            self.outdir.mkdir()
+            self.outdir.mkdir(parents=True, exist_ok=True)
 
         if not self.statedir.exists():
-            self.statedir.mkdir()
+            self.statedir.mkdir(parents=True, exist_ok=True)
         # print('Done.')
 
         '''screen output'''

@@ -64,9 +64,11 @@ class preprocess_base:
         self._local_mask = mask[dl[0]:dl[1], dl[2]:dl[3]]
 
         '''save final mask'''
-        self._out_dir = Path(out_dir) / settings_1['bounds']['prefix']
+        from src_FlowControl.run_context import crop_dir, get_layout
+        self._out_dir = crop_dir(out_dir, settings_1['bounds']['prefix'])   # <domain>/input (layout) or out_dir/<prefix>
+        self._skip_existing = get_layout() is not None                     # layout: crop only missing months
         if not self._out_dir.exists():
-            self._out_dir.mkdir()
+            self._out_dir.mkdir(parents=True)
 
         out_dir = self._out_dir / 'mask'
         if not out_dir.exists():
@@ -111,6 +113,9 @@ class preprocess_base:
             pars = ['ssrd', '2t', 'tp']
 
             fn_out = out_dir / ('%s.h5' % date.strftime('%Y-%m'))
+            if getattr(self, '_skip_existing', False) and fn_out.is_file():
+                print('  %s exists (domain input reused)' % fn_out.name)
+                continue
             file = h5py.File(str(fn_out), 'w')
             dict_group = file.create_group('data')
             for par in pars:

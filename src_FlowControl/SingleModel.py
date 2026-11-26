@@ -1,3 +1,4 @@
+from src_FlowControl import run_context as _rc
 from datetime import datetime
 from pathlib import Path
 import numpy as np
@@ -11,6 +12,9 @@ class SingleModel:
 
     def __init__(self, case='single_run_test', setting_dir='../settings/single_run'):
         self.case = case
+        '''folder layout and case run folder; RDA sets them (legacy_layout False, run_dir = <data_root>/w3ra/runs/<case>)'''
+        self.legacy_layout = True
+        self.run_dir = None
         self.setting_dir = Path(setting_dir)
 
         # print('Welcome to PyGLDA, the user case is: %s' % case)
@@ -45,9 +49,14 @@ class SingleModel:
         dp1['input']["pars"] = dp2['out_dir']
         dp1['input']["clim"] = dp2['out_dir']
         dp1['input']["mask_fn"] = dp2['out_dir']
-        dp1['init']['spec'] = self.case
+        from src_FlowControl import run_context as rc
+        dp1['init']['spec'] = rc.init_name(self.case)          # the domain (layout) or the case (legacy)
 
         dp1['init']['mode'] = mode.name
+        '''folder layout (src_FlowControl/run_context.py): domains -> <domain>/OL/<ensemble>/ens_kk, <case>/DA/ens_kk; legacy -> shared'''
+        from src_FlowControl import run_context as rc
+        dp1['output']['layout'] = 'domains' if rc.get_layout() is not None else 'legacy'
+        dp1['output']['stage'] = {'warm': 'OL', 'resume': 'DA'}.get(mode.name, '')
         if mode == init_mode.cold:
             dp1['init']['spinup'] = [self.period[0].strftime('%Y-%m-%d'), self.period[1].strftime('%Y-%m-%d')]
         else:
@@ -107,16 +116,18 @@ class SingleModel:
         else:
             the_last_day = settings.run.todate
 
-        sd = Path(self._outdir2) / ('state_%s' % self.case)
+        from src_FlowControl import run_context as rc
+        sd = rc.single_dir(self._outdir2, 'state', self.case)             # <domain>/spinup/state or legacy
         source_file = sd / ('state.%s.h5' % datetime.strptime(the_last_day, '%Y-%m-%d').strftime('%Y%m%d'))
         target_folder = Path(settings.init.dir)
+        target_folder.mkdir(parents=True, exist_ok=True)
 
         shutil.copy(source_file, target_folder)
 
         oldname = 'state.%s.h5' % datetime.strptime(the_last_day, '%Y-%m-%d').strftime('%Y%m%d')
         # x = oldname.split('.')
-        newname = self.case +'_state.' + modifydate + '.h5'
-        os.rename(target_folder / oldname, target_folder / newname)
+        newname = rc.init_name(self.case) + '_state.' + modifydate + '.h5'   # <domain>_state... (layout)
+        os.replace(target_folder / oldname, target_folder / newname)
         pass
 
     def extract_signal(self):
@@ -129,27 +140,19 @@ class SingleModel:
         print('Result analysis for %s' % self.basin)
 
         '''search for the shape file'''
-        pp = Path('../data/basin/shp/')
-        target = []
-        for root, dirs, files in os.walk(pp):
-            for file_name in files:
-                if (str(file_name).split('_')[0] == self.basin) and file_name.endswith('.shp') and (
-                        'subbasins' in file_name):
-                # if (str(file_name).split('_')[0]==self.basin) and file_name.endswith('.shp') and ('subbasins' in file_name):
-                # if (self.basin in file_name) and file_name.endswith('.shp') and ('subbasins' in file_name):
-                    target.append(os.path.join(root, file_name))
-        assert len(target) == 1
+        target = [_rc.find_basin_shp(self.basin)]          # RDA/GDA shapefile, else the single match below basin/shp
 
         '''generate mask and vec files for given basin'''
         outdir = Path(self._outdir)
         bs = basin_shp_process(res=0.1, basin_name=self.basin).shp_to_mask(
             shp_path=str(target[0]))
         statedir = Path(self._outdir2)
-        bs.mask_to_vec(model_mask_global=str(outdir / self.case / 'mask' / 'mask_global.h5'))
+        from src_FlowControl import run_context as rc
+        bs.mask_to_vec(model_mask_global=str(rc.crop_dir(outdir, self.case) / 'mask' / 'mask_global.h5'))
 
         '''basin analysis'''
-        an = BasinSignalAnalysis(basin_mask=bs, state_dir=str(statedir / ('state_%s' % self.case)),
-                                 par_dir=str(outdir / self.case / 'par'))
+        an = BasinSignalAnalysis(basin_mask=bs, state_dir=str(rc.single_dir(statedir, 'state', self.case)),
+                                 par_dir=str(rc.crop_dir(outdir, self.case) / 'par'))
 
         # an.configure_mask2D().get_2D_map(this_day=datetime.strptime('2001-01-07', '%Y-%m-%d'), save=True)
 

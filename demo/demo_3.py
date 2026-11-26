@@ -18,6 +18,11 @@ We make use of MPI to do the parallelization, so please type the command to exec
 '''Define where to store the key results of DA'''
 res_output='../../../External Data/w3ra/res'
 figure_output='../../../External Data/w3ra/figure'
+RDA.res_output, RDA.figure_output = res_output, figure_output
+
+'''Define the data root (the run copy of the settings goes to <data_root>/w3ra/cases/<case>/settings)'''
+import os
+RDA.data_root = os.environ.get('PYGLDA_V1_DATA', '../../../External Data')
 
 '''Define where to load the necessary setting files'''
 RDA.setting_dir = '../settings/demo_3'
@@ -31,13 +36,13 @@ RDA.case = 'case_study_demo3'
 '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
 '''Example-I: Regional basin-scale DA for Danube'''
 RDA.basin = 'DRB'
-RDA.shp_path = '../data/basin/shp/DRB_3_shapefiles/DRB_subbasins.shp'
+RDA.shp_path = 'DRB_3_shapefiles/DRB_subbasins.shp'
 '''Example-II: Regional grid-scale DA for Danube, please uncomment below to activate this example'''
 # RDA.basin = 'GDRB'
-# RDA.shp_path = '../data/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp'
+# RDA.shp_path = 'GDRB_shapefiles/GDRB_subbasins.shp'
 '''Example-III: Global (one tile) grid-scale DA for Danube, please uncomment below to activate this example'''
 # RDA.basin = 'Tile85'
-# RDA.shp_path = '../data/basin/shp/global_shp_new/Tile85_subbasins.shp'
+# RDA.shp_path = 'global_shp_new/Tile85_subbasins.shp'
 
 '''this is useless, as the area will be automatically calculated from the shape file'''
 RDA.box = [50.5, 42, 8.5, 29.5]

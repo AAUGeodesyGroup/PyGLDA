@@ -2,6 +2,7 @@ import os
 import sys
 
 sys.path.append('../')
+from src_FlowControl import run_context as _rc
 from pathlib import Path
 from datetime import datetime, timedelta
 from src_FlowControl.Regional_DA import RDA
@@ -39,11 +40,11 @@ RDA.basin = 'Brahmaputra3subbasins'
 # RDA.basin = 'Brahmaputra3degree'
 # RDA.basin = 'Brahmaputra4degree'
 
-RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
-# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_1/Brahmaputra1degree_subbasins.shp'
-# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_2/Brahmaputra2degree_subbasins.shp'
-# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_3/Brahmaputra3degree_subbasins.shp'
-# RDA.shp_path = '../data/basin/shp/ESA_SING/Grid_4/Brahmaputra4degree_subbasins.shp'
+RDA.shp_path = 'ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
+# RDA.shp_path = 'ESA_SING/Grid_1/Brahmaputra1degree_subbasins.shp'
+# RDA.shp_path = 'ESA_SING/Grid_2/Brahmaputra2degree_subbasins.shp'
+# RDA.shp_path = 'ESA_SING/Grid_3/Brahmaputra3degree_subbasins.shp'
+# RDA.shp_path = 'ESA_SING/Grid_4/Brahmaputra4degree_subbasins.shp'
 
 '''this is useless, as the area will be automatically calculated from the shape file'''
 RDA.box = [50.5, 42, 8.5, 29.5]
@@ -186,7 +187,7 @@ def save_data():
     basin = RDA.basin
     shp_path = RDA.shp_path
     settings = Path(RDA.setting_dir) / 'setting.json'
-    global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir='../data/basin/mask').shp_to_mask(
+    global_basin_mask = basin_shp_process(res=0.1, basin_name=basin, save_dir=_rc.legacy_mask_dir()).shp_to_mask(
         shp_path=shp_path).mask[0]
 
     '''DA results'''
@@ -221,7 +222,7 @@ def customize(mission: str, filter: str, grid: str, region: str):
     RDA.setting_dir = str(Path(RDA.setting_dir) / mission / filter)
     RDA.case = mission + '_' + filter + '_' + grid + '_' + region
 
-    RDA.shp_path = Path('../data/basin/shp/ESA_SING/')
+    RDA.shp_path = Path('ESA_SING/')
     RDA.basin = region + grid
     if grid == '3subbasins':
         RDA.shp_path = RDA.shp_path / 'subbasins' / ('%s%s_subbasins.shp' % (region, grid))
@@ -414,7 +415,7 @@ def exp1():
     # RDA.basin = 'Brahmaputra3degree'
     # RDA.basin = 'Brahmaputra4degree'
 
-    RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
+    RDA.shp_path = 'ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
 
     demo_prepare_GRACE(isDiagonal=False)
     # RDA.prepare_Forcing()
@@ -438,7 +439,7 @@ def exp2(param=None):
     #
     # '''Define the shape file of basin and its sub-basin to be assimilated with GRACE'''
     # RDA.basin = 'Brahmaputra3subbasins'
-    # RDA.shp_path = '../data/basin/shp/ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
+    # RDA.shp_path = 'ESA_SING/subbasins/Brahmaputra3subbasins_subbasins.shp'
 
     # demo_prepare_GRACE_Mascon(isDiagonal=False)
     # RDA.prepare_Forcing()

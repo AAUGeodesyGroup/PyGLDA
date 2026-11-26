@@ -31,7 +31,7 @@ class ERA5_for_W3:
     def __init__(self):
 
         '''download path'''
-        self.__path = "../data/ERA5/"
+        self.__path = "ERA5/"                      # set with setPath() (e.g. <data_root>/ERA5/Raw_W3)
         self.__ERA_parameters = {}
         self.__daylist = None
         self.__server = cdsapi.Client()

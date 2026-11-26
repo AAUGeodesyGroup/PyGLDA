@@ -1,0 +1,38 @@
+{
+    "basic": {
+        "fromdate": "2002-04-01",
+        "todate": "2006-12-31",
+        "basin": "GDRB",
+        "basin_shp": "${DATA_ROOT}/basin/shp/GDRB_shapefiles/GDRB_subbasins.shp",
+        "NaNmaskStatesDir": "${DATA_ROOT}/w3ra/states_sample",
+        "ensemble": 30,
+        "layer": {
+            "S0": true,
+            "Ss": true,
+            "Sd": true,
+            "Sr": true,
+            "Sg": true,
+            "Mleaf": true,
+            "FreeWater": true,
+            "DrySnow": true
+        }
+    },
+    "obs": {
+        "name": "GRACE",
+        "dir": "${DATA_ROOT}/GRACE/obs/Danube_GDRB",
+        "GRACE": {
+            "EWH_grid_dir": "${DATA_ROOT}/GRACE/SaGEA/signal_Mascon",
+            "cov_dir": "${DATA_ROOT}/GRACE/SaGEA/sample_DDK3",
+            "preprocess_res": "${DATA_ROOT}/GRACE/output/Danube_GDRB",
+            "OL_mean": "${DATA_ROOT}/GRACE/OLmean/Danube_GDRB",
+            "aux_for_time_epochs": "${DATA_ROOT}/GRACE/SaGEA/signal_Mascon",
+            "kind": "Mascon_monthly"
+        }
+    },
+    "model": {
+        "name": "w3ra_v0"
+    },
+    "method": {
+        "fusion_method": "EnKF_v0"
+    }
+}

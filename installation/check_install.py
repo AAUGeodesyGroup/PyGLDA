@@ -25,7 +25,12 @@ REQUIRED_MODULES = [
     'src_DA.Analysis', 'src_DA.ObsDesignMatrix', 'src_DA.configure_DA',
     'src_OBS.prepare_GRACE', 'src_OBS.prepare_GRACE_mascon', 'src_OBS.GRACE_perturbation',
 ]
-SAMPLE_SHP = REPO / 'data' / 'basin' / 'shp' / 'DRB_3_shapefiles' / 'DRB_subbasins.shp'
+# the repository holds no data: the DRB shapefile of the data root if PYGLDA_V1_DATA is set, else a small shapefile
+# written to a temporary folder (tests the same GDAL/PROJ stack)
+_ROOT = os.environ.get('PYGLDA_V1_DATA')
+SAMPLE_SHP = Path(_ROOT) / 'basin' / 'shp' / 'DRB_3_shapefiles' / 'DRB_subbasins.shp' if _ROOT else None
+if SAMPLE_SHP is not None and not SAMPLE_SHP.is_file():
+    SAMPLE_SHP = None
 
 results = []   # (name, required, ok, detail)
 
@@ -139,13 +144,24 @@ def serial():
             ds.close()
         return 'ok'
 
-    @check('geopandas read + reproject (%s)' % SAMPLE_SHP.name)
+    @check('geopandas write/read + reproject (%s)' % (SAMPLE_SHP.name if SAMPLE_SHP else 'temporary shapefile'))
     def _():
+        import tempfile
         import geopandas as gpd
-        g = gpd.read_file(SAMPLE_SHP)
+        if SAMPLE_SHP is not None:
+            g = gpd.read_file(SAMPLE_SHP)
+            what = '%d sub-basins' % len(g)
+        else:
+            from shapely.geometry import box
+            with tempfile.TemporaryDirectory() as td:
+                fn = Path(td) / 'test_subbasins.shp'
+                gpd.GeoDataFrame({'ID': [1, 2]}, geometry=[box(10, 45, 11, 46), box(11, 45, 12, 46)],
+                                 crs='EPSG:4326').to_file(fn)
+                g = gpd.read_file(fn)
+            what = '%d polygons (no data root)' % len(g)
         g2 = g.to_crs(3035)                          # needs a working PROJ database
         assert len(g) > 0 and g2.crs.to_epsg() == 3035
-        return '%d sub-basins' % len(g)
+        return what
 
     @check('pygmt (visualisation, optional)', required=False)
     def _():

@@ -1,0 +1,66 @@
+{
+    "bounds": {
+        "lat": [
+            50.2,
+            42.3
+        ],
+        "lon": [
+            8.8,
+            29.2
+        ],
+        "prefix": "Danube_GDRB"
+    },
+    "init": {
+        "mode": "resume",
+        "date": "2002-04-30",
+        "spinup": [
+            "2002-01-01",
+            "2002-03-31"
+        ],
+        "dir": "${DATA_ROOT}/w3ra/initial_states",
+        "spec": "Danube_GDRB"
+    },
+    "run": {
+        "fromdate": "2002-05-01",
+        "todate": "2002-12-31",
+        "res": 0.1,
+        "exttype": "ERA5",
+        "save_states_every_day": true,
+        "save_output_every_day": false
+    },
+    "input": {
+        "meteo": "${DATA_ROOT}/w3ra/crop_input",
+        "clim": "${DATA_ROOT}/w3ra/crop_input",
+        "pars": "${DATA_ROOT}/w3ra/crop_input",
+        "mask_fn": "${DATA_ROOT}/w3ra/crop_input"
+    },
+    "output": {
+        "dir": "${DATA_ROOT}/w3ra/output",
+        "var": {
+            "Stot": true,
+            "ETtot": false,
+            "Qtot": false,
+            "Qnet": false,
+            "E0": false,
+            "Ei": false,
+            "Et": false,
+            "Es": false,
+            "Er": false,
+            "RSn": false,
+            "RLn": false,
+            "LE": false,
+            "H": false,
+            "albedo": false,
+            "LAI": false,
+            "Ssnow": false,
+            "z_g": false,
+            "S0": false,
+            "Sroot": false,
+            "Ssoil": false,
+            "Sg": false,
+            "Ts": false,
+            "fsnow": false,
+            "Sr": false
+        }
+    }
+}

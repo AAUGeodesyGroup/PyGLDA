@@ -1,3 +1,4 @@
+import time as _time
 from src_GHM.hotrun import model_run_daily
 from src_DA.configure_DA import config_DA
 from src_GHM.GeoMathKit import GeoMathKit
@@ -92,6 +93,18 @@ class EnKF:
 
         return states_update
 
+    def _log_analysis_time(self, epoch, update_s, window_s, ndays):
+        """append one line per assimilated window: epoch, update() time, whole window (gather, update, scatter,
+        rewrite of the window's daily states), number of days"""
+        from pathlib import Path
+        fn = Path(self.analysis_log)
+        fn.parent.mkdir(parents=True, exist_ok=True)
+        new = not fn.exists()
+        with open(fn, 'a') as f:
+            if new:
+                f.write('epoch,update_s,window_s,ndays\n')
+            f.write('%s,%.4f,%.4f,%d\n' % (epoch, update_s, window_s, ndays))
+
     def run_mpi(self):
         """
         parallelized running with MPI4py
@@ -172,6 +185,7 @@ class EnKF:
             historic_mean_states = historic_mean_states / len(info[1])
 
             '''synchronization to prepare for the data assimilation'''
+            _t_window = _time.time()
             this_day = comm.gather(today, root=main_thread)
             if rank == main_thread:
                 for iday in this_day:
@@ -201,7 +215,9 @@ class EnKF:
                 ens_states = np.array(ens_states).T
 
                 '''kalman filter: update step'''
+                _t_update = _time.time()
                 states_update = self.update(obs=ens_obs, obs_cov=obs_cov, ens_states=ens_states)
+                _t_update = _time.time() - _t_update
                 # print(np.shape(states_update.T), '=============================')
 
                 '''delta for monthly mean'''
@@ -235,6 +251,10 @@ class EnKF:
             if rank != OL_thread:
                 '''to assign the last day to the current prediction vector to enable another round of kalman filter'''
                 self._states_predict = new_state
+
+            '''per-window analysis time (log only; written by the analysis rank when analysis_log is set)'''
+            if rank == main_thread and getattr(self, 'analysis_log', None):
+                self._log_analysis_time(info[0], _t_update, _time.time() - _t_window, len(info[1]))
 
             '''free memory'''
             states_old = None

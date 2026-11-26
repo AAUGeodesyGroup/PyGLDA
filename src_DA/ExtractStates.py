@@ -1,3 +1,4 @@
+from src_FlowControl import run_context as _rc
 from src_GHM.EnumType import states_var
 import numpy as np
 import h5py
@@ -200,7 +201,7 @@ class EnsStates:
 def demo1():
     from src_DA.Analysis import basin_shp_process
     bs = basin_shp_process(res=0.1, basin_name='MDB').shp_to_mask(
-        shp_path='../data/basin/shp/MDB_4_shapefiles/MDB_4_subbasins.shp')
+        shp_path=str(_rc.basin_path('MDB_4_shapefiles/MDB_4_subbasins.shp')))
 
     bs.mask_to_vec(model_mask_global='/media/user/My Book/Fan/W3RA_data/crop_input/single_run_test/mask/mask_global.h5')
 
