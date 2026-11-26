@@ -67,9 +67,13 @@ class EnKF:
         '''calculate the deviation of ens_states'''
         A = ens_states - np.mean(ens_states, 1)[:, None]
 
-        '''Inflation to increase the model perturbation'''
-        A = A * self._inflation
-        ens_states_inf = np.mean(ens_states, 1)[:, None] + A
+        '''Inflation to increase the model perturbation (factor 1.0: no inflation step at all, so that the update is
+        exactly the plain EnKF of 2025, data_assimilation_flexible_time.DataAssimilation.update)'''
+        if self._inflation == 1.0:
+            ens_states_inf = ens_states
+        else:
+            A = A * self._inflation
+            ens_states_inf = np.mean(ens_states, 1)[:, None] + A
 
         '''propagate it into obs-equivalent variable'''
         HX = self._DM(states=ens_states_inf)

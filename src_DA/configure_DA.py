@@ -50,7 +50,9 @@ class config_DA:
         method = self.method
         self.method = self.config_method()
         self.method.__dict__.update(method)
-        self.method.fusion_method = FusionMethod[self.method.fusion_method]
+        from src_DA.filter_registry import resolve_name
+        self.method.fusion_method = resolve_name(self.method.fusion_method)     # name of the filter class
+        self.method.inflation = float(self.method.inflation)
 
         return self
 
@@ -96,7 +98,8 @@ class config_DA:
     class config_method:
 
         def __init__(self):
-            self.fusion_method = FusionMethod.EnKF_v0.name
+            self.fusion_method = 'EnKF_localization_v1'      # src_DA/filter_registry.py; today's filter
+            self.inflation = 1.1                             # factor on the forecast anomalies (EnKF.py default)
 
 
 def demo1():

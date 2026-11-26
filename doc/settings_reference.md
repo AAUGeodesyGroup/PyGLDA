@@ -50,6 +50,7 @@ what the template says there is used only with `RDA.legacy_layout = True`.
 | `run.exttype` | forcing | `ERA5` | `ERA5` |
 | `run.save_states_every_day` | write daily states (needed by DA) | bool | false |
 | `run.save_output_every_day` | write daily outputs `output.var` | bool | false |
+| `run.forcing_day` | ERA5 day used for model day d: `next` = d+1 (ERA5 daily accumulations end at 00 UTC of the next day; since commit 8c775b5, Mar 2026), `same` = d (code before; the published ESA-SING runs, `settings/JoG_ESA_SING`) | `next`, `same` | `next` |
 | `input.meteo`, `input.clim`, `input.pars`, `input.mask_fn` | base folder of the cropped inputs; `<prefix>/forcing|clim|par|mask` (or `ens_forcing`, `ens_par` for members) is appended | path | driver (= `pre_process.out_dir`) |
 | `output.dir` | folder of `state_<prefix>[_<stage>][_ensemble_k]` and `output_<prefix>[_<stage>][_ensemble_k]` | path | required |
 | `output.layout` | folder layout: `domains` (members in `domains/<domain>/OL/<ensemble>/ens_kk` and `cases/<case>/DA/ens_kk`; DA starts from the OL state of the day before) or `legacy` (shared folders) | `domains`, `legacy` | driver (`RDA.legacy_layout`); `legacy` if absent |
@@ -112,13 +113,13 @@ what the template says there is used only with `RDA.legacy_layout = True`.
 ### method
 | key | values | default |
 |---|---|---|
-| `fusion_method` | `EnKF_v0`, `EnKF_v1`, `EnKF_v2` (parsed, **not used** **[issue 4]**) | `EnKF_v0` |
+| `fusion_method` | filter class: `EnKF`, `EnKF_localization_v1`, `EnKF_localization_v2`, `EnKF_domain_localization`, `EnKF_adaptive`, `EnSQRA`, `EnSQRA_V2`; old `EnKF_v0/v1/v2` = `EnKF_localization_v1` (warning); unknown = error | `EnKF_localization_v1` |
+| `inflation` | factor on the forecast anomalies; 1.0 = no inflation step | 1.1 |
 
 ## Constants in the code (not settings yet **[issue 8]**)
 
 | constant | value | where |
 |---|---|---|
-| inflation of the forecast anomalies | 1.1 | `src_DA/EnKF.py:35` |
 | shrinkage of H P Hᵀ / of R (`EnKF_localization_v1`) | 0.10 / 0.50 | `src_DA/EnKF.py:377, 381` |
 | floor for negative storages after the update | 0.0001 | `src_DA/EnKF.py:230` |
 | box margin around the shapefile | 0.2° | `Regional_DA.py:set_box` |

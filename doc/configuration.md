@@ -160,15 +160,20 @@ not centred **[issue 2]**.
 `name`: `w3ra_v0` (only value used).
 
 ### 5.4 `method`
-`fusion_method`: `EnKF_v0`, `EnKF_v1`, `EnKF_v2`. **Read but not used** — `run_DA` always uses
-`EnKF_localization_v1` **[issue 4]**.
+`fusion_method` selects the filter class (`src_DA/filter_registry.py`, issue 4 fixed): `EnKF` (plain perturbed-observation
+EnKF, no shrinkage), `EnKF_localization_v1` (default, section 6), `EnKF_localization_v2`, `EnKF_domain_localization`,
+`EnKF_adaptive`, `EnSQRA`, `EnSQRA_V2`. The old names `EnKF_v0`, `EnKF_v1`, `EnKF_v2` never chose a filter; they run
+`EnKF_localization_v1` as before, with a warning. An unknown name stops the run with the list of valid names.
+`inflation` (default 1.1) multiplies the forecast anomalies; with exactly 1.0 the inflation step is skipped, so
+`EnKF` + 1.0 is the filter of the published ESA-SING runs of 2025 (`settings/JoG_ESA_SING/README.md`). The run log
+(`DA_log_rank<k>.txt` / stdout of rank 0) names the filter and the inflation.
 
-## 6. The filter as run (`src_DA/EnKF.py`, class `EnKF_localization_v1`)
+## 6. The default filter (`src_DA/EnKF.py`, class `EnKF_localization_v1`)
 
 - Window: one GRACE solution (monthly, or 5-daily for `ESA_SING`). The model runs through the window, the
   window-mean state is compared with the observation, and the analysis increment of the window mean is added to the
   stored daily states of every day of the window (no rerun). After the update, every negative storage is set to 0.0001 **[issue 8]**.
-- The ensemble anomalies of the forecast are inflated by 1.1 before the update **[issue 8]**.
+- The ensemble anomalies of the forecast are inflated by `method.inflation` (default 1.1) before the update.
 - Both covariances in observation space are shrunk towards their diagonal, C' = (1 − α) C + α diag(C):
   α = 0.10 for the forecast covariance H P Hᵀ and α = 0.50 for the observation error covariance R, i.e. the
   correlations of R between units are halved **[issue 8]**. K = A (HA)ᵀ (H P Hᵀ + R)⁻¹ / (N − 1), solved with

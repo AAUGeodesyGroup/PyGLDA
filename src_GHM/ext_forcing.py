@@ -42,7 +42,12 @@ class load_forcing:
 
         settings = self.__settings
 
-        day_next = date + timedelta(days=1)
+        '''run.forcing_day: "next" (default since 8c775b5, Mar 2026) = model day d uses ERA5 day d+1 (see above);
+        "same" = model day d uses ERA5 day d, as the code until then (published 2025 runs, settings/JoG_ESA_SING)'''
+        fday = getattr(settings.run, 'forcing_day', 'next')
+        if fday not in ('next', 'same'):
+            raise ValueError('PyGLDA v1: run.forcing_day must be "next" or "same", not %r' % (fday,))
+        day_next = date + timedelta(days=1) if fday == 'next' else date
 
         ERA5_year_month = day_next.strftime('%Y-%m')
 

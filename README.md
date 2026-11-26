@@ -1,121 +1,136 @@
-# PyGLDA: a fine-scale Python-based Global Land Data Assimilation system for integrating satellite gravity data into hydrological models
-## Discussion
-Should you have any question, suggestion and comment on PyGLDA, feel free to leave your message in our discussion forum (https://github.com/orgs/NCSGgroup/discussions) so that we can answer or reach out to you as soon as possible.
+# PyGLDA v1
 
-## Description
-Data assimilation (DA) has been widely used to merge the hydrological 'model' and 
-the satellite gravity based 'observations', to complement each other towards a better 
-temporal, horizontal and vertical disaggregation of the terrestrial water storage estimates.
-We hereby present a free, open-source, parallel and Python based PyGLDA 
-system to address the challenges of the High-Resolution Global DA (HRGDA) for GRACE
-and W3RA hydrologocal model (up to 0.1 degree and daily).
+**PyGLDA** (Python-based Global Land Data Assimilation system) integrates GRACE/GRACE-FO and simulated future-mission
+terrestrial water storage (TWS) anomalies into the W3RA hydrological model with an Ensemble Kalman Filter (EnKF),
+at up to 0.1° and daily resolution.
+
+## Overview
+
+PyGLDA v1 runs the W3RA model (Python translation, two hydrological response units per cell, ERA5 forcing) as an
+ensemble, one MPI rank per member. Observations averaged over basins, sub-basins or regular grid cells update the
+model's soil, groundwater, snow, surface water and canopy storages. The increment of each observation window (monthly
+or 5-daily) is applied to every day of the window.
 
 <img src="structure.jpg" width="450">
 
-When referencing this work, please cite: 
-> Yang, F., Schumacher, M., Retegui-Schiettekatte, L., van Dijk, A. I. J. M., and Forootan, E.: PyGLDA: a fine-scale 
-python-based global land data assimilation system for integrating satellite gravity data into hydrological models, 
-Geosci. Model Dev., 18, 6195–6217, https://doi.org/10.5194/gmd-18-6195-2025, 2025
+### Key features
 
-## Developer and contact
-- Fan Yang (fany@plan.aau.dk)
-- Ehsan Forootan (efo@plan.aau.dk) 
-- Leire Retegui-Schiettekatte (leirears@plan.aau.dk) 
-- Maike Schumacher (maikes@plan.aau.dk)
+- One framework for basin-scale and grid-scale DA: any shapefile with a basin and its sub-basins (or grid cells)
+  defines the units to be assimilated, from basins to 1°–5° grids
+- Observation error covariance between arbitrary units from Monte Carlo samples (SaGEA DDK3), diagonal or full
+- Observations of different averaging periods through one interface: monthly GRACE (CSR mascons, SH grids) and
+  5-daily ESA-SING future-mission products (GRACE-C, NGGM, MAGIC)
+- Filter chosen in the settings (`method.fusion_method`, e.g. the plain stochastic EnKF), inflation as a setting
+- Configurable ensemble generation: which forcing variables and model parameters are perturbed, Gaussian or
+  triangular, additive or multiplicative, with or without spatial correlation
+- Regional and tile-wise global DA; MPI-parallel; shared inputs, spin-ups and open loops reused across cases
+- Reproducible runs: every stage works on a recorded copy of its settings, regression tests check bit-identity
 
-We are from Geodesy Group (see https://aaugeodesy.com/), Department of Sustainability and Planning, Aalborg University, Aalborg 9000, Denmark
+## Repository structure
 
-This work is supported by the Danmarks Frie Forskningsfond [10.46540/2035-00247B] through the DANSk-LSM project. Additional supports come from and national Natural Science Foundation of China (Grant No. 42274112 and No. 41804016). We also acknowledge the support of W3RA model via https://www.dropbox.com/scl/fo/b0hneugr9vao0rqm4oh86/AEPPU-QG6kgh9wTlIBgiwMQ?rlkey=q7ux08mitdghnoac3e4spwaev&e=1&dl=0
+```
+py-w3ra/
+├── src_GHM/             # W3RA model (Python), configuration, input cropping (Metview)
+├── src_DA/              # EnKF variants and filter registry, perturbation, design matrix, basin masks
+├── src_OBS/             # GRACE / ESA-SING observation preparation and perturbation
+├── src_FlowControl/     # experiment stages (Regional_DA, global_DA, DA_GRACE, OpenLoop), run context and data layout
+├── src_postprocessing/  # collection and export of results
+├── src_auxiliary/       # tile and shapefile tools, utilities
+├── demo/                # drivers, e.g. demo_danube.py; summer-school notebooks
+├── settings/            # one folder per case: setting.json, DA_setting.json, pre_process.json, perturbation.json
+├── tests/               # regression harness (bit-identity) and reproduction tests
+├── doc/                 # installation and configuration guides, settings reference, known issues
+└── installation/        # pinned environment, lock file, install and check scripts
+```
 
-## Important information
+The repository holds code only. All input data and all results are below one data root (`PYGLDA_V1_DATA`), see
+[doc/installation.md](doc/installation.md#6-data) and [doc/configuration.md](doc/configuration.md):
 
-- Please download the code and auxiliary data from https://drive.google.com/drive/folders/1ZDU9oUnpUaTC9H9Bv4spZa8-_z9d-9Ib, which is a version specified for demonstration and lecture in our summer school.
-- One can get the actively developing version in our Github repository (https://github.com/AAUGeodesyGroup/PyGLDA), but
-there would be no guarantee that the installation guideline can still work for the latest github version.
+```
+<data root>/
+├── ERA5/Raw_W3/              # forcing
+├── GRACE/                    # mascons, SaGEA DDK3 samples, ESA-SING products
+├── basin/shp/                # shapefiles of all unit sets
+└── w3ra/
+    ├── global/               # global W3RA files (mask, climatology, parameters)
+    ├── domains/<domain>/     # cropped input, spin-up, ensembles, open loops (shared by cases)
+    ├── units/<unit set>/     # masks, design matrix, prepared observations (shared by cases)
+    ├── cases/<case>/         # one DA experiment: settings copy, logs, DA states, results, products
+    └── aggregates/<run>/     # global tile-wise products
+```
 
-## Features
-- A novel unified framework that addresses both the basin-scale and grid-scale DA, where the area to be computed is defined as the 'basin' and the grid is treated as the 'sub-basin'. Any shape file that has well defined the basin and sub-basins is accepted to launch PyGLDA;
-- A novel framework to seamlessly transit from regional DA to global DA by introducing domain localization and weighting algorithms; 
-- Computation of the spatial covariance of the observations, i.e., GRACE based TWS, is available between arbitrary sub-basins/grids for the first time. Accounting for the spatial covariance into the DA is also allowed in PyGLDA;
-- Flexible options in the grid resolution: a choice of 0.1 degree and 0.5 degree is available for the employed global W3RA model; a flexible choice of the grid/sub-basin to be assimilated, e.g., from 1 degree to 5 degree with an increment of 0.5 degree;
-- Flexible choice of perturbation, e.g., which forcing data and which model parameters to be perturbed in which noise distribution (Gaussian or Triangle; additive or multiplicative);
-- In addition to the general Ensemble Kalman filter, a novel Kalman smoother that achieves optimal temporal disaggregation from monthly increment to daily increment is facilitated.
+Errors of all runs are collected in the repository's `log/` folder (`log/errors.log`, one detail file per error in
+`log/errors/`); each case keeps its full logs in `cases/<case>/log/`.
 
-## Software Architecture
-- A flexible modular structure to de-couple PyGLDA into three individual modules: (1) hydrological model, (2) GRACE processing and (3) mathematical DA integration. This makes possible to easily develop/modify/replace any individual module;
-- A high-level programming language (object-oriented Python) for easy comprehension of the code and to facilitate extensibility. The Python translation of W3RA model is distributed;
-- Easy/fast installation for cross-platform to the users’ needs and capacity (e.g., Windows, Linux and parallel computation at high performance clusters);
-- Optimization by using high-performance Numpy package as the basic data container to reach comparable numerical efficiency as C++, Fortran and Matlab;
-- User-friendly interaction by (1) controlling/configuring PyGLDA with JSON setting file, where wide options are available for a different purpose; and (2) state-of-the-art data structure H5DF for reading and writing spatiotemporal data to allow for efficient management of data storage.
+## Installation
 
-## Installation on Windows
-Please be aware that while PyGLDA is applicable on multiple platforms (Windows and Linux etc), PyGLDA is designed for 
-the large-scale computation, where the linux and cluster should be always the preferred. For the purpose of demonstration,
- we still outline the procedure of installation on Windows, but for a simplified version with reduced functionality.
-Whoever is interested in using PyGLDA in practice should go for the installation on Linux.
+### 1. Clone this repository
 
-1. Download and install the package manager 'Conda'. Miniconda is preferred for its light weight. The details can be found
- at its official website: https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html
-2. Navigate to PyGLDA folder--'../PyGLDA/installation/..', open your terminal or the 'Anaconda Prompt', and create a new environment called 'pyglda' for PyGLDA:
-> conda create --name pyglda --file windows-spec-file.txt
-3. Now you can freely explore PyGLDA toolbox. The following is optional for visualization module (or you can use your own script to read the output in '../SummerSchool/External Data/w3ra/res/..'). Built-in scripts for visualization requires to have PyGMT installed at an independent environment called 'pygmt':
-> conda create --name pygmt --channel conda-forge pygmt mkl netcdf4 h5py scipy geopandas
+```bash
+git clone https://github.com/AAUGeodesyGroup/PyGLDA.git
+cd PyGLDA
+```
 
+### 2. Install the environment
 
+```bash
+# pinned conda-forge environment from the lock file, MPI (MPICH), Metview; runs the checks at the end
+bash installation/install.sh                          # desktop: conda env 'pyglda_v1'
+bash installation/install.sh --prefix /work/<data>/envs   # HPC / UCloud: env under a persistent folder
+```
 
-## Installation on Linux
+A plain `pip install` does not give a working environment (Metview, GDAL/PROJ and one HDF5 for h5py and netCDF4).
+See [doc/installation.md](doc/installation.md) for the HPC set-up, job sizes and troubleshooting, and
+`bash installation/check_install.sh` to re-check an environment.
 
-1. Download and install the package manager 'Conda'. Miniconda is preferred for its light weight. The details can be found
- at its official website: https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html
-2. Navigate to PyGLDA folder--'../PyGLDA/Installation/..', open your terminal and create a new environment called 'pyglda' for PyGLDA
-> conda create --name pyglda --file linux-spec-file.txt
-> 
-> conda activate pyglda
-> 
-> pip install h5py
-3. Now you can freely explore PyGLDA toolbox. The following is optional for visualization module (or you can use your own script to read the output in '../SummerSchool/External Data/w3ra/res/..'). Built-in scripts for visualization requires to have PyGMT installed at an independent environment called 'pygmt':
-> conda create --name pygmt --file visualization-linux-spec-file.txt
+### 3. Get the data
 
+Input data are not part of the repository. A sample for the summer school (one year, small basins) is available at
+https://drive.google.com/drive/folders/1ZDU9oUnpUaTC9H9Bv4spZa8-_z9d-9Ib; the layout of a full data root is given in
+[doc/installation.md](doc/installation.md#6-data).
 
-## Test
-To test if the environment is properly installed, please open a terminal and type the following commands by sequence and see if it passes.
-> conda activate pyglda
-> 
-> mpiexec -n 5 python -m mpi4py.bench helloworld 
+## Usage
 
-Then, navigate to the folder, '../PyGLDA/demo/', open a terminal and type
-> conda activate pyglda
-> 
-> mpiexec -n 4 python -u demo_test_installation.py 
+Experiments are run stage by stage by a driver in `demo/`; the settings are in `settings/<case>/`
+(see [doc/configuration.md](doc/configuration.md) and the one-page [doc/settings_reference.md](doc/settings_reference.md)).
 
-For Linux, additional test includes 
-> metview -slog 
->
-> python3 -m metview selfcheck
-> 
+```bash
+export PYGLDA_V1_DATA=/path/to/data_root
+cd demo
+python demo_danube.py --basin DRB --stages forcing,grace,spinup      # crop forcing, prepare GRACE, spin-up
+mpiexec -n 31 python demo_danube.py --basin DRB --stages ol,da        # open loop and DA (30 members + control)
+```
 
-For visualization module (optional):
-> conda activate pygmt
-> 
-> python
-> 
-> import pygmt
-> 
-> pygmt.show_versions()
+Known limitations and their status are listed in [doc/known_issues.md](doc/known_issues.md).
 
-## Troubleshooting
-In general, if an error message indicates that a certain package is missing or not functional, please try to type
-> conda install XXX
-or
-> pip install XXX
+## Discussion
 
+Questions, suggestions and comments are welcome in the discussion forum: https://github.com/orgs/NCSGgroup/discussions
 
-Please understand that there could be a variety of reasons leading to the installation failure, and 
-we cannot list every potential issue and solution.  
+## Acknowledgements
 
-Potential installation troubles:
-1. metview-related issues please refer to https://metview.readthedocs.io/en/latest/index.html
-2. mpi4py-related issues please refer to https://mpi4py.readthedocs.io/en/latest/install.html
-3. gmt-related issues please refer to https://www.pygmt.org/latest/install.html
+PyGLDA uses a Python translation of the **W3RA** model (World-Wide Water Resources Assessment, van Dijk et al.); W3RA
+data: https://www.dropbox.com/scl/fo/b0hneugr9vao0rqm4oh86/AEPPU-QG6kgh9wTlIBgiwMQ?rlkey=q7ux08mitdghnoac3e4spwaev&e=1&dl=0
 
+This work is supported by the Danmarks Frie Forskningsfond [10.46540/2035-00247B] through the DANSk-LSM project, and
+by the National Natural Science Foundation of China (Grant No. 42274112 and No. 41804016).
 
+## Citation
+
+If you use PyGLDA in your research, please cite:
+
+> Yang, F., Schumacher, M., Retegui-Schiettekatte, L., van Dijk, A. I. J. M., and Forootan, E.: PyGLDA: a fine-scale
+> python-based global land data assimilation system for integrating satellite gravity data into hydrological models,
+> *Geoscientific Model Development*, 18, 6195–6217, https://doi.org/10.5194/gmd-18-6195-2025, 2025.
+
+## License
+
+PyGLDA v1 is licensed under the **MIT License**. See [LICENSE.txt](LICENSE.txt).
+
+## Contact
+
+Fan Yang — [fany@plan.aau.dk](mailto:fany@plan.aau.dk)
+Geodesy Group, Department of Sustainability and Planning, Aalborg University (https://aaugeodesy.com/)
+
+Developers: Fan Yang, Ehsan Forootan (efo@plan.aau.dk), Leire Retegui-Schiettekatte (leirears@plan.aau.dk),
+Maike Schumacher (maikes@plan.aau.dk)

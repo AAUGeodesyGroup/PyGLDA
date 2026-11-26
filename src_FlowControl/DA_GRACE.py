@@ -479,7 +479,12 @@ class DA_GRACE_flexibile(DA_GRACE):
         # da = EnKF(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = EnSQRA(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = EnSQRA_V2(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
-        da = EnKF_localization_v1(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        '''filter by name (DA_setting.json method.fusion_method, src_DA/filter_registry.py) and its inflation'''
+        from src_DA.filter_registry import get_filter
+        da = get_filter(configDA.method.fusion_method)(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
+        da.configure_inflation_factor(inflation=configDA.method.inflation)
+        print('Filter: %s (%s), inflation %s' % (configDA.method.fusion_method, type(da).__name__,
+                                                 configDA.method.inflation))
         # da = EnKF_domain_localization(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = EnKF_localization_v2(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
         # da = DataAssimilation_monthlymean_dailyupdate(DA_setting=configDA, model=model_instance, obs=gr, sv=sv)
