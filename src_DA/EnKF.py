@@ -97,6 +97,49 @@ class EnKF:
 
         return states_update
 
+    def _save_innovations(self, info, y, ens_obs, obs_cov, ens_states, states_update):
+        """append one group per window to self.innovations_file (cases/<case>/DA/innovations.h5): window epoch, start,
+        end; per observation unit: unperturbed obs y, mean of the perturbed obs used by the update, mean and variance
+        (ddof 1) of the forecast H X over the members (window-mean states before the update, without inflation), diag(R),
+        mean of the analysis H X_a; and per state compartment the ensemble-mean increment of the window mapped to the units
+        with the same observation operator (inc_<compartment>; their sum = hxa_mean - hx_mean)"""
+        import h5py
+        import os
+        from src_GHM.EnumType import states_var
+        HX = self._DM(states=ens_states)
+        HXa = self._DM(states=states_update)
+        inc = np.mean(states_update - ens_states, axis=1)
+        dm = self._sv.DM
+        vd = dm.vertical_dim
+        comp, m = {}, 0
+        for key in dm.statesnn:
+            k = 1 if key in (states_var.Sg, states_var.Sr) else 2
+            sel = np.zeros(vd, dtype=bool)
+            sel[m:m + k] = True
+            m += k
+            v = np.where(np.tile(sel, inc.size // vd), inc, 0.0)
+            comp[key.name] = self._DM(states=v[:, None])[:, 0]
+        R = np.atleast_2d(np.asarray(obs_cov, dtype=float))
+        with h5py.File(self.innovations_file, 'a') as f:
+            g = f.create_group('w_%s' % info[0])
+            g.attrs['epoch'] = str(info[0])
+            g.attrs['start'] = info[1][0].strftime('%Y-%m-%d')
+            g.attrs['end'] = info[1][-1].strftime('%Y-%m-%d')
+            g.attrs['ndays'] = len(info[1])
+            g['y'] = np.ravel(y)
+            g['obs_pert_mean'] = np.mean(ens_obs, axis=1)
+            g['hx_mean'] = np.mean(HX, axis=1)
+            g['hx_var'] = np.var(HX, axis=1, ddof=1)
+            g['R_diag'] = np.diag(R)
+            g['hxa_mean'] = np.mean(HXa, axis=1)
+            for k, v in comp.items():
+                g['inc_%s' % k] = v
+        '''test only: raw arrays of the first window, to check the innovation by hand'''
+        dump = os.environ.get('PYGLDA_V1_INNOV_DUMP')
+        if dump and not os.path.exists(dump):
+            np.savez(dump, y=np.ravel(y), ens_obs=ens_obs, obs_cov=R, ens_states=ens_states, states_update=states_update,
+                     DM=dm.getDM(), epoch=str(info[0]))
+
     def _log_analysis_time(self, epoch, update_s, window_s, ndays):
         """append one line per assimilated window: epoch, update() time, whole window (gather, update, scatter,
         rewrite of the window's daily states), number of days"""
@@ -211,6 +254,7 @@ class EnKF:
                 pass
             else:
                 '''delete the OL process: it does not participate in data assimilation'''
+                y_unperturbed = np.array(ens_obs[OL_thread])        # the OL rank reads the unperturbed obs (ens_0)
                 del ens_obs[OL_thread]
                 del ens_states[OL_thread]
 
@@ -222,6 +266,10 @@ class EnKF:
                 _t_update = _time.time()
                 states_update = self.update(obs=ens_obs, obs_cov=obs_cov, ens_states=ens_states)
                 _t_update = _time.time() - _t_update
+
+                '''diagnostics only (output.save_innovations); no effect on the update'''
+                if getattr(self, 'innovations_file', None):
+                    self._save_innovations(info, y_unperturbed, ens_obs, obs_cov, ens_states, states_update)
                 # print(np.shape(states_update.T), '=============================')
 
                 '''delta for monthly mean'''

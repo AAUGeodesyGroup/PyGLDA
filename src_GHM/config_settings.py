@@ -178,6 +178,7 @@ class config_settings:
             self.exttype = forcingSource.ERA5.name
             self.save_states_every_day = False
             self.save_output_every_day = False
+            self.seed = None                    # run.seed: None = unseeded (numpy global generator); int = seeded streams
             self.forcing_day = 'next'           # ERA5 day used for model day d: 'next' (d+1, today) or 'same' (d, 2025)
             pass
 

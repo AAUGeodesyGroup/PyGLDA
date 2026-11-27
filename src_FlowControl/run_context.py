@@ -261,7 +261,7 @@ def log_dir():
 
 
 def find_ens_dir(base, kind: str, case: str, ens: int, stage=None) -> Path:
-    """reader used since review 14: the member folder of the current layout (or the legacy one)"""
+    """reader: the member folder of the current layout (or the legacy one)"""
     return member_dir(base, kind, case, ens, stage=stage)
 
 
@@ -343,6 +343,43 @@ def find_basin_shp(basin) -> str:
         raise RuntimeError('PyGLDA v1: basin "%s": %d different shapefiles below %s (%s); set RDA.shp_path to the one '
                            'to use' % (basin, len(target), basin_shp_dir(), ', '.join(target) or 'none'))
     return target[0]
+
+
+# ---------------------------------------------------------------- run.seed: reproducible random streams
+# run.seed (setting.json) = None: numpy's global generator as before (unseeded). An integer: every draw comes from its own
+# stream np.random.default_rng(SeedSequence([seed, purpose, member, key...])), so a draw depends only on (seed, purpose,
+# member, key) - not on the number of members or ranks or the order of execution; variants that share the seed get the
+# same observation perturbation of member k at epoch t (paired comparison).
+SEED_PURPOSE = {'obs': 1, 'forcing': 2, 'par': 3}
+_SEED = None
+
+
+def set_seed(seed):
+    global _SEED
+    _SEED = None if seed is None else int(seed)
+
+
+def get_seed():
+    return _SEED
+
+
+def seed_key(x) -> int:
+    """stable integer of a key: dates '2002-09-07' -> 20020907, '2002-09' -> 200209, ints as they are, names -> crc32"""
+    import zlib
+    if isinstance(x, int):
+        return x
+    s = str(x)
+    d = s.replace('-', '')
+    return int(d) if d.isdigit() else zlib.crc32(s.encode())
+
+
+def rng(purpose: str, member: int, *keys):
+    """the stream of one draw (requires run.seed)"""
+    import numpy as np
+    if _SEED is None:
+        raise RuntimeError('PyGLDA v1: rng() needs run.seed')
+    return np.random.default_rng(np.random.SeedSequence([_SEED, SEED_PURPOSE[purpose], int(member)] +
+                                                        [seed_key(k) for k in keys]))
 
 
 def grace_land_mask() -> str:

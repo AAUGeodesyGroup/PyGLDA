@@ -174,6 +174,7 @@ class RDA:
         rc.set_layout(L)
         rc.set_shapefile(rc.resolve_shp(RDA.shp_path) if RDA.shp_path else None)
         dst = L.settings_dir if L else Path(root) / 'w3ra' / 'runs' / RDA.case / 'settings'
+        seed = None
         if comm is None or comm.Get_rank() == 0:
             if L:
                 L.make_dirs()
@@ -181,10 +182,28 @@ class RDA:
             rc.make_run_copy(RDA.setting_dir, dst, root)
             if L:
                 RDA._rewrite_paths(dst, L)
+            seed = RDA._read_seed(dst)
         if comm is not None:
             comm.barrier()
+            '''the seed is read by rank 0 before the barrier and broadcast: after the barrier rank 0 rewrites
+            setting.json (generate_settings) while the other ranks would still read it'''
+            seed = comm.bcast(seed, root=0)
         RDA._run_settings = str(dst)
+        RDA._set_seed(seed, note=(comm is None or comm.Get_rank() == 0))
         return str(dst)
+
+    @staticmethod
+    def _read_seed(settings_dir):
+        import json
+        return json.loads((Path(settings_dir) / 'setting.json').read_text()).get('run', {}).get('seed')
+
+    @staticmethod
+    def _set_seed(seed, note=True):
+        """run.seed of the run copy (setting.json) -> run_context; noted in the case log when set"""
+        rc.set_seed(seed)
+        if note and seed is not None and rc.get_layout() is not None:
+            rc.note('run.seed = %s (seeded random streams)' % seed)
+        return seed
 
     @staticmethod
     def activate():
@@ -205,11 +224,12 @@ class RDA:
             if L:
                 RDA._rewrite_paths(dst, L)
         RDA._run_settings = str(dst)
+        RDA._set_seed(RDA._read_seed(dst))
         return str(dst)
 
     @staticmethod
     def _configure(demo):
-        """kept for drivers written against review 14; the layout is registered by _settings()"""
+        """kept for older drivers; the layout is registered by _settings()"""
         return demo
 
     @staticmethod
@@ -581,6 +601,7 @@ class RDA:
 
         if rank == 0:
             print('\n=================Welcome to the OL experiment for: %s====================' % RDA.case)
+            print('run.seed: %s' % rc.get_seed())
 
             '''change the sub-setting files according to the main setting'''
             demo.generate_settings(mode=init_mode.warm)
@@ -621,7 +642,13 @@ class RDA:
         if rank == 0 and rc.get_layout() is not None:
             L = rc.get_layout()
             if ens_state == 'new':
-                rc.made_with_write(L.ensemble_dir, 'ensemble', ens_def, _months(RDA.warm_begin_time, RDA.warm_end_time))
+                '''who made the members (information only, not part of the identity: cases with other run.seed values
+                share the ensemble and the open loop; their observation perturbations differ)'''
+                made_by = 'imported (OL_run skip_perturbation=True)' if skip_perturbation else (
+                    'run.seed=%d (SeedSequence streams)' % rc.get_seed() if rc.get_seed() is not None
+                    else 'unseeded numpy global generator')
+                rc.made_with_write(L.ensemble_dir, 'ensemble', ens_def, _months(RDA.warm_begin_time, RDA.warm_end_time),
+                                   extra=dict(perturbed_by=made_by))
             if ol_state == 'new':
                 rc.made_with_write(L.ol_dir, 'open loop', ol_def)
 
@@ -677,6 +704,7 @@ class RDA:
 
         if rank == 0:
             print('\n\n=================Welcome to the DA experiment for: %s====================' % RDA.case)
+            print('run.seed: %s' % rc.get_seed())
             print('\n\n===================== DA preparation ==========================')
             '''change the sub-setting files according to the main setting'''
             demo.generate_settings(mode=init_mode.resume)

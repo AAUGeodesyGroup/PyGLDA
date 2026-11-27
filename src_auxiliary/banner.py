@@ -40,7 +40,7 @@ def env():
     return rank
 
 
-def print_pyglda_banner(version="1.0.0"):
+def print_pyglda_banner(version="1.2"):
     if env() != 0: return
 
     use_color = sys.stdout.isatty()

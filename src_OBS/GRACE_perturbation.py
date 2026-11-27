@@ -92,8 +92,18 @@ class GRACE_perturbed_obs:
             else:
                 mcov = C_h5fn['data'][index]
 
-            '''perturb the signal'''
-            if basin_num == 1:
+            '''perturb the signal (run.seed: member k at epoch t from its own stream, src_FlowControl/run_context.py)'''
+            from src_FlowControl import run_context as _rc
+            if _rc.get_seed() is not None:
+                rows = []
+                for i in range(self.ens):
+                    g = _rc.rng('obs', i + 1, time)
+                    if basin_num == 1:
+                        rows.append([g.normal(a[0], np.sqrt(np.ravel(mcov)[0]))])
+                    else:
+                        rows.append(g.multivariate_normal(a, mcov))
+                perturbed_TWS = np.array(rows)
+            elif basin_num == 1:
                 '''in case there is only one subbasin'''
                 perturbed_TWS = np.random.normal(a, np.sqrt(mcov), self.ens)[:, None]
             else:

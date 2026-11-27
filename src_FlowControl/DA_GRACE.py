@@ -492,6 +492,15 @@ class DA_GRACE_flexibile(DA_GRACE):
         '''per-window analysis time -> <case>/log/analysis_times.csv (written by the analysis rank)'''
         if rc.log_dir() is not None:
             da.analysis_log = str(rc.log_dir() / 'analysis_times.csv')
+        '''output.save_innovations (layout only): per-window innovation diagnostics -> <case>/DA/innovations.h5'''
+        if getattr(settings.output, 'save_innovations', False):
+            L = rc.get_layout()
+            if L is None:
+                raise RuntimeError('PyGLDA v1: output.save_innovations needs the data layout (RDA.legacy_layout = False)')
+            da.innovations_file = str(L.case_dir / 'DA' / 'innovations.h5')
+            if rank == 1 and Path(da.innovations_file).exists():
+                Path(da.innovations_file).unlink()            # a new DA run starts a new file
+            print('save_innovations: %s' % da.innovations_file)
 
         '''running with MPI parallelization'''
         print('User case: %s' % self.case)

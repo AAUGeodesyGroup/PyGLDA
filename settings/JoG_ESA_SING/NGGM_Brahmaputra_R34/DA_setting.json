@@ -1,0 +1,39 @@
+{
+    "basic": {
+        "fromdate": "2002-09-01",
+        "todate": "2006-12-31",
+        "basin": "Brahmaputra1degree",
+        "basin_shp": "${DATA_ROOT}/basin/shp/ESA_SING/Grid_1/Brahmaputra1degree_subbasins.shp",
+        "NaNmaskStatesDir": "${DATA_ROOT}/w3ra/states_sample",
+        "ensemble": 30,
+        "layer": {
+            "S0": true,
+            "Ss": true,
+            "Sd": true,
+            "Sr": true,
+            "Sg": true,
+            "Mleaf": true,
+            "FreeWater": true,
+            "DrySnow": true
+        }
+    },
+    "obs": {
+        "name": "GRACE",
+        "dir": "${DATA_ROOT}/GRACE/obs",
+        "GRACE": {
+            "kind": "ESA_SING",
+            "aux_for_time_epochs": "${DATA_ROOT}/GRACE/aux/ESA_5daily",
+            "EWH_grid_dir": "${DATA_ROOT}/GRACE/ESA_SING/ESM2.0/Brahmaputra/gravity_signal_cov",
+            "cov_dir": "${DATA_ROOT}/GRACE/ESA_SING/ESM2.0/Brahmaputra/gravity_signal_cov",
+            "preprocess_res": "${DATA_ROOT}/GRACE/output_R34/NGGM/1e18",
+            "OL_mean": "${DATA_ROOT}/GRACE/OLmean"
+        }
+    },
+    "model": {
+        "name": "w3ra_v0"
+    },
+    "method": {
+        "fusion_method": "EnKF",
+        "inflation": 1.0
+    }
+}

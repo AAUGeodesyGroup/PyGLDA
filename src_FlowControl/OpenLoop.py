@@ -70,9 +70,12 @@ class OpenLoop(SingleModel):
     def perturbation(self):
         from src_DA.Perturbation import perturbation
 
+        import json
         dp = self.setting_dir / 'perturbation.json'
+        '''the month after the period is needed only when model day d reads ERA5 day d+1 (run.forcing_day "next", default)'''
+        fday = json.loads((self.setting_dir / 'setting.json').read_text()).get('run', {}).get('forcing_day', 'next')
         pp = perturbation(dp=dp).setDate(month_begin=self.period[0].strftime('%Y-%m'),
-                                         month_end=self.period[1].strftime('%Y-%m'))
+                                         month_end=self.period[1].strftime('%Y-%m'), next_month=(fday != 'same'))
         print('')
         print('Start to generate ensembles with given perturbation...')
         # pp.perturbe_par()

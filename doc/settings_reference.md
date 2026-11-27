@@ -1,6 +1,6 @@
 # PyGLDA v1 — settings reference
 
-Every key of the four JSON files that the code reads (code with the review 14-16 changes). "driver" = written by
+Every key of the four JSON files that the code reads (current code). "driver" = written by
 `generate_settings()` at the start of each stage into the run copy `<data_root>/w3ra/cases/<case>/settings/` (legacy
 layout: `w3ra/runs/<case>/settings/`; see
 `configuration.md` §0); the files in `settings/` themselves are not written. Paths may be written as
@@ -50,11 +50,13 @@ what the template says there is used only with `RDA.legacy_layout = True`.
 | `run.exttype` | forcing | `ERA5` | `ERA5` |
 | `run.save_states_every_day` | write daily states (needed by DA) | bool | false |
 | `run.save_output_every_day` | write daily outputs `output.var` | bool | false |
+| `run.seed` | random streams: `null` = numpy's global generator, unseeded (as before); an integer = every draw from its own stream `SeedSequence([seed, purpose, member, key])` (purpose obs / forcing / parameters; key = epoch date, variable and month), so a run is bit-reproducible and independent of the number of members or ranks; cases with the same seed get the same observation perturbation of member k at epoch t. Implemented for the spatially correlated forcing/parameter perturbations (other variants stop with an error when seeded). The seed is printed at the OL/DA start, noted in the case's `reuse.log` and recorded in the ensemble's `made_with.json` (`extra.perturbed_by`; not part of its identity, so cases with other seeds share the ensemble and the open loop) | `null`, int | `null` |
 | `run.forcing_day` | ERA5 day used for model day d: `next` = d+1 (ERA5 daily accumulations end at 00 UTC of the next day; since commit 8c775b5, Mar 2026), `same` = d (code before; the published ESA-SING runs, `settings/JoG_ESA_SING`) | `next`, `same` | `next` |
 | `input.meteo`, `input.clim`, `input.pars`, `input.mask_fn` | base folder of the cropped inputs; `<prefix>/forcing|clim|par|mask` (or `ens_forcing`, `ens_par` for members) is appended | path | driver (= `pre_process.out_dir`) |
 | `output.dir` | folder of `state_<prefix>[_<stage>][_ensemble_k]` and `output_<prefix>[_<stage>][_ensemble_k]` | path | required |
 | `output.layout` | folder layout: `domains` (members in `domains/<domain>/OL/<ensemble>/ens_kk` and `cases/<case>/DA/ens_kk`; DA starts from the OL state of the day before) or `legacy` (shared folders) | `domains`, `legacy` | driver (`RDA.legacy_layout`); `legacy` if absent |
 | `output.stage` | stage of the run | `OL`, `DA`, empty | driver (warm = OL, resume = DA) |
+| `output.save_innovations` | DA diagnostics (layout only): per window `cases/<case>/DA/innovations.h5` with group `w_<epoch>` (attrs start, end, ndays): `y` unperturbed obs, `obs_pert_mean` mean of the perturbed obs used by the update, `hx_mean`/`hx_var` forecast H X over the members (window mean, before the update, without inflation), `R_diag`, `hxa_mean`, `inc_<compartment>` ensemble-mean increment of each store mapped to the units with the same operator (sum = `hxa_mean - hx_mean`). No effect on the update | bool | false |
 | `output.var.<name>` | write this output variable | bool for `Stot`, `ETtot`, `Qtot`, `Qnet`, `E0`, `Ei`, `Et`, `Es`, `Er`, `RSn`, `RLn`, `LE`, `H`, `albedo`, `LAI`, `Ssnow`, `z_g`, `S0`, `Sroot`, `Ssoil`, `Sg`, `Ts`, `fsnow`, `Sr` | all false |
 
 ## pre_process.json
@@ -78,8 +80,10 @@ what the template says there is used only with `RDA.legacy_layout = True`.
 | `forcing.<var>.perturb_method` | (old key `perturbe_method` is accepted with a warning) | `additive`, `multiplicative` |
 | `forcing.<var>.error_distribution` | | `gaussian` (coefficient = std), `triangle` (coefficient = half-width) |
 | `forcing.<var>.coefficients` | list with one value | number |
-| `par.<name>.*` | same four keys for each of the 44 W3RA parameters | as above |
-| (no key) | random seed | not available: draws are unseeded **[issue 2]** |
+| `forcing.<var>.min_factor`, `par.<name>.min_factor` | optional lower bound of the drawn factor of a `multiplicative` perturbation (e.g. `0.0` keeps precipitation and parameters non-negative when the coefficient is large); absent = unbounded, as before | number, optional |
+| `forcing.<var>.min_value` | optional lower bound of the perturbed forcing field of an `additive` perturbation (e.g. `0.0` for `ssrd`); absent = unbounded, as before | number, optional |
+| `par.<name>.*` | same keys for each of the 44 W3RA parameters | as above |
+| (no key) | random seed | `run.seed` in setting.json |
 
 ## DA_setting.json (`configure_DA`)
 

@@ -60,19 +60,22 @@ class perturbation:
             warnings.warn('%s: no "correlation" block; using the old default (spatially correlated forcing and '
                           'parameters, no temporal correlation); please add the block' % dp)
 
-    def setDate(self, month_begin='2002-04', month_end='2002-04'):
+    def setDate(self, month_begin='2002-04', month_end='2002-04', next_month=True):
         """
         Please note that, for ERA5-land daily data, the total precipitation (and solar radiation) of a given day is actually
         obtained from 00:00:00 of the next day. So, it is necessary to expand the time-series by adding one additional day.
         ref: https://confluence.ecmwf.int/pages/viewpage.action?pageId=197702790
+        next_month=False (run.forcing_day "same": model day d reads ERA5 day d) does not add the month after month_end.
         """
         '''A trick: add 4 days to 28 to ensure the acquisition of next month'''
-        month_end = (datetime.strptime(month_end, '%Y-%m').replace(day=28) + timedelta(days=4)).strftime('%Y-%m')
+        if next_month:
+            month_end = (datetime.strptime(month_end, '%Y-%m').replace(day=28) + timedelta(days=4)).strftime('%Y-%m')
         self.monthlist = GeoMathKit.monthListByMonth(begin=month_begin, end=month_end)
 
         return self
 
     def perturb_forcing(self):
+        self._seed_ctx = None                    # run.seed context, set only by the variants that support it
         forcing = self.setting['correlation']['forcing']
 
         if forcing['customize']:
@@ -99,7 +102,7 @@ class perturbation:
         pass
 
     def perturb_par(self):
-
+        self._seed_ctx = None
         par = self.setting['correlation']['par']
 
         if par['customize']:
@@ -240,10 +243,10 @@ class perturbation:
 
                 if forcing[key]['perturb_method'] == perturbe_method.multiplicative.name:
                     hh = samples_mul[key][:, :, None] * dd * dict_group_load[None, :, :]
-                    outdata[key] = hh
+                    outdata[key] = self._floor(hh, forcing[key])
                 else:
                     hh = dd * dict_group_load[None, :, :] + samples_add[key][:, :, None] * dd
-                    outdata[key] = hh
+                    outdata[key] = self._floor(hh, forcing[key])
 
             for ens in np.arange(self.ens):
                 dict_group = ff_2.create_group('ens_%s' % (ens + 1))
@@ -300,15 +303,16 @@ class perturbation:
 
                 dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
                 s_shape = tuple([np.shape(dict_group_load)[0]])
+                self._seed_ctx = ('forcing', key, month.strftime('%Y-%m'))      # run.seed streams
                 if forcing[key]['perturb_method'] == perturbe_method.multiplicative.name:
                     samples = self.__generate_perturbation(config=forcing[key], mean=np.ones(s_shape))
                     hh = samples[:, :, None] * dd * dict_group_load[None, :, :]
-                    outdata[key] = hh
+                    outdata[key] = self._floor(hh, forcing[key])
                     pass
                 else:
                     samples = self.__generate_perturbation(config=forcing[key], mean=np.zeros(s_shape))
                     hh = dd * dict_group_load[None, :, :] + samples[:, :, None] * dd
-                    outdata[key] = hh
+                    outdata[key] = self._floor(hh, forcing[key])
 
             for ens in np.arange(self.ens):
                 dict_group = ff_2.create_group('ens_%s' % (ens + 1))
@@ -386,10 +390,10 @@ class perturbation:
 
                 if forcing[key]['perturb_method'] == perturbe_method.multiplicative.name:
                     hh = samples_mul[key][:, None, :] * dd * dict_group_load[None, :, :]
-                    outdata[key] = hh
+                    outdata[key] = self._floor(hh, forcing[key])
                 else:
                     hh = dd * dict_group_load[None, :, :] + samples_add[key][:, None, :] * dd
-                    outdata[key] = hh
+                    outdata[key] = self._floor(hh, forcing[key])
 
             for ens in np.arange(self.ens):
                 dict_group = ff_2.create_group('ens_%s' % (ens + 1))
@@ -499,6 +503,7 @@ class perturbation:
             ''''''
             dd = np.ones(tuple([self.ens] + list(np.shape(dict_group_load))))
             s_shape = tuple([np.shape(dict_group_load)[0]])
+            self._seed_ctx = ('par', key)                                          # run.seed streams
             if pars[key]['perturb_method'] == perturbe_method.multiplicative.name:
                 samples = self.__generate_perturbation(config=pars[key], mean=np.ones(s_shape))
                 hh = samples[:, :, None] * dd * dict_group_load[None, :, :]
@@ -524,6 +529,7 @@ class perturbation:
 
         ff_1.close()
         ff_2.close()
+        self._seed_ctx = None
 
         pass
 
@@ -554,18 +560,50 @@ class perturbation:
                 """co[0]: error percentage"""
                 pp = self.Gaussian_perturbation(mean=dd, std=dd * co[0])
 
+            if 'min_factor' in config:                     # optional lower bound of the factor (absent: unbounded)
+                pp = np.maximum(pp, config['min_factor'])
             mean = np.expand_dims(mean, axis=0) * pp
 
             pass
 
         return mean
 
+    @staticmethod
+    def _floor(hh, config):
+        """optional lower bound of a perturbed forcing field ('min_value' in its perturbation entry; absent: unchanged)"""
+        if 'min_value' in config:
+            return np.maximum(hh, config['min_value'])
+        return hh
+
     def triangle_perturbation(self, mean, limit, size=None):
+        if self._seeded():
+            return self._per_member(lambda g, i: g.triangular(left=(mean - limit)[i], mode=mean[i],
+                                                              right=(mean + limit)[i]))
         return np.random.triangular(left=mean - limit, mode=mean,
                                     right=mean + limit, size=size)
 
     def Gaussian_perturbation(self, mean, std, size=None):
+        if self._seeded():
+            return self._per_member(lambda g, i: g.normal(loc=mean[i], scale=std[i]))
         return np.random.normal(loc=mean, scale=std, size=size)
+
+    def _seeded(self):
+        """run.seed set (src_FlowControl/run_context.py): draws per member from their own streams; the context
+        (purpose, variable, month) is set by the perturbation functions that support it"""
+        from src_FlowControl import run_context as _rc
+        if _rc.get_seed() is None:
+            return False
+        if getattr(self, '_seed_ctx', None) is None:
+            raise NotImplementedError('PyGLDA v1: run.seed is implemented for the spatially correlated perturbations '
+                                      '(correlation.forcing isSpatialCorrelated true / isTemporalCorrelated false, '
+                                      'correlation.par isSpatialCorrelated true)')
+        return True
+
+    def _per_member(self, draw):
+        """rows 0..ens-1 (members 1..ens) drawn from rng(purpose, member, *keys)"""
+        from src_FlowControl import run_context as _rc
+        purpose, keys = self._seed_ctx[0], self._seed_ctx[1:]
+        return np.stack([draw(_rc.rng(purpose, i + 1, *keys), i) for i in range(self.ens)])
 
     def _format_check(self):
         forcing = self.setting['forcing']

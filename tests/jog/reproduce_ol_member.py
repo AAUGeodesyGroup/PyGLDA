@@ -1,4 +1,4 @@
-"""Reproduce published open-loop members with the current code (V1 review 19, Proof B; JoG ESA-SING revision).
+"""Reproduce published open-loop members with the current code (JoG ESA-SING revision).
 
     cd <repo>/tests/jog
     python reproduce_ol_member.py --data-root /work/data_for_w3 [--basin Brahmaputra] [--month 2002-09] [--ens 5]

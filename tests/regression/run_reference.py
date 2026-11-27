@@ -44,13 +44,21 @@ def rank():
     return 0
 
 
-def prepare_settings(src: Path, data_root: str, case: str, make_obs_dirs=True) -> Path:
+def prepare_settings(src: Path, data_root: str, case: str, make_obs_dirs=True, run_seed=None,
+                     save_innovations=False) -> Path:
     dst = Path(data_root) / 'w3ra' / 'runs' / case / 'harness_settings'
     dst.mkdir(parents=True, exist_ok=True)
     for f in ('DA_setting.json', 'perturbation.json', 'pre_process.json', 'setting.json'):
         txt = (src / f).read_text().replace('${DATA_ROOT}', data_root).replace('${CASE}', case)
         json.loads(txt)                                   # still valid JSON
         (dst / f).write_text(txt)
+    if run_seed is not None or save_innovations:          # run.seed / output.save_innovations of the code under test
+        st = json.loads((dst / 'setting.json').read_text())
+        if run_seed is not None:
+            st['run']['seed'] = int(run_seed)
+        if save_innovations:
+            st['output']['save_innovations'] = True
+        (dst / 'setting.json').write_text(json.dumps(st, indent=4))
     if make_obs_dirs:                                     # old places; the layout makes its own folders
         a = json.loads((dst / 'DA_setting.json').read_text())
         for d in (a['obs']['dir'], a['obs']['GRACE']['preprocess_res'], a['obs']['GRACE']['OL_mean']):
@@ -110,6 +118,8 @@ def main():
     ap.add_argument('--ensemble', help='layout: shared ensemble name (default: n<ens>)')
     ap.add_argument('--unit-set', help='layout: shared unit set name (default: basin)')
     ap.add_argument('--product', help='layout: GRACE product name (default from obs.GRACE.kind)')
+    ap.add_argument('--run-seed', type=int, help='set run.seed in the settings copy (code with seeded streams)')
+    ap.add_argument('--save-innovations', action='store_true', help='set output.save_innovations in the settings copy')
     ap.add_argument('--stage', help=argparse.SUPPRESS)              # internal: run one stage in this process
     a = ap.parse_args()
     data_root = str(Path(a.data_root).resolve())
@@ -141,7 +151,8 @@ def main():
     new_layout = (REPO / 'src_FlowControl' / 'run_context.py').is_file() and not a.legacy_layout
     if new_layout:
         new_layout = 'class Layout' in (REPO / 'src_FlowControl' / 'run_context.py').read_text()
-    settings = prepare_settings(Path(a.settings), data_root, a.case, make_obs_dirs=not new_layout)
+    settings = prepare_settings(Path(a.settings), data_root, a.case, make_obs_dirs=not new_layout, run_seed=a.run_seed,
+                                save_innovations=a.save_innovations)
     log = Path(data_root) / 'w3ra' / 'runs' / a.case / 'harness_log'
     log.mkdir(parents=True, exist_ok=True)
     (log / 'resources_harness.csv').write_text('stage,rank,wall_s,maxrss_MB\n')
